@@ -11,8 +11,10 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
+
+import axios from 'axios';
 import { useFormInput } from '../utils/form';
-import QrReader from 'react-qr-reader';
+import QrReader from './QrReader';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -29,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
     width: '100%', // Fix IE 11 issue.
     marginTop: theme.spacing(1),
   },
-  submit: {
+  button: {
     margin: theme.spacing(3, 0, 2),
   },
 }));
@@ -44,27 +46,23 @@ export default function PatientInfo(props) {
   const classes = useStyles();
 
   const handleScan = (data) => {
+    console.log('[SCAN]', data);
     if (data) {
       const json = JSON.parse(data);
-      console.log('[DATAAA]', json);
 
       branch.setValue(json.Sucursal);
       origin.setValue(json.Origen);
       sampleNumber.setValue(json.NroMuestra);
-
-      console.log('[branch]', branch.value);
-      console.log('[origin]', origin.value);
-      console.log('[sampleNumber]', sampleNumber.value);
     }
   };
 
-  const handleError = (err) => {
-    console.error(err);
-  };
+  const getPatientInfo = async () => {
+    const response = await axios.post('/paciente_datos', {
+      documento: dni.value,
+      tipoDoc: 'DNI',
+    });
 
-  const previewStyle = {
-    height: 240,
-    width: 320,
+    console.log(response);
   };
 
   return (
@@ -126,11 +124,12 @@ export default function PatientInfo(props) {
                 {...sampleNumber}
               />
               <Button
-                type="submit"
+                type="button"
                 fullWidth
                 variant="contained"
                 color="primary"
-                className={classes.submit}
+                className={classes.button}
+                onClick={getPatientInfo}
               >
                 Guardar
               </Button>
@@ -138,14 +137,7 @@ export default function PatientInfo(props) {
           </div>
         </Container>
       ) : (
-        <div>
-          <QrReader
-            delay={1000}
-            style={previewStyle}
-            onError={handleError}
-            onScan={handleScan}
-          />
-        </div>
+        <QrReader handleScan={handleScan} />
       )}
     </Fragment>
   );
