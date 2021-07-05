@@ -85,6 +85,8 @@ export default function PatientInfo() {
       secondName,
       firstSurname,
       secondSurname,
+      gender,
+      active,
     } = content;
 
   const classes = useStyles();
@@ -120,7 +122,7 @@ export default function PatientInfo() {
 
     if (parsedInfo) {
       const {
-        Paciente: { Nombre, Nombre2, Apellido, Apellido2 },
+        Paciente: { Nombre, Nombre2, Apellido, Apellido2, Sexo, Activo },
       } = parsedInfo;
 
       setContent((prevState) => ({
@@ -129,6 +131,8 @@ export default function PatientInfo() {
         secondName: Nombre2.value,
         firstSurname: Apellido.value,
         secondSurname: Apellido2.value,
+        gender: Sexo.value,
+        active: Activo.value,
       }));
     }
   };
@@ -278,6 +282,48 @@ export default function PatientInfo() {
                 value={secondSurname}
                 onChange={onChange}
               />
+              <FormControl
+                id="gender"
+                className={classes.formControl}
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+              >
+                <InputLabel id="gender">Género</InputLabel>
+                <Select
+                  labelId="gender"
+                  id="gender"
+                  name="gender"
+                  label="Género"
+                  value={gender}
+                  onChange={onChange}
+                >
+                  <MenuItem value={'M'}>Masculino</MenuItem>
+                  <MenuItem value={'F'}>Femenino</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl
+                id="active"
+                className={classes.formControl}
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+              >
+                <InputLabel id="active">Activo</InputLabel>
+                <Select
+                  labelId="active"
+                  id="active"
+                  name="active"
+                  label="Activo"
+                  value={active}
+                  onChange={onChange}
+                >
+                  <MenuItem value={'S'}>Sí</MenuItem>
+                  <MenuItem value={'N'}>No</MenuItem>
+                </Select>
+              </FormControl>
               <Button
                 type="button"
                 fullWidth
