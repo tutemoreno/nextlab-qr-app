@@ -15,7 +15,8 @@
     "react-qr-reader": "^2.2.1",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.3",
-    "web-vitals": "^1.1.2"
+    "web-vitals": "^1.1.2",
+    "xml-js": "^1.6.11"
   },
   "scripts": {
     "start": "react-scripts start",

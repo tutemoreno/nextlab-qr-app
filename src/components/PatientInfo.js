@@ -1,21 +1,20 @@
-import React, { Fragment } from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import TextField from '@material-ui/core/TextField';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
-import Link from '@material-ui/core/Link';
-import Grid from '@material-ui/core/Grid';
-import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
-import Typography from '@material-ui/core/Typography';
-import { makeStyles } from '@material-ui/core/styles';
-import { getStore } from '../utils/store';
 import Container from '@material-ui/core/Container';
-import qs from 'qs';
-
+import CssBaseline from '@material-ui/core/CssBaseline';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
+import { makeStyles } from '@material-ui/core/styles';
+import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
+import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import axios from 'axios';
-import { useFormInput } from '../utils/form';
+import React, { Fragment } from 'react';
+import xmlParser from 'xml-js';
+import { useFormContent } from '../utils/form';
+import { getStore } from '../utils/store';
 import QrReader from './QrReader';
 
 const useStyles = makeStyles((theme) => ({
@@ -36,44 +35,107 @@ const useStyles = makeStyles((theme) => ({
   button: {
     margin: theme.spacing(3, 0, 2),
   },
+  formControl: {
+    minWidth: 120,
+  },
+  selectEmpty: {
+    marginTop: theme.spacing(2),
+  },
 }));
 
+const initialState = {
+  // manual
+  document: '',
+  documentType: 'DNI',
+  // qr
+  branch: '',
+  origin: '',
+  sampleNumber: '',
+  analysis: [],
+  // fetch
+  code: '',
+  firstName: '',
+  secondName: '',
+  lastName: '',
+  firstSurname: '',
+  secondSurname: '',
+  gender: '',
+  benefit: '',
+  populationGroup: '',
+  exportationDate: '',
+  address: '',
+  birthDate: '',
+  phone: '',
+  fax: '',
+  cellPhone: '',
+  email: '',
+  auxiliarCode: '',
+  active: '',
+};
+
 export default function PatientInfo() {
-  const dni = useFormInput('');
-  const branch = useFormInput('');
-  const origin = useFormInput('');
-  const sampleNumber = useFormInput('');
-  // const analysis = useFormInput([]);
+  const { content, setContent, onChange } = useFormContent(initialState),
+    {
+      document,
+      branch,
+      origin,
+      sampleNumber,
+      documentType,
+      firstName,
+      secondName,
+      firstSurname,
+      secondSurname,
+    } = content;
 
   const classes = useStyles();
 
   const handleScan = (data) => {
-    console.log('[SCAN]', data);
+    console.log(data);
     if (data) {
-      const json = JSON.parse(data);
+      const { Sucursal, Origen, NroMuestra } = JSON.parse(data);
 
-      branch.setValue(json.Sucursal);
-      origin.setValue(json.Origen);
-      sampleNumber.setValue(json.NroMuestra);
+      setContent((prevState) => ({
+        ...prevState,
+        branch: Sucursal,
+        origin: Origen,
+        sampleNumber: NroMuestra,
+      }));
     }
   };
 
   const getPatientInfo = async () => {
     const params = new URLSearchParams();
 
-    params.append('documento', dni.value);
-    params.append('tipoDoc', 'DNI');
+    params.append('documento', document);
+    params.append('tipoDoc', documentType);
     params.append('codigo', 0);
     params.append('token', getStore('nextlab-qr').token);
 
     const response = await axios.post('/paciente_datos', params);
 
-    console.log(response);
+    const parsedInfo = xmlParser.xml2js(response.data, {
+      compact: true,
+      textKey: 'value',
+    });
+
+    if (parsedInfo) {
+      const {
+        Paciente: { Nombre, Nombre2, Apellido, Apellido2 },
+      } = parsedInfo;
+
+      setContent((prevState) => ({
+        ...prevState,
+        firstName: Nombre.value,
+        secondName: Nombre2.value,
+        firstSurname: Apellido.value,
+        secondSurname: Apellido2.value,
+      }));
+    }
   };
 
   return (
     <Fragment>
-      {sampleNumber.value ? (
+      {sampleNumber ? (
         <Container component="main" maxWidth="xs">
           <CssBaseline />
           <div className={classes.paper}>
@@ -90,22 +152,11 @@ export default function PatientInfo() {
                 margin="normal"
                 required
                 fullWidth
-                id="dni"
-                label="DNI."
-                name="DNI"
-                {...dni}
-                autoFocus
-              />
-              <TextField
-                type="text"
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
                 name="branch"
                 label="Sucursal"
                 id="branch"
-                {...branch}
+                value={branch}
+                onChange={onChange}
               />
               <TextField
                 type="text"
@@ -116,7 +167,8 @@ export default function PatientInfo() {
                 name="origin"
                 label="Origen"
                 id="origin"
-                {...origin}
+                value={origin}
+                onChange={onChange}
               />
               <TextField
                 type="number"
@@ -127,7 +179,104 @@ export default function PatientInfo() {
                 name="sampleNumber"
                 label="Nro. de muestra"
                 id="sampleNumber"
-                {...sampleNumber}
+                value={sampleNumber}
+                onChange={onChange}
+              />
+              <FormControl
+                id="documentType"
+                className={classes.formControl}
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+              >
+                <InputLabel id="documentType">Tipo de documento</InputLabel>
+                <Select
+                  labelId="documentType"
+                  id="documentType"
+                  name="documentType"
+                  label="Tipo de documento"
+                  value={documentType}
+                  onChange={onChange}
+                >
+                  <MenuItem value={'BOL'}>Boliviano</MenuItem>
+                  <MenuItem value={'BRA'}>Brasilero</MenuItem>
+                  <MenuItem value={'CHI'}>Chileno</MenuItem>
+                  <MenuItem value={'CI'}>Cédula</MenuItem>
+                  <MenuItem value={'COL'}>Colombiano</MenuItem>
+                  <MenuItem value={'DNI'}>Doc. Nac. Identidad</MenuItem>
+                  <MenuItem value={'DNU'}>Doc. Nac. Único</MenuItem>
+                  <MenuItem value={'LC'}>Lib. Cívica</MenuItem>
+                  <MenuItem value={'LE'}>Lib. Enrolamiento</MenuItem>
+                  <MenuItem value={'NN'}>No identificado</MenuItem>
+                  <MenuItem value={'PAR'}>Paraguayo</MenuItem>
+                  <MenuItem value={'PAS'}>Pasaporte</MenuItem>
+                  <MenuItem value={'PER'}>Peruano</MenuItem>
+                  <MenuItem value={'RN'}>Recien Nacido</MenuItem>
+                  <MenuItem value={'URU'}>Uruguayo</MenuItem>
+                  <MenuItem value={'VEN'}>Venezolano</MenuItem>
+                  <MenuItem value={'VET'}>Veterinario</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField
+                type="text"
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                name="document"
+                label="Documento"
+                id="document"
+                value={document}
+                onChange={onChange}
+              />
+              <TextField
+                type="text"
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                name="firstName"
+                label="Primer nombre"
+                id="firstName"
+                value={firstName}
+                onChange={onChange}
+              />
+              <TextField
+                type="text"
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                name="secondName"
+                label="Segundo nombre"
+                id="secondName"
+                value={secondName}
+                onChange={onChange}
+              />
+              <TextField
+                type="text"
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                name="firstSurname"
+                label="Primer nombre"
+                id="firstSurname"
+                value={firstSurname}
+                onChange={onChange}
+              />
+              <TextField
+                type="text"
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                name="secondSurname"
+                label="Segundo nombre"
+                id="secondSurname"
+                value={secondSurname}
+                onChange={onChange}
               />
               <Button
                 type="button"
@@ -137,7 +286,7 @@ export default function PatientInfo() {
                 className={classes.button}
                 onClick={getPatientInfo}
               >
-                Guardar
+                Obtener paciente
               </Button>
             </form>
           </div>
