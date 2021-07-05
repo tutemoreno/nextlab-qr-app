@@ -1,4 +1,5 @@
 import React, { Fragment } from 'react';
+import PropTypes from 'prop-types';
 import QrReader from 'react-qr-reader';
 import { useFormInput } from '../utils/form';
 
@@ -26,3 +27,7 @@ export default function QrReaderComponent(props) {
     </Fragment>
   );
 }
+
+QrReaderComponent.propTypes = {
+  handleScan: PropTypes.func.isRequired,
+};

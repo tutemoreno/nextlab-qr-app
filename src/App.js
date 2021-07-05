@@ -1,3 +1,4 @@
+import React from 'react';
 import Login from './components/Login.js';
 import PatientInfo from './components/PatientInfo.js';
 import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';

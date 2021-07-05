@@ -10,7 +10,9 @@ import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
+import { getStore } from '../utils/store';
 import Container from '@material-ui/core/Container';
+import qs from 'qs';
 
 import axios from 'axios';
 import { useFormInput } from '../utils/form';
@@ -36,12 +38,12 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function PatientInfo(props) {
+export default function PatientInfo() {
   const dni = useFormInput('');
   const branch = useFormInput('');
   const origin = useFormInput('');
   const sampleNumber = useFormInput('');
-  const analysis = useFormInput([]);
+  // const analysis = useFormInput([]);
 
   const classes = useStyles();
 
@@ -57,10 +59,14 @@ export default function PatientInfo(props) {
   };
 
   const getPatientInfo = async () => {
-    const response = await axios.post('/paciente_datos', {
-      documento: dni.value,
-      tipoDoc: 'DNI',
-    });
+    const params = new URLSearchParams();
+
+    params.append('documento', dni.value);
+    params.append('tipoDoc', 'DNI');
+    params.append('codigo', 0);
+    params.append('token', getStore('nextlab-qr').token);
+
+    const response = await axios.post('/paciente_datos', params);
 
     console.log(response);
   };
