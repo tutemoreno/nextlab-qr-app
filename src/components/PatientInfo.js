@@ -11,7 +11,7 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import axios from 'axios';
-import React, { Fragment } from 'react';
+import React, { useEffect, useState, Fragment } from 'react';
 import xmlParser from 'xml-js';
 import { useFormContent } from '../utils/form';
 import { getStore } from '../utils/store';
@@ -87,12 +87,27 @@ export default function PatientInfo() {
       secondSurname,
       gender,
       active,
-    } = content;
+    } = content,
+    [documentTypes, setDocumentTypes] = useState(initialState);
 
   const classes = useStyles();
 
+  useEffect(() => {
+    async function fetchDocumentTypes() {
+      const response = await axios({
+        method: 'get',
+        url: '/GetTiposDeDocumento',
+      });
+
+      console.log(response);
+
+      setDocumentTypes(response.data.messages);
+    }
+
+    fetchDocumentTypes();
+  }, []);
+
   const handleScan = (data) => {
-    console.log(data);
     if (data) {
       const { Sucursal, Origen, NroMuestra } = JSON.parse(data);
 

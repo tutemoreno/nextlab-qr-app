@@ -4,7 +4,9 @@
         "es2021": true
     },
     "extends": [
-        "plugin:react/recommended"
+        "eslint:recommended",
+        "plugin:react/recommended",
+        "prettier"
     ],
     "parserOptions": {
         "ecmaFeatures": {
@@ -17,6 +19,8 @@
         "react"
     ],
     "rules": {
-        "no-unused-vars": "warn"
+        "no-extra-semi": "off",
+        "no-mixed-spaces-and-tabs": "off",
+        "no-unexpected-multiline": "off"
     }
 }
