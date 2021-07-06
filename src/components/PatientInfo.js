@@ -11,10 +11,10 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import axios from 'axios';
-import React, { useEffect, useState, Fragment } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import xmlParser from 'xml-js';
+import { useAuth } from '../context/auth';
 import { useFormContent } from '../utils/form';
-import { getStore } from '../utils/store';
 import QrReader from './QrReader';
 
 const useStyles = makeStyles((theme) => ({
@@ -73,6 +73,8 @@ const initialState = {
   active: '',
 };
 
+const { REACT_APP_PATIENT_SERVICE, REACT_APP_NEXTLAB_TOKEN } = process.env;
+
 export default function PatientInfo() {
   const { content, setContent, onChange } = useFormContent(initialState),
     {
@@ -88,20 +90,33 @@ export default function PatientInfo() {
       gender,
       active,
     } = content,
-    [documentTypes, setDocumentTypes] = useState(initialState);
+    [documentTypes, setDocumentTypes] = useState([]),
+    auth = useAuth();
 
   const classes = useStyles();
 
   useEffect(() => {
     async function fetchDocumentTypes() {
+      const data = new URLSearchParams();
+
+      data.append('token', REACT_APP_NEXTLAB_TOKEN);
+
       const response = await axios({
-        method: 'get',
-        url: '/GetTiposDeDocumento',
+        method: 'post',
+        url: `${REACT_APP_PATIENT_SERVICE}/GetTiposDeDocumento`,
+        data,
       });
 
-      console.log(response);
+      const parsedInfo = xmlParser.xml2js(response.data, {
+        compact: true,
+        textKey: 'value',
+      });
 
-      setDocumentTypes(response.data.messages);
+      setDocumentTypes(
+        parsedInfo.ListaTipoDocumento.Lista.TipoDocumento.map((e) => {
+          return { id: e.TipoDoc.value, name: e.Descripcion.value };
+        }),
+      );
     }
 
     fetchDocumentTypes();
@@ -121,14 +136,18 @@ export default function PatientInfo() {
   };
 
   const getPatientInfo = async () => {
-    const params = new URLSearchParams();
+    const data = new URLSearchParams();
 
-    params.append('documento', document);
-    params.append('tipoDoc', documentType);
-    params.append('codigo', 0);
-    params.append('token', getStore('nextlab-qr').token);
+    data.append('documento', document);
+    data.append('tipoDoc', documentType);
+    data.append('codigo', 0);
+    data.append('token', REACT_APP_NEXTLAB_TOKEN);
 
-    const response = await axios.post('/paciente_datos', params);
+    const response = await axios({
+      method: 'post',
+      url: `${REACT_APP_PATIENT_SERVICE}/paciente_datos`,
+      data,
+    });
 
     const parsedInfo = xmlParser.xml2js(response.data, {
       compact: true,
@@ -218,23 +237,11 @@ export default function PatientInfo() {
                   value={documentType}
                   onChange={onChange}
                 >
-                  <MenuItem value={'BOL'}>Boliviano</MenuItem>
-                  <MenuItem value={'BRA'}>Brasilero</MenuItem>
-                  <MenuItem value={'CHI'}>Chileno</MenuItem>
-                  <MenuItem value={'CI'}>Cédula</MenuItem>
-                  <MenuItem value={'COL'}>Colombiano</MenuItem>
-                  <MenuItem value={'DNI'}>Doc. Nac. Identidad</MenuItem>
-                  <MenuItem value={'DNU'}>Doc. Nac. Único</MenuItem>
-                  <MenuItem value={'LC'}>Lib. Cívica</MenuItem>
-                  <MenuItem value={'LE'}>Lib. Enrolamiento</MenuItem>
-                  <MenuItem value={'NN'}>No identificado</MenuItem>
-                  <MenuItem value={'PAR'}>Paraguayo</MenuItem>
-                  <MenuItem value={'PAS'}>Pasaporte</MenuItem>
-                  <MenuItem value={'PER'}>Peruano</MenuItem>
-                  <MenuItem value={'RN'}>Recien Nacido</MenuItem>
-                  <MenuItem value={'URU'}>Uruguayo</MenuItem>
-                  <MenuItem value={'VEN'}>Venezolano</MenuItem>
-                  <MenuItem value={'VET'}>Veterinario</MenuItem>
+                  {documentTypes.map((e) => (
+                    <MenuItem key={e.id} value={e.id}>
+                      {e.name}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
               <TextField

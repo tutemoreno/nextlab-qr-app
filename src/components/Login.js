@@ -10,7 +10,9 @@ import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
+import { useAuth } from '../context/auth';
 import Container from '@material-ui/core/Container';
+import { useFormContent } from '../utils/form';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -32,8 +34,22 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function SignIn() {
-  const classes = useStyles();
+const initialState = {
+  username: null,
+  password: null,
+  remember: false,
+};
+
+export default function Login() {
+  const { content, onChange } = useFormContent(initialState),
+    { username, password, remember } = content,
+    auth = useAuth(),
+    classes = useStyles();
+
+  const signIn = (e) => {
+    e.preventDefault();
+    auth.signIn(content);
+  };
 
   return (
     <Container component="main" maxWidth="xs">
@@ -43,18 +59,20 @@ export default function SignIn() {
           <LockOutlinedIcon />
         </Avatar>
         <Typography component="h1" variant="h5">
-          Sign in
+          Iniciar Sesion
         </Typography>
-        <form className={classes.form} noValidate>
+        <form className={classes.form} onSubmit={signIn}>
           <TextField
             variant="outlined"
             margin="normal"
             required
             fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
+            id="username"
+            label="Nombre de usuario"
+            name="username"
+            value={username}
+            onChange={onChange}
+            autoComplete="username"
             autoFocus
           />
           <TextField
@@ -63,14 +81,24 @@ export default function SignIn() {
             required
             fullWidth
             name="password"
-            label="Password"
+            label="Contraseña"
             type="password"
             id="password"
+            value={password}
+            onChange={onChange}
             autoComplete="current-password"
           />
           <FormControlLabel
-            control={<Checkbox value="remember" color="primary" />}
-            label="Remember me"
+            control={
+              <Checkbox
+                name="remember"
+                checked={remember}
+                onChange={onChange}
+                color="primary"
+              />
+            }
+            name="remember"
+            label="Recordarme"
           />
           <Button
             type="submit"
@@ -79,12 +107,12 @@ export default function SignIn() {
             color="primary"
             className={classes.submit}
           >
-            Sign In
+            Iniciar Sesion
           </Button>
           <Grid container>
             <Grid item xs>
               <Link href="#" variant="body2">
-                Forgot password?
+                Olvidé mi contraseña
               </Link>
             </Grid>
           </Grid>

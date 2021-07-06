@@ -21,6 +21,10 @@
     "rules": {
         "no-extra-semi": "off",
         "no-mixed-spaces-and-tabs": "off",
-        "no-unexpected-multiline": "off"
+        "no-unexpected-multiline": "off",
+        "no-unused-vars": "warn"
+    },
+    "globals": {
+        "process": "readonly"
     }
 }

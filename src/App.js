@@ -1,33 +1,24 @@
 import React from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import Login from './components/Login.js';
+import PrivateRoute from './components/PrivateRoute.js';
 import PatientInfo from './components/PatientInfo.js';
-import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
+import { useAuth, ProvideAuth } from './context/auth';
 
-function App() {
+export default function App() {
+  const auth = useAuth();
   return (
-    <Router>
-      <div>
-        <nav>
-          <ul>
-            <li>
-              <Link to="/login">Login</Link>
-            </li>
-            <li>
-              <Link to="/patientInfo">PatientInfo</Link>
-            </li>
-          </ul>
-        </nav>
+    <ProvideAuth>
+      <Router>
         <Switch>
           <Route path="/login">
             <Login />
           </Route>
-          <Route path="/patientInfo">
+          <PrivateRoute path="/patientInfo">
             <PatientInfo />
-          </Route>
+          </PrivateRoute>
         </Switch>
-      </div>
-    </Router>
+      </Router>
+    </ProvideAuth>
   );
 }
-
-export default App;

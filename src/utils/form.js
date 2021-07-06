@@ -22,9 +22,12 @@ export function useFormContent(initialState) {
   };
 
   const onChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
 
-    setContent((prevState) => ({ ...prevState, [name]: value }));
+    setContent((prevState) => ({
+      ...prevState,
+      [name]: type != 'checkbox' ? value : checked,
+    }));
   };
 
   return {
