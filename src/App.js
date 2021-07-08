@@ -1,12 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import Login from './components/Login.js';
-import PrivateRoute from './components/PrivateRoute.js';
 import PatientInfo from './components/PatientInfo.js';
-import { useAuth, ProvideAuth } from './context/auth';
+import PrivateRoute from './components/PrivateRoute.js';
+import { ProvideAuth } from './context/auth';
 
 export default function App() {
-  const auth = useAuth();
   return (
     <ProvideAuth>
       <Router>

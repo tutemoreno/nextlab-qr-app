@@ -1,9 +1,9 @@
 import axios from 'axios';
 import PropTypes from 'prop-types';
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext } from 'react';
 import xmlParser from 'xml-js';
 import { useFormContent } from '../utils/form';
-import { setStore, getStore } from '../utils/store';
+import { getStore, setStore } from '../utils/store';
 
 const {
     REACT_APP_NEXTLAB_TOKEN,
@@ -53,26 +53,17 @@ function useProvideAuth() {
     });
 
     const {
-        Usuario: { EsValido, User },
+        Usuario: {
+          EsValido: { value: isValid },
+        },
       } = parsedInfo,
-      usr = { username: User.value, isValid: EsValido.value };
+      usr = { username, isValid: isValid === 'true' };
 
     setUser(usr);
     setStore(REACT_APP_STORE_PATH, usr, remember);
+
+    return usr.isValid;
   };
-
-  useEffect(() => {
-    console.log('usa efecto');
-    function init() {
-      console.log('init efecto');
-
-      const store = getStore(REACT_APP_STORE_PATH);
-
-      if (store) setUser({ ...store });
-    }
-
-    init();
-  }, []);
 
   return {
     user,
