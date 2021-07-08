@@ -123,7 +123,10 @@ export default function PatientInfo() {
   }, []);
 
   const handleScan = (data) => {
+    console.log('[READING]');
     if (data) {
+      console.log('[RAW]', data);
+      console.log('[PARSED]', JSON.parse(data));
       const { Sucursal, Origen, NroMuestra } = JSON.parse(data);
 
       setContent((prevState) => ({
