@@ -1,85 +1,52 @@
 // https://itnext.io/accessing-the-webcam-with-javascript-and-react-33cbe92f49cb
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export default function QrReader() {
+  // const barcodeDetector = new window.BarcodeDetector({
+  //   formats: ['qr_code', 'code_128'],
+  // });
   const videoRef = useRef(null);
   const photoRef = useRef(null);
-  const stripRef = useRef(null);
-  const colorRef = useRef(null);
 
-  // useEffect(() => {
-  //   getVideo();
-  // }, [videoRef]);
+  useEffect(() => {
+    const startScan = setInterval(async () => {
+      let video = videoRef.current;
+      let photo = photoRef.current;
+      let ctx = photo.getContext('2d');
 
-  const getVideo = () => {
-    navigator.mediaDevices
-      .getUserMedia({ video: { width: 300 } })
-      .then((stream) => {
-        let video = videoRef.current;
-        video.srcObject = stream;
-        video.play();
-      })
-      .catch((err) => {
-        console.error('error:', err);
-      });
-  };
+      ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
 
-  const paintToCanvas = () => {
-    let video = videoRef.current;
-    let photo = photoRef.current;
-    let ctx = photo.getContext('2d');
+      // console.log('scan', await barcodeDetector.detect(video));
+    }, 1000);
 
-    const width = 320;
-    const height = 240;
-    photo.width = width;
-    photo.height = height;
+    const getVideo = () => {
+      navigator.mediaDevices
+        .getUserMedia({
+          video: {
+            facingMode: { exact: 'environment' },
+          },
+        })
+        .then((stream) => {
+          // const imageCapture = new ImageCapture(stream.getVideoTracks()[0]);
+          const video = videoRef.current;
 
-    return setInterval(() => {
-      let color = colorRef.current;
+          video.srcObject = stream;
+        })
+        .catch((err) => {
+          console.error('error:', err);
+        });
+    };
 
-      ctx.drawImage(video, 0, 0, width, height);
-      let pixels = ctx.getImageData(0, 0, width, height);
+    getVideo();
 
-      color.style.backgroundColor = `rgb(${pixels.data[0]},${pixels.data[1]},${pixels.data[2]})`;
-      color.style.borderColor = `rgb(${pixels.data[0]},${pixels.data[1]},${pixels.data[2]})`;
-    }, 200);
-  };
-
-  const takePhoto = () => {
-    let photo = photoRef.current;
-    let strip = stripRef.current;
-
-    const data = photo.toDataURL('image/jpeg');
-
-    console.warn(data);
-    const link = document.createElement('a');
-    link.href = data;
-    link.setAttribute('download', 'myWebcam');
-    link.innerHTML = `<img src='${data}' alt='thumbnail'/>`;
-    strip.insertBefore(link, strip.firstChild);
-  };
+    return () => clearInterval(startScan);
+  }, [videoRef]);
 
   return (
     <div className="container">
-      <input type="file" accept="image/*" capture="environment"></input>
-      {/* <div ref={colorRef} className="scene">
-        <img
-          className="mountains"
-          src="https://i.ibb.co/RjYk1Ps/2817290-eps-1.png"
-        />
-      </div>
-      <div className="webcam-video">
-        <button onClick={() => takePhoto()}>Take a photo</button>
-        <video
-          onCanPlay={() => paintToCanvas()}
-          ref={videoRef}
-          className="player"
-        />
-        <canvas ref={photoRef} className="photo" />
-        <div className="photo-booth">
-          <div ref={stripRef} className="strip" />
-        </div>
-      </div> */}
+      {/* <input type="file" accept="image/*" capture="environment"></input> */}
+      <video autoPlay ref={videoRef} />
+      <canvas ref={photoRef} width="640" height="480" />
     </div>
   );
 }

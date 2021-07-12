@@ -15,7 +15,7 @@ import React, { Fragment, useEffect, useState } from 'react';
 import xmlParser from 'xml-js';
 import { useAuth } from '../context/auth';
 import { useFormContent } from '../utils/form';
-import QrReader from './QrReader';
+import QrReader from './QrReaderExpo';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
