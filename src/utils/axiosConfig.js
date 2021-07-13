@@ -1,9 +1,8 @@
 import axios from 'axios';
-import { setStore } from './store';
 
 // setStore('nextlab-qr', { token: 'nlsvctok' });
 
-axios.defaults.baseURL = process.env.REACT_APP_BASE_URL;
+axios.defaults.baseURL = process.env.REACT_APP_BASE_URL_HTTPS;
 // axios.defaults.headers.post['Content-Type'] =
 //   'application/x-www-form-urlencoded';
 
