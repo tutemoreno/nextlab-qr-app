@@ -8,9 +8,11 @@ export function useFormInput(initialState) {
   };
 
   return {
-    value,
+    input: {
+      value,
+      onChange,
+    },
     setValue,
-    onChange,
   };
 }
 
