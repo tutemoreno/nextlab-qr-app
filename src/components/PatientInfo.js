@@ -1,47 +1,24 @@
-import Avatar from '@material-ui/core/Avatar';
-import Button from '@material-ui/core/Button';
-import Container from '@material-ui/core/Container';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import FormControl from '@material-ui/core/FormControl';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import Select from '@material-ui/core/Select';
-import { makeStyles } from '@material-ui/core/styles';
-import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
-import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
+import {
+  Avatar,
+  Button,
+  Container,
+  Grid,
+  IconButton,
+  MenuItem,
+  Paper,
+  TextField,
+  Typography,
+} from '@material-ui/core';
+import { LockOutlined as LockOutlinedIcon } from '@material-ui/icons';
+import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import xmlParser from 'xml-js';
 import { useAuth } from '../context/auth';
+import useStyles from '../hooks/useStyles';
+import QrCodeIcon from '../icons/QrCode';
 import { useFormContent } from '../utils/form';
 import QrReader from './QrReader';
-
-const useStyles = makeStyles((theme) => ({
-  paper: {
-    marginTop: theme.spacing(8),
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  avatar: {
-    margin: theme.spacing(1),
-    backgroundColor: theme.palette.secondary.main,
-  },
-  form: {
-    width: '100%', // Fix IE 11 issue.
-    marginTop: theme.spacing(1),
-  },
-  button: {
-    margin: theme.spacing(3, 0, 2),
-  },
-  formControl: {
-    minWidth: 120,
-  },
-  selectEmpty: {
-    marginTop: theme.spacing(2),
-  },
-}));
 
 const initialState = {
   // manual
@@ -64,7 +41,7 @@ const initialState = {
   populationGroup: '',
   exportationDate: '',
   address: '',
-  birthDate: '',
+  birthDate: new Date(),
   phone: '',
   fax: '',
   cellPhone: '',
@@ -87,10 +64,13 @@ export default function PatientInfo() {
       secondName,
       firstSurname,
       secondSurname,
+      birthDate,
       gender,
       active,
     } = content,
-    [documentTypes, setDocumentTypes] = useState([]),
+    [documentTypes, setDocumentTypes] = useState([
+      { id: 'DNI', name: 'Doc. Nac. Identidad' },
+    ]),
     auth = useAuth();
 
   const classes = useStyles();
@@ -123,10 +103,7 @@ export default function PatientInfo() {
   }, []);
 
   const handleScan = (data) => {
-    console.log('[READING]');
     if (data) {
-      console.log('[RAW]', data);
-      console.log('[PARSED]', JSON.parse(data));
       const { Sucursal, Origen, NroMuestra } = JSON.parse(data);
 
       setContent((prevState) => ({
@@ -175,180 +152,149 @@ export default function PatientInfo() {
   };
 
   return (
-    <Fragment>
-      {sampleNumber ? (
-        <Container component="main" maxWidth="xs">
-          <CssBaseline />
-          <div className={classes.paper}>
-            <Avatar className={classes.avatar}>
-              <LockOutlinedIcon />
-            </Avatar>
-            <Typography component="h1" variant="h5">
-              Sign in
-            </Typography>
-            <form className={classes.form} noValidate>
-              <TextField
-                type="text"
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                name="branch"
-                label="Sucursal"
-                id="branch"
-                value={branch}
-                onChange={onChange}
-              />
-              <TextField
-                type="text"
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                name="origin"
-                label="Origen"
-                id="origin"
-                value={origin}
-                onChange={onChange}
-              />
-              <TextField
-                type="number"
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                name="sampleNumber"
-                label="Nro. de muestra"
-                id="sampleNumber"
-                value={sampleNumber}
-                onChange={onChange}
-              />
-              <FormControl
-                id="documentType"
-                className={classes.formControl}
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-              >
-                <InputLabel id="documentType">Tipo de documento</InputLabel>
-                <Select
-                  labelId="documentType"
+    <Container>
+      {/* eslint-disable-next-line no-constant-condition */}
+      {true ? (
+        <Paper className={classes.paper}>
+          <Avatar className={classes.avatar}>
+            <LockOutlinedIcon />
+          </Avatar>
+          <Typography component="h1" variant="h5">
+            Información del paciente
+          </Typography>
+          <form className={classes.form}>
+            <Grid container spacing={2}>
+              {/* <Grid fixed container item xs={12} spacing={2}> */}
+              <Grid item xs={12} sm={4}>
+                <TextField
                   id="documentType"
-                  name="documentType"
                   label="Tipo de documento"
+                  name="documentType"
+                  variant="outlined"
+                  fullWidth
                   value={documentType}
                   onChange={onChange}
+                  select
+                  xs="6"
                 >
                   {documentTypes.map((e) => (
                     <MenuItem key={e.id} value={e.id}>
                       {e.name}
                     </MenuItem>
                   ))}
-                </Select>
-              </FormControl>
-              <TextField
-                type="text"
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                name="document"
-                label="Documento"
-                id="document"
-                value={document}
-                onChange={onChange}
-              />
-              <TextField
-                type="text"
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                name="firstName"
-                label="Primer nombre"
-                id="firstName"
-                value={firstName}
-                onChange={onChange}
-              />
-              <TextField
-                type="text"
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                name="secondName"
-                label="Segundo nombre"
-                id="secondName"
-                value={secondName}
-                onChange={onChange}
-              />
-              <TextField
-                type="text"
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                name="firstSurname"
-                label="Primer nombre"
-                id="firstSurname"
-                value={firstSurname}
-                onChange={onChange}
-              />
-              <TextField
-                type="text"
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                name="secondSurname"
-                label="Segundo nombre"
-                id="secondSurname"
-                value={secondSurname}
-                onChange={onChange}
-              />
-              <FormControl
-                id="gender"
-                className={classes.formControl}
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
+                </TextField>
+              </Grid>
+              <Grid item xs>
+                <TextField
+                  type="text"
+                  variant="outlined"
+                  required
+                  fullWidth
+                  name="document"
+                  label="Documento"
+                  id="document"
+                  value={document}
+                  onChange={onChange}
+                />
+              </Grid>
+              <Grid
+                container
+                item
+                xs={2}
+                direction="row"
+                style={{ justifyContent: 'center' }}
+                alignItems="center"
               >
-                <InputLabel id="gender">Género</InputLabel>
-                <Select
-                  labelId="gender"
+                <IconButton>
+                  <QrCodeIcon fontSize="large" />
+                </IconButton>
+              </Grid>
+            </Grid>
+            <Grid container spacing={2}>
+              {/* </Grid> */}
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  type="text"
+                  variant="outlined"
+                  required
+                  fullWidth
+                  name="firstName"
+                  autoComplete="given-name"
+                  label="Primer nombre"
+                  id="firstName"
+                  value={firstName}
+                  onChange={onChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  type="text"
+                  variant="outlined"
+                  required
+                  fullWidth
+                  name="secondName"
+                  label="Segundo nombre"
+                  id="secondName"
+                  value={secondName}
+                  onChange={onChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  type="text"
+                  variant="outlined"
+                  required
+                  fullWidth
+                  name="firstSurname"
+                  autoComplete="family-name"
+                  label="Primer apellido"
+                  id="firstSurname"
+                  value={firstSurname}
+                  onChange={onChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  type="text"
+                  variant="outlined"
+                  required
+                  fullWidth
+                  name="secondSurname"
+                  label="Segundo apellido"
+                  id="secondSurname"
+                  value={secondSurname}
+                  onChange={onChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <KeyboardDatePicker
+                  variant="inline"
+                  autoOk
+                  inputVariant="outlined"
+                  fullWidth
+                  format="MM/dd/yyyy"
+                  id="birthDate"
+                  label="Fecha de nacimiento"
+                  value={birthDate}
+                  onChange={onChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
                   id="gender"
-                  name="gender"
                   label="Género"
+                  name="gender"
+                  variant="outlined"
+                  fullWidth
                   value={gender}
                   onChange={onChange}
+                  select
                 >
                   <MenuItem value={'M'}>Masculino</MenuItem>
                   <MenuItem value={'F'}>Femenino</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl
-                id="active"
-                className={classes.formControl}
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-              >
-                <InputLabel id="active">Activo</InputLabel>
-                <Select
-                  labelId="active"
-                  id="active"
-                  name="active"
-                  label="Activo"
-                  value={active}
-                  onChange={onChange}
-                >
-                  <MenuItem value={'S'}>Sí</MenuItem>
-                  <MenuItem value={'N'}>No</MenuItem>
-                </Select>
-              </FormControl>
+                </TextField>
+              </Grid>
+
               <Button
                 type="button"
                 fullWidth
@@ -359,12 +305,12 @@ export default function PatientInfo() {
               >
                 Obtener paciente
               </Button>
-            </form>
-          </div>
-        </Container>
+            </Grid>
+          </form>
+        </Paper>
       ) : (
         <QrReader handleScan={handleScan} />
       )}
-    </Fragment>
+    </Container>
   );
 }
