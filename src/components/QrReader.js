@@ -11,60 +11,42 @@ export default function QrReader(props) {
   // import("./math").then(math => {
   //   console.log(math.add(16, 26));
   // });
-  // const barcodeDetector = new window.BarcodeDetector({
-  //   formats: ['qr_code', 'code_128', 'pdf417'],
-  // });
+  // formats ['qr_code', 'code_128', 'pdf417']
+  const barcodeDetector = new window.BarcodeDetector({
+    formats: props.formats,
+  });
   const deviceState = useFormInput('');
   const [devices, setDevices] = useState([]);
-  const [intervalId, setIntervalId] = useState(0);
   const videoRef = useRef(null);
-  // const photoRef = useRef(null);
 
-  useEffect(async () => {
-    const devices = await navigator.mediaDevices.enumerateDevices();
+  useEffect(() => {
+    const getDevices = async () => {
+      const devices = await navigator.mediaDevices.enumerateDevices();
 
-    const videoDevices = devices.filter(
-      (device) => device.kind === 'videoinput',
-    );
+      const videoDevices = devices.filter(
+        (device) => device.kind === 'videoinput',
+      );
 
-    setDevices(videoDevices);
+      setDevices(videoDevices);
 
-    deviceState.setValue(videoDevices[videoDevices.length - 1].deviceId);
-  }, []);
-
-  useEffect(async () => {
-    const startScan = async function () {
-      console.log('[SCAN]', intervalId);
-      // let video = videoRef.current;
-      // let photo = photoRef.current;
-      // let ctx = photo.getContext('2d');
-      // ctx.drawImage(video, 0, 0);
-
-      if (videoRef.current) {
-        const data = [{}];
-        // const data = await barcodeDetector.detect(videoRef.current);
-
-        if (data.length) {
-          clearInterval(intervalId);
-          props.handleScan(data[0]);
-        }
-      }
+      deviceState.setValue(videoDevices[videoDevices.length - 1].deviceId);
     };
 
-    if (deviceState.input.value) {
-      const oldStream = videoRef.current.srcObject;
+    getDevices();
+  }, []);
 
-      if (oldStream) {
-        oldStream.getTracks().forEach((track) => {
-          track.stop();
-        });
+  useEffect(() => {
+    let intervalId, stream;
 
-        console.log('[cameraDidChange]', intervalId);
+    const startScan = async () => {
+      console.log('scan');
+      const data = await barcodeDetector.detect(videoRef.current);
 
-        clearInterval(intervalId);
-      }
+      if (data.length) props.handleScan(data[0]);
+    };
 
-      const stream = await navigator.mediaDevices.getUserMedia({
+    const startVideo = async () => {
+      stream = await navigator.mediaDevices.getUserMedia({
         video: {
           deviceId: deviceState.input.value,
           resizeMode: 'none',
@@ -74,17 +56,18 @@ export default function QrReader(props) {
 
       videoRef.current.srcObject = stream;
 
-      const tmp = setInterval(startScan, 200);
+      intervalId = setInterval(startScan, 200);
+    };
 
-      console.log(tmp);
-
-      setIntervalId(tmp);
-      console.log('[id after set]', intervalId, 'asd');
-    }
+    if (deviceState.input.value) startVideo();
 
     return () => {
-      console.log('[CLEANING]');
       clearInterval(intervalId);
+
+      if (stream)
+        stream.getTracks().forEach((track) => {
+          track.stop();
+        });
     };
   }, [deviceState.input.value]);
 
@@ -115,4 +98,5 @@ export default function QrReader(props) {
 
 QrReader.propTypes = {
   handleScan: PropTypes.func.isRequired,
+  formats: PropTypes.array.isRequired,
 };

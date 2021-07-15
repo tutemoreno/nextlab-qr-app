@@ -2,6 +2,8 @@ import {
   Avatar,
   Button,
   Container,
+  Dialog,
+  DialogTitle,
   Grid,
   IconButton,
   InputAdornment,
@@ -16,6 +18,7 @@ import {
 } from '@material-ui/icons';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
+import PropTypes from 'prop-types';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
 import xmlParser from 'xml-js';
@@ -27,15 +30,16 @@ import QrReader from './QrReader';
 
 const initialState = {
   // qr
+  hasBooldInfo: false,
   branch: '',
   origin: '',
   sampleNumber: '',
   analysis: [],
-  hasBooldInfo: false,
   // manual
   document: '',
   documentType: 'DNI',
   // fetch
+  hasPatientInfo: false,
   code: '',
   firstName: '',
   secondName: '',
@@ -62,15 +66,16 @@ export default function PatientInfo() {
   const { content, setContent, onChange } = useFormContent(initialState),
     {
       // qr
+      hasBooldInfo,
       branch,
       origin,
       sampleNumber,
       analysis,
-      hasBooldInfo,
       // manual
       document,
       documentType,
       // fetch patient
+      hasPatientInfo,
       firstName,
       secondName,
       firstSurname,
@@ -85,32 +90,30 @@ export default function PatientInfo() {
 
   const classes = useStyles();
 
-  useEffect(async () => {
-    const data = new URLSearchParams();
+  useEffect(() => {
+    const getDocumentTypes = async () => {
+      const response = await axios({
+        method: 'post',
+        url: `${REACT_APP_PATIENT_SERVICE}/GetTiposDeDocumento`,
+        data: qs.stringify({ token: REACT_APP_NEXTLAB_TOKEN }),
+      });
 
-    data.append('token', REACT_APP_NEXTLAB_TOKEN);
+      const parsedInfo = xmlParser.xml2js(response.data, {
+        compact: true,
+        textKey: 'value',
+      });
 
-    const response = await axios({
-      method: 'post',
-      url: `${REACT_APP_PATIENT_SERVICE}/GetTiposDeDocumento`,
-      data,
-    });
+      setDocumentTypes(
+        parsedInfo.ListaTipoDocumento.Lista.TipoDocumento.map((e) => {
+          return { id: e.TipoDoc.value, name: e.Descripcion.value };
+        }),
+      );
+    };
 
-    const parsedInfo = xmlParser.xml2js(response.data, {
-      compact: true,
-      textKey: 'value',
-    });
-
-    setDocumentTypes(
-      parsedInfo.ListaTipoDocumento.Lista.TipoDocumento.map((e) => {
-        return { id: e.TipoDoc.value, name: e.Descripcion.value };
-      }),
-    );
+    getDocumentTypes();
   }, []);
 
   const onBloodScan = async ({ rawValue }) => {
-    console.log(rawValue);
-
     const response = await axios({
       method: 'post',
       url: `${REACT_APP_PATIENT_SERVICE}/GetQr`,
@@ -138,25 +141,28 @@ export default function PatientInfo() {
     }
   };
 
-  const getPatientInfo = async () => {
-    const data = new URLSearchParams();
-
-    data.append('documento', document);
-    data.append('tipoDoc', documentType);
-    data.append('codigo', 0);
-    data.append('token', REACT_APP_NEXTLAB_TOKEN);
+  const getPatientInfo = async (e) => {
+    e.preventDefault();
 
     const response = await axios({
+      method: 'post',
       url: `${REACT_APP_PATIENT_SERVICE}/paciente_datos`,
-      data,
+      data: qs.stringify({
+        documento: document,
+        tipoDoc: documentType,
+        codigo: 0,
+        token: REACT_APP_NEXTLAB_TOKEN,
+      }),
     });
 
-    const parsedInfo = xmlParser.xml2js(response.data, {
-      compact: true,
-      textKey: 'value',
-    });
+    if (response.status == 200) {
+      const parsedInfo = xmlParser.xml2js(response.data, {
+        compact: true,
+        textKey: 'value',
+      });
 
-    if (parsedInfo) {
+      console.log(parsedInfo);
+
       const {
         Paciente: { Nombre, Nombre2, Apellido, Apellido2, Sexo, Activo },
       } = parsedInfo;
@@ -169,6 +175,7 @@ export default function PatientInfo() {
         secondSurname: Apellido2.value,
         gender: Sexo.value,
         active: Activo.value,
+        hasPatientInfo: true,
       }));
     }
   };
@@ -183,12 +190,7 @@ export default function PatientInfo() {
           <Typography component="h1" variant="h5">
             Información del paciente
           </Typography>
-          <form
-            className={classes.form}
-            onSubmit={() => {
-              console.log('[submit]');
-            }}
-          >
+          <form className={classes.form} onSubmit={getPatientInfo}>
             <Grid item container spacing={2}>
               <Grid item xs={12} sm={4}>
                 <TextField
@@ -235,16 +237,14 @@ export default function PatientInfo() {
                 <IconButton
                   type="submit"
                   style={{ padding: '0px' }}
-                  onClick={() => {
-                    console.log('[submit]');
-                  }}
+                  onClick={getPatientInfo}
                 >
                   <SearchIcon fontSize="large" />
                 </IconButton>
               </Grid>
             </Grid>
           </form>
-          <Slide direction="up" in={true} mountOnEnter unmountOnExit>
+          <Slide direction="up" in={hasPatientInfo} mountOnEnter unmountOnExit>
             <form className={classes.form}>
               <Grid item container spacing={2}>
                 <Grid item xs={12}>
@@ -334,7 +334,6 @@ export default function PatientInfo() {
                     <MenuItem value={'F'}>Femenino</MenuItem>
                   </TextField>
                 </Grid>
-
                 <Button
                   type="button"
                   fullWidth
@@ -350,8 +349,37 @@ export default function PatientInfo() {
           </Slide>
         </div>
       ) : (
-        <QrReader handleScan={onBloodScan} />
+        <QrReader formats={['code_128']} handleScan={onBloodScan} />
       )}
     </Container>
   );
 }
+
+function SimpleDialog(props) {
+  const classes = useStyles();
+  const { onClose, selectedValue, open } = props;
+
+  const handleClose = () => {
+    onClose(selectedValue);
+  };
+
+  const handleListItemClick = (value) => {
+    onClose(value);
+  };
+
+  return (
+    <Dialog
+      onClose={handleClose}
+      aria-labelledby="simple-dialog-title"
+      open={open}
+    >
+      <DialogTitle id="simple-dialog-title">Set backup account</DialogTitle>
+      <QrReader formats={['code_128']} handleScan={handleClose} />
+    </Dialog>
+  );
+}
+SimpleDialog.propTypes = {
+  onClose: PropTypes.func.isRequired,
+  open: PropTypes.bool.isRequired,
+  selectedValue: PropTypes.string.isRequired,
+};
