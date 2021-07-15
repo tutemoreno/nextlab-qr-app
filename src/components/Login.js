@@ -6,7 +6,6 @@ import {
   FormControlLabel,
   Grid,
   Link,
-  Paper,
   TextField,
   Typography,
 } from '@material-ui/core';
@@ -42,7 +41,7 @@ export default function Login() {
 
   return (
     <Container maxWidth="xs">
-      <Paper className={classes.paper}>
+      <div className={classes.paper}>
         <Avatar className={classes.avatar}>
           <LockOutlinedIcon />
         </Avatar>
@@ -105,7 +104,7 @@ export default function Login() {
             </Grid>
           </Grid>
         </form>
-      </Paper>
+      </div>
     </Container>
   );
 }
