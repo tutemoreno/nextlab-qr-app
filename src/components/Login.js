@@ -137,7 +137,7 @@ export default function Login() {
           >
             Iniciar Sesion
           </Button>
-          <Grid Grid>
+          <Grid>
             <Grid item xs>
               <Link href="#" variant="body2">
                 Olvidé mi contraseña
