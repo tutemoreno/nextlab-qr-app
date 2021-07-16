@@ -2,11 +2,8 @@ import DateFnsUtils from '@date-io/date-fns';
 import { CssBaseline } from '@material-ui/core';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import React, { Fragment } from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import Login from './components/Login.js';
-import PatientInfo from './components/PatientInfo.js';
-import PrivateRoute from './components/PrivateRoute.js';
 import { ProvideAuth } from './context/auth';
+import { AppRouter } from './routers/AppRouter.js';
 
 export default function App() {
   return (
@@ -14,16 +11,9 @@ export default function App() {
       <ProvideAuth>
         <Fragment>
           <CssBaseline />
-          <Router>
-            <Switch>
-              <Route path="/login">
-                <Login />
-              </Route>
-              <PrivateRoute path="/patientInfo">
-                <PatientInfo />
-              </PrivateRoute>
-            </Switch>
-          </Router>
+          
+          <AppRouter />
+
         </Fragment>
       </ProvideAuth>
     </MuiPickersUtilsProvider>
