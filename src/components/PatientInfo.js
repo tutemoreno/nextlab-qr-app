@@ -2,8 +2,6 @@ import {
   Avatar,
   Button,
   Container,
-  Dialog,
-  DialogTitle,
   Grid,
   IconButton,
   InputAdornment,
@@ -18,15 +16,14 @@ import {
 } from '@material-ui/icons';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
-import PropTypes from 'prop-types';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
 import xmlParser from 'xml-js';
-import { useAuth } from '../context/auth';
 import useStyles from '../hooks/useStyles';
 import QrCodeIcon from '../icons/QrCode';
 import { useFormContent } from '../utils/form';
 import QrReader from './QrReader';
+import QrReaderDialog from './QrReader copy';
 
 const initialState = {
   // qr
@@ -82,13 +79,43 @@ export default function PatientInfo() {
       secondSurname,
       birthDate,
       gender,
-    } = content,
-    [documentTypes, setDocumentTypes] = useState([
-      { id: 'DNI', name: 'Doc. Nac. Identidad' },
-    ]),
-    auth = useAuth();
-
+    } = content;
+  const [scannerState, setScannerState] = useState({
+    open: false,
+    formats: [],
+  });
+  const [documentTypes, setDocumentTypes] = useState([
+    { id: 'DNI', name: 'Doc. Nac. Identidad' },
+  ]);
   const classes = useStyles();
+
+  const openScanner = (formats) => {
+    setScannerState({
+      open: true,
+      title: 'Escanee el código de barras del documento',
+      handleScan: onDocumentScan,
+      formats,
+    });
+  };
+
+  const onDocumentScan = ({ rawValue }) => {
+    const split = rawValue.split('@');
+    let document;
+
+    if (split[0].length) document = split[4];
+    else document = split[1];
+
+    setContent((prevState) => ({
+      ...prevState,
+      document,
+    }));
+
+    closeScanner();
+  };
+
+  const closeScanner = () => {
+    setScannerState({ open: false });
+  };
 
   useEffect(() => {
     const getDocumentTypes = async () => {
@@ -182,6 +209,7 @@ export default function PatientInfo() {
 
   return (
     <Container>
+      <QrReaderDialog {...scannerState} handleClose={closeScanner} />
       {hasBooldInfo ? (
         <div className={classes.paper}>
           <Avatar className={classes.avatar}>
@@ -225,7 +253,7 @@ export default function PatientInfo() {
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        <IconButton onClick={() => {}}>
+                        <IconButton onClick={() => openScanner(['pdf417'])}>
                           <QrCodeIcon fontSize="large" />
                         </IconButton>
                       </InputAdornment>
@@ -354,32 +382,3 @@ export default function PatientInfo() {
     </Container>
   );
 }
-
-function SimpleDialog(props) {
-  const classes = useStyles();
-  const { onClose, selectedValue, open } = props;
-
-  const handleClose = () => {
-    onClose(selectedValue);
-  };
-
-  const handleListItemClick = (value) => {
-    onClose(value);
-  };
-
-  return (
-    <Dialog
-      onClose={handleClose}
-      aria-labelledby="simple-dialog-title"
-      open={open}
-    >
-      <DialogTitle id="simple-dialog-title">Set backup account</DialogTitle>
-      <QrReader formats={['code_128']} handleScan={handleClose} />
-    </Dialog>
-  );
-}
-SimpleDialog.propTypes = {
-  onClose: PropTypes.func.isRequired,
-  open: PropTypes.bool.isRequired,
-  selectedValue: PropTypes.string.isRequired,
-};

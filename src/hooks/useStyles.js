@@ -8,6 +8,10 @@ export default makeStyles((theme) => ({
     flexDirection: 'column',
     alignItems: 'center',
   },
+  title: {
+    flexGrow: 1,
+    margin: theme.spacing(1),
+  },
   avatar: {
     margin: theme.spacing(1),
     backgroundColor: theme.palette.secondary.main,
