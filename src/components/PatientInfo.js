@@ -159,7 +159,6 @@ export default function PatientInfo() {
 
   useEffect(() => {
     const getDocumentTypes = async () => {
-      // TODO: agregar try catch
 
       try {
         const response = await axios({
