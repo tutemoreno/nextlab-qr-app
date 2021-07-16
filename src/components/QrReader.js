@@ -6,98 +6,123 @@ import { Container, MenuItem, TextField } from '@material-ui/core';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 import { useFormInput } from '../hooks/useForm';
+import useStyles from '../hooks/useStyles';
 
 export default function QrReader(props) {
   // import("./math").then(math => {
   //   console.log(math.add(16, 26));
   // });
   // formats ['qr_code', 'code_128', 'pdf417']
-  const barcodeDetector = new window.BarcodeDetector({
-    formats: props.formats,
-  });
-  const deviceState = useFormInput('');
-  const [devices, setDevices] = useState([]);
-  const videoRef = useRef(null);
 
-  useEffect(() => {
-    const getDevices = async () => {
-      // TODO: agregar try catch
-      const devices = await navigator.mediaDevices.enumerateDevices();
+  const classes = useStyles();
 
-      const videoDevices = devices.filter(
-        (device) => device.kind === 'videoinput',
-      );
+  try {
+    const barcodeDetector = new window.BarcodeDetector({
+      formats: props.formats,
+    });
+    const deviceState = useFormInput('');
+    const [devices, setDevices] = useState([]);
+    const videoRef = useRef(null);
 
-      setDevices(videoDevices);
+    useEffect(() => {
+      const getDevices = async () => {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
 
-      deviceState.setValue(videoDevices[videoDevices.length - 1].deviceId);
-    };
+          const videoDevices = devices.filter(
+            (device) => device.kind === 'videoinput',
+          );
 
-    getDevices();
-  }, []);
+          setDevices(videoDevices);
 
-  useEffect(() => {
-    let intervalId, stream;
+          deviceState.setValue(videoDevices[videoDevices.length - 1].deviceId);
+        } catch (error) {
+          console.log(error, 'QR Error');
+        }
+      };
 
-    const startScan = async () => {
-      // TODO: agregar try catch
-      console.log('scan');
-      const data = await barcodeDetector.detect(videoRef.current);
+      getDevices();
+    }, []);
 
-      if (data.length) props.handleScan(data[0]);
-    };
+    useEffect(() => {
+      let intervalId, stream;
 
-    const startVideo = async () => {
-      // TODO: agregar try catch
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          deviceId: deviceState.input.value,
-          facingMode: 'environment',
-        },
-      });
+      const startScan = async () => {
+        try {
+          console.log('scan');
 
-      videoRef.current.srcObject = stream;
+          const data = await barcodeDetector.detect(videoRef.current);
 
-      intervalId = setInterval(startScan, 500);
-    };
+          if (data.length) props.handleScan(data[0]);
+        } catch (error) {
+          console.log(error, 'QR error');
+        }
+      };
 
-    if (deviceState.input.value) startVideo();
+      const startVideo = async () => {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              deviceId: deviceState.input.value,
+              facingMode: 'environment',
+            },
+          });
 
-    return () => {
-      clearInterval(intervalId);
+          videoRef.current.srcObject = stream;
 
-      if (stream)
-        stream.getTracks().forEach((track) => {
-          track.stop();
-        });
-    };
-  }, [deviceState.input.value]);
+          intervalId = setInterval(startScan, 200);
+        } catch (error) {
+          console.log(error, 'QR Error');
+        }
+      };
 
-  return (
-    <Container maxWidth="xs">
-      <TextField
-        id="selectedDevice"
-        label="Camara seccionada"
-        name="selectedDevice"
-        margin="normal"
-        variant="outlined"
-        fullWidth
-        {...deviceState.input}
-        select
-      >
-        {devices.map((e) => (
-          <MenuItem key={e.deviceId} value={e.deviceId}>
-            {e.label}
-          </MenuItem>
-        ))}
-      </TextField>
-      <video
-        style={{ width: 'inherit', height: 'inherit' }}
-        autoPlay
-        ref={videoRef}
-      />
-    </Container>
-  );
+      if (deviceState.input.value) startVideo();
+
+      return () => {
+        clearInterval(intervalId);
+
+        if (stream)
+          stream.getTracks().forEach((track) => {
+            track.stop();
+          });
+      };
+    }, [deviceState.input.value]);
+
+    return (
+      <Container maxWidth="xs">
+        <TextField
+          id="selectedDevice"
+          label="Camara seccionada"
+          name="selectedDevice"
+          margin="normal"
+          variant="outlined"
+          fullWidth
+          {...deviceState.input}
+          select
+        >
+          {devices.map((e) => (
+            <MenuItem key={e.deviceId} value={e.deviceId}>
+              {e.label}
+            </MenuItem>
+          ))}
+        </TextField>
+        <video
+          style={{ width: 'inherit', height: 'inherit' }}
+          autoPlay
+          ref={videoRef}
+        />
+      </Container>
+    );
+  } catch (error) {
+    console.log(error, 'QR Exception');
+    return (
+      <Container maxWidth="xs">
+        <div className={classes.paper}>
+          <h1>No se pudo cargar la Camara del dispositivo</h1>
+        </div>
+      </Container>
+    );
+  }
 }
 
 QrReader.propTypes = {
