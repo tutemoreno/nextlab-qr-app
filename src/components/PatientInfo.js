@@ -19,9 +19,9 @@ import axios from 'axios';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
 import xmlParser from 'xml-js';
+import { useFormContent } from '../hooks/useForm';
 import useStyles from '../hooks/useStyles';
 import QrCodeIcon from '../icons/QrCode';
-import { useFormContent } from '../hooks/useForm';
 import QrReader from './QrReader';
 import QrReaderDialog from './QrReader copy';
 
@@ -57,6 +57,15 @@ const initialState = {
   active: '',
 };
 
+const initialScannerState = {
+  open: true,
+  formats: ['code_128'],
+  title: 'Escanee el analisis de sangre',
+  showClose: false,
+};
+
+const initialDocumentTypesState = [{ id: 'DNI', name: 'Doc. Nac. Identidad' }];
+
 const { REACT_APP_PATIENT_SERVICE, REACT_APP_NEXTLAB_TOKEN } = process.env;
 
 export default function PatientInfo() {
@@ -80,25 +89,57 @@ export default function PatientInfo() {
       birthDate,
       gender,
     } = content;
+  const onBloodScan = async ({ rawValue }) => {
+    try {
+      const response = await axios({
+        method: 'post',
+        url: `${REACT_APP_PATIENT_SERVICE}/GetQr`,
+        data: qs.stringify({ idQr: rawValue, token: REACT_APP_NEXTLAB_TOKEN }),
+      });
+
+      if (response.status == 200) {
+        const parsedXml = xmlParser.xml2js(response.data, {
+          compact: true,
+          textKey: 'value',
+        });
+
+        const { Sucursal, Origen, NroMuestra, Analisis } = JSON.parse(
+          parsedXml.string.value,
+        );
+
+        setContent((prevState) => ({
+          ...prevState,
+          branch: Sucursal,
+          origin: Origen,
+          sampleNumber: NroMuestra,
+          analysis: Analisis,
+          hasBooldInfo: true,
+        }));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const [scannerState, setScannerState] = useState({
-    open: false,
-    formats: [],
+    ...initialScannerState,
+    handleScan: onBloodScan,
   });
-  const [documentTypes, setDocumentTypes] = useState([
-    { id: 'DNI', name: 'Doc. Nac. Identidad' },
-  ]);
+  const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
   const classes = useStyles();
 
-  const openScanner = (formats) => {
+  const openDocumentScanner = () => {
     setScannerState({
       open: true,
       title: 'Escanee el código de barras del documento',
+      formats: ['pdf417'],
       handleScan: onDocumentScan,
-      formats,
+      showClose: true,
     });
   };
 
   const onDocumentScan = ({ rawValue }) => {
+    closeScanner();
+
     const split = rawValue.split('@');
     let document;
 
@@ -110,85 +151,45 @@ export default function PatientInfo() {
       document,
     }));
 
-    closeScanner();
+    getPatientInfo();
   };
 
   const closeScanner = () => {
-    setScannerState({ open: false });
+    setScannerState((prevState) => ({ ...prevState, open: false }));
   };
 
   useEffect(() => {
     const getDocumentTypes = async () => {
 
       try {
-        
         const response = await axios({
           method: 'post',
           url: `${REACT_APP_PATIENT_SERVICE}/GetTiposDeDocumento`,
           data: qs.stringify({ token: REACT_APP_NEXTLAB_TOKEN }),
         });
-  
+
         const parsedInfo = xmlParser.xml2js(response.data, {
           compact: true,
           textKey: 'value',
         });
-  
+
         setDocumentTypes(
           parsedInfo.ListaTipoDocumento.Lista.TipoDocumento.map((e) => {
             return { id: e.TipoDoc.value, name: e.Descripcion.value };
           }),
         );
-
       } catch (error) {
-        console.log(object)
+        console.log(error);
       }
-      
     };
 
     getDocumentTypes();
   }, []);
 
-  const onBloodScan = async ({ rawValue }) => {
-    
-    try {
-      
-      const response = await axios({
-        method: 'post',
-        url: `${REACT_APP_PATIENT_SERVICE}/GetQr`,
-        data: qs.stringify({ idQr: rawValue, token: REACT_APP_NEXTLAB_TOKEN }),
-      });
-  
-      if (response.status == 200) {
-        const parsedXml = xmlParser.xml2js(response.data, {
-          compact: true,
-          textKey: 'value',
-        });
-  
-        const { Sucursal, Origen, NroMuestra, Analisis } = JSON.parse(
-          parsedXml.string.value,
-        );
-  
-        setContent((prevState) => ({
-          ...prevState,
-          branch: Sucursal,
-          origin: Origen,
-          sampleNumber: NroMuestra,
-          analysis: Analisis,
-          hasBooldInfo: true,
-        }));
-      }
-
-    } catch (error) {
-      console.log(error);
-    }
-    
-  };
-
   const getPatientInfo = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
 
     try {
-      
       const response = await axios({
         method: 'post',
         url: `${REACT_APP_PATIENT_SERVICE}/paciente_datos`,
@@ -223,7 +224,6 @@ export default function PatientInfo() {
           hasPatientInfo: true,
         }));
       }
-
     } catch (error) {
       console.log(error);
     }
@@ -275,7 +275,7 @@ export default function PatientInfo() {
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        <IconButton onClick={() => openScanner(['pdf417'])}>
+                        <IconButton onClick={openDocumentScanner}>
                           <QrCodeIcon fontSize="large" />
                         </IconButton>
                       </InputAdornment>
