@@ -57,6 +57,15 @@ const initialState = {
   active: '',
 };
 
+const initialScannerState = {
+  open: true,
+  formats: ['code_128'],
+  title: 'Escanee el analisis de sangre',
+  showClose: false,
+};
+
+const initialDocumentTypesState = [{ id: 'DNI', name: 'Doc. Nac. Identidad' }];
+
 const { REACT_APP_PATIENT_SERVICE, REACT_APP_NEXTLAB_TOKEN } = process.env;
 
 export default function PatientInfo() {
@@ -80,66 +89,6 @@ export default function PatientInfo() {
       birthDate,
       gender,
     } = content;
-  const [scannerState, setScannerState] = useState({
-    open: false,
-    formats: [],
-  });
-  const [documentTypes, setDocumentTypes] = useState([
-    { id: 'DNI', name: 'Doc. Nac. Identidad' },
-  ]);
-  const classes = useStyles();
-
-  const openScanner = (formats) => {
-    setScannerState({
-      open: true,
-      title: 'Escanee el código de barras del documento',
-      handleScan: onDocumentScan,
-      formats,
-    });
-  };
-
-  const onDocumentScan = ({ rawValue }) => {
-    const split = rawValue.split('@');
-    let document;
-
-    if (split[0].length) document = split[4];
-    else document = split[1];
-
-    setContent((prevState) => ({
-      ...prevState,
-      document,
-    }));
-
-    closeScanner();
-  };
-
-  const closeScanner = () => {
-    setScannerState({ open: false });
-  };
-
-  useEffect(() => {
-    const getDocumentTypes = async () => {
-      const response = await axios({
-        method: 'post',
-        url: `${REACT_APP_PATIENT_SERVICE}/GetTiposDeDocumento`,
-        data: qs.stringify({ token: REACT_APP_NEXTLAB_TOKEN }),
-      });
-
-      const parsedInfo = xmlParser.xml2js(response.data, {
-        compact: true,
-        textKey: 'value',
-      });
-
-      setDocumentTypes(
-        parsedInfo.ListaTipoDocumento.Lista.TipoDocumento.map((e) => {
-          return { id: e.TipoDoc.value, name: e.Descripcion.value };
-        }),
-      );
-    };
-
-    getDocumentTypes();
-  }, []);
-
   const onBloodScan = async ({ rawValue }) => {
     const response = await axios({
       method: 'post',
@@ -167,9 +116,69 @@ export default function PatientInfo() {
       }));
     }
   };
+  const [scannerState, setScannerState] = useState({
+    ...initialScannerState,
+    handleScan: onBloodScan,
+  });
+  const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
+  const classes = useStyles();
+
+  const openDocumentScanner = () => {
+    setScannerState({
+      open: true,
+      title: 'Escanee el código de barras del documento',
+      formats: ['pdf417'],
+      handleScan: onDocumentScan,
+      showClose: true,
+    });
+  };
+
+  const onDocumentScan = ({ rawValue }) => {
+    closeScanner();
+
+    const split = rawValue.split('@');
+    let document;
+
+    if (split[0].length) document = split[4];
+    else document = split[1];
+
+    setContent((prevState) => ({
+      ...prevState,
+      document,
+    }));
+
+    getPatientInfo();
+  };
+
+  const closeScanner = () => {
+    setScannerState((prevState) => ({ ...prevState, open: false }));
+  };
+
+  useEffect(() => {
+    const getDocumentTypes = async () => {
+      const response = await axios({
+        method: 'post',
+        url: `${REACT_APP_PATIENT_SERVICE}/GetTiposDeDocumento`,
+        data: qs.stringify({ token: REACT_APP_NEXTLAB_TOKEN }),
+      });
+
+      const parsedInfo = xmlParser.xml2js(response.data, {
+        compact: true,
+        textKey: 'value',
+      });
+
+      setDocumentTypes(
+        parsedInfo.ListaTipoDocumento.Lista.TipoDocumento.map((e) => {
+          return { id: e.TipoDoc.value, name: e.Descripcion.value };
+        }),
+      );
+    };
+
+    getDocumentTypes();
+  }, []);
 
   const getPatientInfo = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
 
     const response = await axios({
       method: 'post',
@@ -253,7 +262,7 @@ export default function PatientInfo() {
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        <IconButton onClick={() => openScanner(['pdf417'])}>
+                        <IconButton onClick={openDocumentScanner}>
                           <QrCodeIcon fontSize="large" />
                         </IconButton>
                       </InputAdornment>
