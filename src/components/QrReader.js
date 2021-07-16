@@ -58,7 +58,7 @@ export default function QrReader(props) {
 
       videoRef.current.srcObject = stream;
 
-      intervalId = setInterval(startScan, 200);
+      intervalId = setInterval(startScan, 500);
     };
 
     if (deviceState.input.value) startVideo();
