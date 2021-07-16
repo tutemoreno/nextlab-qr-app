@@ -1,61 +1,49 @@
-import React, { useEffect } from 'react';
-import {
-    BrowserRouter as Router,
-    Switch,
-    Redirect
-  } from 'react-router-dom';
-
+import React from 'react';
+import { BrowserRouter as Router, Redirect, Switch } from 'react-router-dom';
 import Login from '../components/Login';
 import PatientInfo from '../components/PatientInfo';
-import { PatientInfo2 } from '../components/PatientInfo2';
-import { PublicRoute } from './PublicRoute.js';
-import { PrivateRoute } from './PrivateRoute.js';
 import { useAuth } from '../context/auth';
+import { PrivateRoute } from './PrivateRoute.js';
+import { PublicRoute } from './PublicRoute.js';
+
 export const AppRouter = () => {
+  const auth = useAuth();
 
-    const auth = useAuth();
+  // useEffect(() => {
 
-    // useEffect(() => {
-        
-    //     if ( ( auth && auth.user && auth.user.isValid ) ) {
-    //         console.log('esta logeado');
-    //     } else {
-    //         console.log('no esta logeado');
-    //     }
+  //     if ( ( auth && auth.user && auth.user.isValid ) ) {
+  //         console.log('esta logeado');
+  //     } else {
+  //         console.log('no esta logeado');
+  //     }
 
-    // }, [auth.user])
+  // }, [auth.user])
 
-    return (
-        <Router>
-            <div>
-                <Switch>
+  return (
+    <Router>
+      <div>
+        <Switch>
+          <PublicRoute
+            exact
+            path="/login"
+            component={Login}
+            isAuthenticated={
+              auth && auth.user && auth.user.isValid ? true : false
+            }
+          />
 
-                    <PublicRoute 
-                        exact 
-                        path="/login" 
-                        component={ Login }
-                        isAuthenticated={
-                                            ( auth && auth.user && auth.user.isValid ) 
-                                            ? true
-                                            : false
-                                        }
-                    />
+          <PrivateRoute
+            exact
+            path="/"
+            component={PatientInfo}
+            isAuthenticated={
+              auth && auth.user && auth.user.isValid ? true : false
+            }
+          />
 
-                    <PrivateRoute 
-                        exact 
-                        path="/" 
-                        component={ PatientInfo2 } 
-                        isAuthenticated={
-                                            ( auth && auth.user && auth.user.isValid ) 
-                                            ? true
-                                            : false
-                                        }
-                    />
-
-                    <Redirect to="/" />   
-                </Switch>
-            </div>
-        </Router>
-    )
-
-}
+          <Redirect to="/" />
+        </Switch>
+      </div>
+    </Router>
+  );
+};

@@ -22,12 +22,10 @@ import xmlParser from 'xml-js';
 import { useFormContent } from '../hooks/useForm';
 import useStyles from '../hooks/useStyles';
 import QrCodeIcon from '../icons/QrCode';
-import QrReader from './QrReader';
 import QrReaderDialog from './QrReader copy';
 
 const initialState = {
   // qr
-  hasBooldInfo: false,
   branch: '',
   origin: '',
   sampleNumber: '',
@@ -72,7 +70,6 @@ export default function PatientInfo() {
   const { content, setContent, onChange } = useFormContent(initialState),
     {
       // qr
-      hasBooldInfo,
       branch,
       origin,
       sampleNumber,
@@ -91,6 +88,8 @@ export default function PatientInfo() {
     } = content;
   const onBloodScan = async ({ rawValue }) => {
     try {
+      closeScanner();
+
       const response = await axios({
         method: 'post',
         url: `${REACT_APP_PATIENT_SERVICE}/GetQr`,
@@ -113,7 +112,6 @@ export default function PatientInfo() {
           origin: Origen,
           sampleNumber: NroMuestra,
           analysis: Analisis,
-          hasBooldInfo: true,
         }));
       }
     } catch (error) {
@@ -133,7 +131,6 @@ export default function PatientInfo() {
       title: 'Escanee el código de barras del documento',
       formats: ['pdf417'],
       handleScan: onDocumentScan,
-      showClose: true,
     });
   };
 
@@ -145,6 +142,8 @@ export default function PatientInfo() {
 
     if (split[0].length) document = split[4];
     else document = split[1];
+
+    console.log(document);
 
     setContent((prevState) => ({
       ...prevState,
@@ -189,6 +188,7 @@ export default function PatientInfo() {
 
   const getPatientInfo = async (e) => {
     if (e) e.preventDefault();
+    console.log(document);
 
     try {
       const response = await axios({
@@ -233,175 +233,172 @@ export default function PatientInfo() {
   return (
     <Container>
       <QrReaderDialog {...scannerState} handleClose={closeScanner} />
-      {hasBooldInfo ? (
-        <div className={classes.paper}>
-          <Avatar className={classes.avatar}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            Información del paciente
-          </Typography>
-          <form className={classes.form} onSubmit={getPatientInfo}>
+
+      <div className={classes.paper}>
+        <Avatar className={classes.avatar}>
+          <LockOutlinedIcon />
+        </Avatar>
+        <Typography component="h1" variant="h5">
+          Información del paciente
+        </Typography>
+        <form className={classes.form} onSubmit={getPatientInfo}>
+          <Grid item container spacing={2}>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                id="documentType"
+                label="Tipo de documento"
+                name="documentType"
+                variant="outlined"
+                fullWidth
+                value={documentType}
+                onChange={onChange}
+                select
+                xs="6"
+              >
+                {documentTypes.map((e) => (
+                  <MenuItem key={e.id} value={e.id}>
+                    {e.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs>
+              <TextField
+                type="text"
+                variant="outlined"
+                required
+                fullWidth
+                name="document"
+                label="Documento"
+                id="document"
+                value={document}
+                onChange={onChange}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={openDocumentScanner}>
+                        <QrCodeIcon fontSize="large" />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item container xs={2} direction="row" alignItems="center">
+              <IconButton
+                type="submit"
+                style={{ padding: '0px' }}
+                onClick={getPatientInfo}
+              >
+                <SearchIcon fontSize="large" />
+              </IconButton>
+            </Grid>
+          </Grid>
+        </form>
+        <Slide direction="up" in={hasPatientInfo} mountOnEnter unmountOnExit>
+          <form className={classes.form}>
             <Grid item container spacing={2}>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  id="documentType"
-                  label="Tipo de documento"
-                  name="documentType"
-                  variant="outlined"
-                  fullWidth
-                  value={documentType}
-                  onChange={onChange}
-                  select
-                  xs="6"
-                >
-                  {documentTypes.map((e) => (
-                    <MenuItem key={e.id} value={e.id}>
-                      {e.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
+              <Grid item xs={12}>
+                <Typography component="h1" variant="h6">
+                  Detalles
+                </Typography>
               </Grid>
-              <Grid item xs>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   type="text"
                   variant="outlined"
                   required
                   fullWidth
-                  name="document"
-                  label="Documento"
-                  id="document"
-                  value={document}
+                  name="firstName"
+                  autoComplete="given-name"
+                  label="Primer nombre"
+                  id="firstName"
+                  value={firstName}
                   onChange={onChange}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={openDocumentScanner}>
-                          <QrCodeIcon fontSize="large" />
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
                 />
               </Grid>
-              <Grid item container xs={2} direction="row" alignItems="center">
-                <IconButton
-                  type="submit"
-                  style={{ padding: '0px' }}
-                  onClick={getPatientInfo}
-                >
-                  <SearchIcon fontSize="large" />
-                </IconButton>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  type="text"
+                  variant="outlined"
+                  required
+                  fullWidth
+                  name="secondName"
+                  label="Segundo nombre"
+                  id="secondName"
+                  value={secondName}
+                  onChange={onChange}
+                />
               </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  type="text"
+                  variant="outlined"
+                  required
+                  fullWidth
+                  name="firstSurname"
+                  autoComplete="family-name"
+                  label="Primer apellido"
+                  id="firstSurname"
+                  value={firstSurname}
+                  onChange={onChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  type="text"
+                  variant="outlined"
+                  required
+                  fullWidth
+                  name="secondSurname"
+                  label="Segundo apellido"
+                  id="secondSurname"
+                  value={secondSurname}
+                  onChange={onChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <KeyboardDatePicker
+                  variant="inline"
+                  autoOk
+                  inputVariant="outlined"
+                  fullWidth
+                  format="MM/dd/yyyy"
+                  id="birthDate"
+                  label="Fecha de nacimiento"
+                  value={birthDate}
+                  onChange={onChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  id="gender"
+                  label="Género"
+                  name="gender"
+                  variant="outlined"
+                  fullWidth
+                  value={gender}
+                  onChange={onChange}
+                  select
+                >
+                  <MenuItem value={'M'}>Masculino</MenuItem>
+                  <MenuItem value={'F'}>Femenino</MenuItem>
+                </TextField>
+              </Grid>
+              <Button
+                type="button"
+                fullWidth
+                variant="contained"
+                color="primary"
+                className={classes.button}
+                onClick={getPatientInfo}
+              >
+                Obtener paciente
+              </Button>
             </Grid>
           </form>
-          <Slide direction="up" in={hasPatientInfo} mountOnEnter unmountOnExit>
-            <form className={classes.form}>
-              <Grid item container spacing={2}>
-                <Grid item xs={12}>
-                  <Typography component="h1" variant="h6">
-                    Detalles
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="text"
-                    variant="outlined"
-                    required
-                    fullWidth
-                    name="firstName"
-                    autoComplete="given-name"
-                    label="Primer nombre"
-                    id="firstName"
-                    value={firstName}
-                    onChange={onChange}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="text"
-                    variant="outlined"
-                    required
-                    fullWidth
-                    name="secondName"
-                    label="Segundo nombre"
-                    id="secondName"
-                    value={secondName}
-                    onChange={onChange}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="text"
-                    variant="outlined"
-                    required
-                    fullWidth
-                    name="firstSurname"
-                    autoComplete="family-name"
-                    label="Primer apellido"
-                    id="firstSurname"
-                    value={firstSurname}
-                    onChange={onChange}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="text"
-                    variant="outlined"
-                    required
-                    fullWidth
-                    name="secondSurname"
-                    label="Segundo apellido"
-                    id="secondSurname"
-                    value={secondSurname}
-                    onChange={onChange}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <KeyboardDatePicker
-                    variant="inline"
-                    autoOk
-                    inputVariant="outlined"
-                    fullWidth
-                    format="MM/dd/yyyy"
-                    id="birthDate"
-                    label="Fecha de nacimiento"
-                    value={birthDate}
-                    onChange={onChange}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    id="gender"
-                    label="Género"
-                    name="gender"
-                    variant="outlined"
-                    fullWidth
-                    value={gender}
-                    onChange={onChange}
-                    select
-                  >
-                    <MenuItem value={'M'}>Masculino</MenuItem>
-                    <MenuItem value={'F'}>Femenino</MenuItem>
-                  </TextField>
-                </Grid>
-                <Button
-                  type="button"
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  className={classes.button}
-                  onClick={getPatientInfo}
-                >
-                  Obtener paciente
-                </Button>
-              </Grid>
-            </form>
-          </Slide>
-        </div>
-      ) : (
-        <QrReader formats={['code_128']} handleScan={onBloodScan} />
-      )}
+        </Slide>
+      </div>
     </Container>
   );
 }

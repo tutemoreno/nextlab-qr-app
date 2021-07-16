@@ -17,27 +17,35 @@ import QrReader from './QrReader';
 
 export default function QrReaderHoc(props) {
   const classes = useStyles();
-  const { open } = props;
+  const { open, title, formats, handleScan, showClose } = props;
 
   return (
     <Dialog fullScreen open={open}>
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" className={classes.title}>
-            {props.title}
+            {title}
           </Typography>
-          <IconButton color="inherit" onClick={props.handleClose}>
-            <CloseIcon />
-          </IconButton>
+          {showClose && (
+            <IconButton color="inherit" onClick={props.handleClose}>
+              <CloseIcon />
+            </IconButton>
+          )}
         </Toolbar>
       </AppBar>
-      <QrReader {...props} />
+      <QrReader title={title} {...{ formats, handleScan }} />
     </Dialog>
   );
 }
+
+QrReaderHoc.defaultProps = {
+  showClose: true,
+};
 QrReaderHoc.propTypes = {
   handleScan: PropTypes.func.isRequired,
-  handleClose: PropTypes.func.isRequired,
+  handleClose: PropTypes.func,
   open: PropTypes.bool.isRequired,
+  formats: PropTypes.array.isRequired,
+  showClose: PropTypes.bool,
   title: PropTypes.string.isRequired,
 };
