@@ -49,7 +49,6 @@ export default function QrReader(props) {
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
           deviceId: deviceState.input.value,
-          resizeMode: 'none',
           facingMode: 'environment',
         },
       });
@@ -89,9 +88,11 @@ export default function QrReader(props) {
           </MenuItem>
         ))}
       </TextField>
-      <video autoPlay ref={videoRef} />
-      {/* <input type="file" accept="image/*" capture="environment"></input> */}
-      {/* <canvas ref={photoRef} width="640" height="480" /> */}
+      <video
+        style={{ width: 'inherit', height: 'inherit' }}
+        autoPlay
+        ref={videoRef}
+      />
     </Container>
   );
 }
