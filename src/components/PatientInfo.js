@@ -19,9 +19,9 @@ import axios from 'axios';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
 import xmlParser from 'xml-js';
+import { useFormContent } from '../hooks/useForm';
 import useStyles from '../hooks/useStyles';
 import QrCodeIcon from '../icons/QrCode';
-import { useFormContent } from '../utils/form';
 import QrReader from './QrReader';
 import QrReaderDialog from './QrReader copy';
 
@@ -90,30 +90,34 @@ export default function PatientInfo() {
       gender,
     } = content;
   const onBloodScan = async ({ rawValue }) => {
-    const response = await axios({
-      method: 'post',
-      url: `${REACT_APP_PATIENT_SERVICE}/GetQr`,
-      data: qs.stringify({ idQr: rawValue, token: REACT_APP_NEXTLAB_TOKEN }),
-    });
-
-    if (response.status == 200) {
-      const parsedXml = xmlParser.xml2js(response.data, {
-        compact: true,
-        textKey: 'value',
+    try {
+      const response = await axios({
+        method: 'post',
+        url: `${REACT_APP_PATIENT_SERVICE}/GetQr`,
+        data: qs.stringify({ idQr: rawValue, token: REACT_APP_NEXTLAB_TOKEN }),
       });
 
-      const { Sucursal, Origen, NroMuestra, Analisis } = JSON.parse(
-        parsedXml.string.value,
-      );
+      if (response.status == 200) {
+        const parsedXml = xmlParser.xml2js(response.data, {
+          compact: true,
+          textKey: 'value',
+        });
 
-      setContent((prevState) => ({
-        ...prevState,
-        branch: Sucursal,
-        origin: Origen,
-        sampleNumber: NroMuestra,
-        analysis: Analisis,
-        hasBooldInfo: true,
-      }));
+        const { Sucursal, Origen, NroMuestra, Analisis } = JSON.parse(
+          parsedXml.string.value,
+        );
+
+        setContent((prevState) => ({
+          ...prevState,
+          branch: Sucursal,
+          origin: Origen,
+          sampleNumber: NroMuestra,
+          analysis: Analisis,
+          hasBooldInfo: true,
+        }));
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
   const [scannerState, setScannerState] = useState({
@@ -156,22 +160,28 @@ export default function PatientInfo() {
 
   useEffect(() => {
     const getDocumentTypes = async () => {
-      const response = await axios({
-        method: 'post',
-        url: `${REACT_APP_PATIENT_SERVICE}/GetTiposDeDocumento`,
-        data: qs.stringify({ token: REACT_APP_NEXTLAB_TOKEN }),
-      });
+      // TODO: agregar try catch
 
-      const parsedInfo = xmlParser.xml2js(response.data, {
-        compact: true,
-        textKey: 'value',
-      });
+      try {
+        const response = await axios({
+          method: 'post',
+          url: `${REACT_APP_PATIENT_SERVICE}/GetTiposDeDocumento`,
+          data: qs.stringify({ token: REACT_APP_NEXTLAB_TOKEN }),
+        });
 
-      setDocumentTypes(
-        parsedInfo.ListaTipoDocumento.Lista.TipoDocumento.map((e) => {
-          return { id: e.TipoDoc.value, name: e.Descripcion.value };
-        }),
-      );
+        const parsedInfo = xmlParser.xml2js(response.data, {
+          compact: true,
+          textKey: 'value',
+        });
+
+        setDocumentTypes(
+          parsedInfo.ListaTipoDocumento.Lista.TipoDocumento.map((e) => {
+            return { id: e.TipoDoc.value, name: e.Descripcion.value };
+          }),
+        );
+      } catch (error) {
+        console.log(error);
+      }
     };
 
     getDocumentTypes();
@@ -180,39 +190,43 @@ export default function PatientInfo() {
   const getPatientInfo = async (e) => {
     if (e) e.preventDefault();
 
-    const response = await axios({
-      method: 'post',
-      url: `${REACT_APP_PATIENT_SERVICE}/paciente_datos`,
-      data: qs.stringify({
-        documento: document,
-        tipoDoc: documentType,
-        codigo: 0,
-        token: REACT_APP_NEXTLAB_TOKEN,
-      }),
-    });
-
-    if (response.status == 200) {
-      const parsedInfo = xmlParser.xml2js(response.data, {
-        compact: true,
-        textKey: 'value',
+    try {
+      const response = await axios({
+        method: 'post',
+        url: `${REACT_APP_PATIENT_SERVICE}/paciente_datos`,
+        data: qs.stringify({
+          documento: document,
+          tipoDoc: documentType,
+          codigo: 0,
+          token: REACT_APP_NEXTLAB_TOKEN,
+        }),
       });
 
-      console.log(parsedInfo);
+      if (response.status == 200) {
+        const parsedInfo = xmlParser.xml2js(response.data, {
+          compact: true,
+          textKey: 'value',
+        });
 
-      const {
-        Paciente: { Nombre, Nombre2, Apellido, Apellido2, Sexo, Activo },
-      } = parsedInfo;
+        console.log(parsedInfo);
 
-      setContent((prevState) => ({
-        ...prevState,
-        firstName: Nombre.value,
-        secondName: Nombre2.value,
-        firstSurname: Apellido.value,
-        secondSurname: Apellido2.value,
-        gender: Sexo.value,
-        active: Activo.value,
-        hasPatientInfo: true,
-      }));
+        const {
+          Paciente: { Nombre, Nombre2, Apellido, Apellido2, Sexo, Activo },
+        } = parsedInfo;
+
+        setContent((prevState) => ({
+          ...prevState,
+          firstName: Nombre.value,
+          secondName: Nombre2.value,
+          firstSurname: Apellido.value,
+          secondSurname: Apellido2.value,
+          gender: Sexo.value,
+          active: Activo.value,
+          hasPatientInfo: true,
+        }));
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 

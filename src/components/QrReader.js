@@ -5,7 +5,7 @@
 import { Container, MenuItem, TextField } from '@material-ui/core';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
-import { useFormInput } from '../utils/form';
+import { useFormInput } from '../hooks/useForm';
 
 export default function QrReader(props) {
   // import("./math").then(math => {
@@ -21,6 +21,7 @@ export default function QrReader(props) {
 
   useEffect(() => {
     const getDevices = async () => {
+      // TODO: agregar try catch
       const devices = await navigator.mediaDevices.enumerateDevices();
 
       const videoDevices = devices.filter(
@@ -39,6 +40,7 @@ export default function QrReader(props) {
     let intervalId, stream;
 
     const startScan = async () => {
+      // TODO: agregar try catch
       console.log('scan');
       const data = await barcodeDetector.detect(videoRef.current);
 
@@ -46,6 +48,7 @@ export default function QrReader(props) {
     };
 
     const startVideo = async () => {
+      // TODO: agregar try catch
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
           deviceId: deviceState.input.value,

@@ -14,7 +14,7 @@ import React from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/auth';
 import useStyles from '../hooks/useStyles';
-import { useFormContent } from '../utils/form';
+import { useFormContent } from '../hooks/useForm';
 
 const initialState = {
   username: '',
@@ -34,9 +34,16 @@ export default function Login() {
   const signIn = async (e) => {
     e.preventDefault();
 
-    const loggedIn = await auth.signIn(content);
+    try {
+      
+      const loggedIn = await auth.signIn(content);
+  
+      if (loggedIn) history.replace(from);
 
-    if (loggedIn) history.replace(from);
+    } catch (error) {
+      console.log(error);
+    }
+
   };
 
   return (
