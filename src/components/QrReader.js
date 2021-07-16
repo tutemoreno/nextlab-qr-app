@@ -21,16 +21,23 @@ export default function QrReader(props) {
 
   useEffect(() => {
     const getDevices = async () => {
-      // TODO: agregar try catch
-      const devices = await navigator.mediaDevices.enumerateDevices();
+      
+      try {
+        
+        const devices = await navigator.mediaDevices.enumerateDevices();
 
-      const videoDevices = devices.filter(
-        (device) => device.kind === 'videoinput',
-      );
+        const videoDevices = devices.filter(
+          (device) => device.kind === 'videoinput',
+        );
 
-      setDevices(videoDevices);
+        setDevices(videoDevices);
 
-      deviceState.setValue(videoDevices[videoDevices.length - 1].deviceId);
+        deviceState.setValue(videoDevices[videoDevices.length - 1].deviceId);
+
+      } catch (error) {
+        console.log(error);
+      }
+      
     };
 
     getDevices();
@@ -40,25 +47,40 @@ export default function QrReader(props) {
     let intervalId, stream;
 
     const startScan = async () => {
-      // TODO: agregar try catch
-      console.log('scan');
-      const data = await barcodeDetector.detect(videoRef.current);
+      
+      try {
 
-      if (data.length) props.handleScan(data[0]);
+        console.log('scan');
+      
+        const data = await barcodeDetector.detect(videoRef.current);
+
+        if (data.length) props.handleScan(data[0]);
+
+      } catch (error) {
+        console.log(error);
+      }
+      
     };
 
     const startVideo = async () => {
-      // TODO: agregar try catch
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          deviceId: deviceState.input.value,
-          facingMode: 'environment',
-        },
-      });
+      
+      try {
+      
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            deviceId: deviceState.input.value,
+            facingMode: 'environment',
+          },
+        });
+  
+        videoRef.current.srcObject = stream;
+  
+        intervalId = setInterval(startScan, 200);
 
-      videoRef.current.srcObject = stream;
-
-      intervalId = setInterval(startScan, 200);
+      } catch (error) {
+        console.log(error);
+      }
+      
     };
 
     if (deviceState.input.value) startVideo();
