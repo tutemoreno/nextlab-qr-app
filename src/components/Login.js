@@ -7,9 +7,11 @@ import {
   Grid,
   Link,
   TextField,
-  Typography,
+  Typography
 } from '@material-ui/core';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
 import React from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/auth';
@@ -22,7 +24,24 @@ const initialState = {
   remember: false,
 };
 
+
+
 export default function Login() {
+
+  const [openError, setOpenError] = React.useState(false);
+
+  const handleCloseError = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setOpenError(false);
+  };
+
+  function Alert(props) {
+    return <MuiAlert elevation={6} variant="filled" {...props} />;
+  }
+
   const { content, onChange } = useFormContent(initialState),
     { username, password, remember } = content,
     history = useHistory(),
@@ -42,6 +61,7 @@ export default function Login() {
 
     } catch (error) {
       console.log(error);
+      setOpenError(true);
     }
 
   };
@@ -49,6 +69,20 @@ export default function Login() {
   return (
     <Container maxWidth="xs">
       <div className={classes.paper}>
+
+        <Snackbar 
+          open={ openError } 
+          autoHideDuration={ 2000 } 
+          onClose={ handleCloseError }
+        >
+          <Alert 
+            onClose={ handleCloseError } 
+            severity="error"
+          >
+            Error de comunicación
+          </Alert>
+        </Snackbar>
+
         <Avatar className={classes.avatar}>
           <LockOutlinedIcon />
         </Avatar>
