@@ -143,14 +143,14 @@ export default function PatientInfo() {
     if (split[0].length) document = split[4];
     else document = split[1];
 
-    console.log(document);
+    console.log(document, '1ro');
 
     setContent((prevState) => ({
       ...prevState,
       document,
     }));
 
-    getPatientInfo();
+    getPatientInfo(document);
   };
 
   const closeScanner = () => {
@@ -185,9 +185,9 @@ export default function PatientInfo() {
     getDocumentTypes();
   }, []);
 
-  const getPatientInfo = async (e) => {
-    if (e) e.preventDefault();
-    console.log(document);
+  const getPatientInfo = async (document) => {
+
+    console.log(document, '2do');
 
     try {
       const response = await axios({
@@ -287,7 +287,7 @@ export default function PatientInfo() {
               <IconButton
                 type="submit"
                 style={{ padding: '0px' }}
-                onClick={getPatientInfo}
+                onClick={ () => getPatientInfo(document)}
               >
                 <SearchIcon fontSize="large" />
               </IconButton>
