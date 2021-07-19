@@ -8,8 +8,10 @@ import {
   Grid,
   IconButton,
   InputAdornment,
+  List,
+  ListItem,
+  ListItemText,
   MenuItem,
-  Slide,
   TextField,
   Typography,
 } from '@material-ui/core';
@@ -38,7 +40,6 @@ const initialState = {
   document: '',
   documentType: 'DNI',
   // fetch
-  hasPatientInfo: false,
   code: '',
   firstName: '',
   secondName: '',
@@ -50,7 +51,7 @@ const initialState = {
   populationGroup: '',
   exportationDate: '',
   address: '',
-  birthDate: '',
+  birthDate: null,
   phone: '',
   fax: '',
   cellPhone: '',
@@ -69,6 +70,13 @@ const initialScannerState = {
 
 const initialDocumentTypesState = [{ id: 'DNI', name: 'Doc. Nac. Identidad' }];
 
+const initialAccordionState = {
+  analysis: true,
+  document: true,
+  patient: false,
+  contact: false,
+};
+
 const { REACT_APP_PATIENT_SERVICE, REACT_APP_NEXTLAB_TOKEN } = process.env;
 
 export default function PatientInfo() {
@@ -83,7 +91,6 @@ export default function PatientInfo() {
       document,
       documentType,
       // fetch patient
-      hasPatientInfo,
       firstName,
       secondName,
       firstSurname,
@@ -132,11 +139,7 @@ export default function PatientInfo() {
     ...initialScannerState,
     handleScan: onBloodScan,
   });
-  const [accordionState, setAccordionState] = useState({
-    document: true,
-    patient: false,
-    contact: false,
-  });
+  const [accordionState, setAccordionState] = useState(initialAccordionState);
   const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
   const classes = useStyles();
 
@@ -232,6 +235,13 @@ export default function PatientInfo() {
           },
         } = parsedInfo;
 
+        setAccordionState({
+          ...initialAccordionState,
+          analysis: false,
+          document: false,
+          patient: true,
+        });
+
         setContent((prevState) => ({
           ...prevState,
           firstName,
@@ -243,7 +253,6 @@ export default function PatientInfo() {
           cellPhone: cellPhone ? cellPhone.replace('-', '') : '',
           phone: phone ? phone.replace('-', '') : '',
           address,
-          hasPatientInfo: true,
         }));
       }
     } catch (error) {
@@ -261,7 +270,6 @@ export default function PatientInfo() {
   return (
     <Container>
       <QrReaderDialog {...scannerState} handleClose={closeScanner} />
-
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
           <LockOutlinedIcon />
@@ -269,251 +277,299 @@ export default function PatientInfo() {
         <Typography component="h1" variant="h5">
           Información del paciente
         </Typography>
-        <form
-          className={classes.form}
-          onSubmit={(e) => {
-            e.preventDefault();
-            getPatientInfo(document);
-          }}
-        >
+        <div className={classes.form}>
+          <Accordion
+            expanded={accordionState.analysis}
+            onChange={() => expandAccordion('analysis')}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>Analisis</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <List>
+                {analysis.map((item) => (
+                  <ListItem divider key={item.CodigoAnalisis}>
+                    <ListItemText
+                      primary={item.CodigoAnalisis}
+                      secondary={item.Descripcion}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </AccordionDetails>
+          </Accordion>
+
           <Accordion
             expanded={accordionState.document}
             onChange={() => expandAccordion('document')}
-            style={{ width: '100%', margin: 0 }}
           >
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="panel1bh-content"
-              id="panel1bh-header"
-            >
-              <Typography className={classes.heading}>
-                General settings
-              </Typography>
-              <Typography className={classes.secondaryHeading}>
-                I am an accordion
-              </Typography>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>Documento</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Grid item container spacing={2}>
-                <Grid item xs={12} sm={4}>
-                  <TextField
-                    id="documentType"
-                    label="Tipo de documento"
-                    name="documentType"
-                    variant="outlined"
-                    fullWidth
-                    value={documentType}
-                    onChange={onChange}
-                    select
-                    xs="6"
+              <form
+                className={classes.form}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  getPatientInfo(document);
+                }}
+              >
+                <Grid item container spacing={2}>
+                  <Grid item xs={12} sm={5}>
+                    <TextField
+                      id="documentType"
+                      label="Tipo de documento"
+                      name="documentType"
+                      variant="outlined"
+                      fullWidth
+                      value={documentType}
+                      onChange={onChange}
+                      select
+                      xs="6"
+                    >
+                      {documentTypes.map((e) => (
+                        <MenuItem key={e.id} value={e.id}>
+                          {e.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
+                  <Grid item xs>
+                    <TextField
+                      type="text"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="document"
+                      label="Documento"
+                      id="document"
+                      value={document}
+                      onChange={onChange}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton onClick={openDocumentScanner}>
+                              <QrCodeIcon fontSize="large" />
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Grid>
+                  <Grid
+                    item
+                    container
+                    xs={2}
+                    direction="row"
+                    alignItems="center"
                   >
-                    {documentTypes.map((e) => (
-                      <MenuItem key={e.id} value={e.id}>
-                        {e.name}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                    <IconButton type="submit" style={{ padding: '0px' }}>
+                      <SearchIcon fontSize="large" />
+                    </IconButton>
+                  </Grid>
                 </Grid>
-                <Grid item xs>
-                  <TextField
-                    type="text"
-                    variant="outlined"
-                    required
-                    fullWidth
-                    name="document"
-                    label="Documento"
-                    id="document"
-                    value={document}
-                    onChange={onChange}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton onClick={openDocumentScanner}>
-                            <QrCodeIcon fontSize="large" />
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid item container xs={2} direction="row" alignItems="center">
-                  <IconButton type="submit" style={{ padding: '0px' }}>
-                    <SearchIcon fontSize="large" />
-                  </IconButton>
-                </Grid>
-              </Grid>
+              </form>
             </AccordionDetails>
           </Accordion>
-        </form>
-        <Slide direction="up" in={hasPatientInfo} mountOnEnter unmountOnExit>
-          <form className={classes.form}>
-            <Grid item container spacing={2}>
-              <Grid item xs={12}>
-                <Typography component="h1" variant="h6">
-                  Detalles
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  type="text"
-                  variant="outlined"
-                  required
-                  fullWidth
-                  name="firstName"
-                  autoComplete="given-name"
-                  label="Primer nombre"
-                  id="firstName"
-                  value={firstName}
-                  onChange={onChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  type="text"
-                  variant="outlined"
-                  required
-                  fullWidth
-                  name="secondName"
-                  label="Segundo nombre"
-                  id="secondName"
-                  value={secondName}
-                  onChange={onChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  type="text"
-                  variant="outlined"
-                  required
-                  fullWidth
-                  name="firstSurname"
-                  autoComplete="family-name"
-                  label="Primer apellido"
-                  id="firstSurname"
-                  value={firstSurname}
-                  onChange={onChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  type="text"
-                  variant="outlined"
-                  required
-                  fullWidth
-                  name="secondSurname"
-                  label="Segundo apellido"
-                  id="secondSurname"
-                  value={secondSurname}
-                  onChange={onChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <KeyboardDatePicker
-                  variant="inline"
-                  autoOk
-                  inputVariant="outlined"
-                  fullWidth
-                  format="MM/dd/yyyy"
-                  id="birthDate"
-                  label="Fecha de nacimiento"
-                  value={birthDate}
-                  onChange={onChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  id="gender"
-                  label="Género"
-                  name="gender"
-                  variant="outlined"
-                  fullWidth
-                  value={gender}
-                  onChange={onChange}
-                  select
-                >
-                  <MenuItem value={'M'}>Masculino</MenuItem>
-                  <MenuItem value={'F'}>Femenino</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  type="email"
-                  variant="outlined"
-                  required
-                  fullWidth
-                  name="email"
-                  label="Email"
-                  id="email"
-                  value={email}
-                  onChange={onChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  type="number"
-                  variant="outlined"
-                  required
-                  fullWidth
-                  name="cellPhone"
-                  label="Celular"
-                  id="cellPhone"
-                  value={cellPhone}
-                  onChange={onChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  type="number"
-                  variant="outlined"
-                  required
-                  fullWidth
-                  name="phone"
-                  label="Teléfono fijo"
-                  id="phone"
-                  value={phone}
-                  onChange={onChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  type="text"
-                  variant="outlined"
-                  required
-                  fullWidth
-                  name="address"
-                  label="Dirección"
-                  id="address"
-                  value={address}
-                  onChange={onChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  type="text"
-                  variant="outlined"
-                  multiline
-                  fullWidth
-                  rows={4}
-                  name="observation"
-                  label="Observaciones"
-                  id="observation"
-                  value={observation}
-                  onChange={onChange}
-                />
-              </Grid>
-              <Button
-                type="button"
-                fullWidth
-                variant="contained"
-                color="primary"
-                className={classes.button}
-                onClick={() => {}}
-              >
-                Guardar
-              </Button>
-            </Grid>
-          </form>
-        </Slide>
+
+          <Accordion
+            expanded={accordionState.patient}
+            onChange={() => expandAccordion('patient')}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>Paciente</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <form className={classes.form}>
+                <Grid item container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="text"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="firstName"
+                      autoComplete="given-name"
+                      label="Primer nombre"
+                      id="firstName"
+                      value={firstName}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="text"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="secondName"
+                      label="Segundo nombre"
+                      id="secondName"
+                      value={secondName}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="text"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="firstSurname"
+                      autoComplete="family-name"
+                      label="Primer apellido"
+                      id="firstSurname"
+                      value={firstSurname}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="text"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="secondSurname"
+                      label="Segundo apellido"
+                      id="secondSurname"
+                      value={secondSurname}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <KeyboardDatePicker
+                      variant="inline"
+                      autoOk
+                      inputVariant="outlined"
+                      fullWidth
+                      disableFuture
+                      format="dd/MM/yyyy"
+                      id="birthDate"
+                      label="Fecha de nacimiento"
+                      value={birthDate}
+                      onChange={(date) =>
+                        onChange({
+                          target: {
+                            value: date,
+                            name: 'birthDate',
+                            type: 'date',
+                          },
+                        })
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      id="gender"
+                      label="Género"
+                      name="gender"
+                      variant="outlined"
+                      fullWidth
+                      value={gender}
+                      onChange={onChange}
+                      select
+                    >
+                      <MenuItem value={'M'}>Masculino</MenuItem>
+                      <MenuItem value={'F'}>Femenino</MenuItem>
+                    </TextField>
+                  </Grid>
+                </Grid>
+              </form>
+            </AccordionDetails>
+          </Accordion>
+
+          <Accordion
+            expanded={accordionState.contact}
+            onChange={() => expandAccordion('contact')}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>Contacto</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <form className={classes.form}>
+                <Grid item container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="email"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="email"
+                      label="Email"
+                      id="email"
+                      value={email}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="number"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="cellPhone"
+                      label="Celular"
+                      id="cellPhone"
+                      value={cellPhone}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="number"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="phone"
+                      label="Teléfono fijo"
+                      id="phone"
+                      value={phone}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="text"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="address"
+                      label="Dirección"
+                      id="address"
+                      value={address}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      type="text"
+                      variant="outlined"
+                      multiline
+                      fullWidth
+                      rows={4}
+                      name="observation"
+                      label="Observaciones"
+                      id="observation"
+                      value={observation}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                </Grid>
+              </form>
+            </AccordionDetails>
+          </Accordion>
+
+          <Button
+            type="button"
+            fullWidth
+            variant="contained"
+            color="primary"
+            className={classes.button}
+            onClick={() => {}}
+          >
+            Guardar
+          </Button>
+        </div>
       </div>
     </Container>
   );
