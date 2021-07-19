@@ -82,7 +82,7 @@ const { REACT_APP_PATIENT_SERVICE, REACT_APP_NEXTLAB_TOKEN } = process.env;
 export default function PatientInfo() {
   const { content, setContent, onChange } = useFormContent(initialState),
     {
-      // qr
+      // barcode
       branch,
       origin,
       sampleNumber,
@@ -267,6 +267,15 @@ export default function PatientInfo() {
     }));
   };
 
+  const newAnalysis = () => {
+    setScannerState({
+      ...initialScannerState,
+      handleScan: onBloodScan,
+    });
+    setAccordionState(initialAccordionState);
+    setContent(initialState);
+  };
+
   return (
     <Container>
       <QrReaderDialog {...scannerState} handleClose={closeScanner} />
@@ -314,7 +323,7 @@ export default function PatientInfo() {
                   getPatientInfo(document);
                 }}
               >
-                <Grid item container spacing={2}>
+                <Grid container spacing={2}>
                   <Grid item xs={12} sm={5}>
                     <TextField
                       id="documentType"
@@ -381,7 +390,7 @@ export default function PatientInfo() {
             </AccordionSummary>
             <AccordionDetails>
               <form className={classes.form}>
-                <Grid item container spacing={2}>
+                <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <TextField
                       type="text"
@@ -487,7 +496,7 @@ export default function PatientInfo() {
             </AccordionSummary>
             <AccordionDetails>
               <form className={classes.form}>
-                <Grid item container spacing={2}>
+                <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <TextField
                       type="email"
@@ -559,16 +568,32 @@ export default function PatientInfo() {
             </AccordionDetails>
           </Accordion>
 
-          <Button
-            type="button"
-            fullWidth
-            variant="contained"
-            color="primary"
-            className={classes.button}
-            onClick={() => {}}
-          >
-            Guardar
-          </Button>
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <Button
+                type="button"
+                fullWidth
+                variant="contained"
+                color="secondary"
+                className={classes.button}
+                onClick={newAnalysis}
+              >
+                Nuevo
+              </Button>
+            </Grid>
+            <Grid item xs={6}>
+              <Button
+                type="button"
+                fullWidth
+                variant="contained"
+                color="primary"
+                className={classes.button}
+                onClick={() => {}}
+              >
+                Guardar
+              </Button>
+            </Grid>
+          </Grid>
         </div>
       </div>
     </Container>
