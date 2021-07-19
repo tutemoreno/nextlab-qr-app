@@ -17,83 +17,70 @@ export default function QrReader(props) {
   const classes = useStyles();
 
   try {
-    
     const barcodeDetector = new window.BarcodeDetector({
       formats: props.formats,
     });
     const deviceState = useFormInput('');
     const [devices, setDevices] = useState([]);
     const videoRef = useRef(null);
-  
+
     useEffect(() => {
       const getDevices = async () => {
-        
         try {
-          
           const devices = await navigator.mediaDevices.enumerateDevices();
-  
+
           const videoDevices = devices.filter(
             (device) => device.kind === 'videoinput',
           );
-  
+
           setDevices(videoDevices);
-  
+
           deviceState.setValue(videoDevices[videoDevices.length - 1].deviceId);
-  
         } catch (error) {
           console.log(error, 'QR Error');
         }
-        
       };
-  
+
       getDevices();
     }, []);
-  
+
     useEffect(() => {
       let intervalId, stream;
-  
+
       const startScan = async () => {
-        
         try {
-  
           console.log('scan');
-        
+
           const data = await barcodeDetector.detect(videoRef.current);
-  
+
           if (data.length) props.handleScan(data[0]);
-  
         } catch (error) {
           console.log(error, 'QR error');
         }
-        
       };
-  
+
       const startVideo = async () => {
-        
         try {
-        
           stream = await navigator.mediaDevices.getUserMedia({
             video: {
               deviceId: deviceState.input.value,
               facingMode: 'environment',
             },
           });
-    
+
           videoRef.current.srcObject = stream;
-    
+
           intervalId = setInterval(startScan, 200);
-  
         } catch (error) {
           console.log(error, 'QR Error');
         }
-        
       };
-  
+
       if (deviceState.input.value) startVideo();
-  
+
       return () => {
         clearInterval(intervalId);
-  
+
         if (stream)
           stream.getTracks().forEach((track) => {
             track.stop();
@@ -126,21 +113,16 @@ export default function QrReader(props) {
         />
       </Container>
     );
-
   } catch (error) {
     console.log(error, 'QR Exception');
     return (
       <Container maxWidth="xs">
-        <div className={ classes.paper }>
-
+        <div className={classes.paper}>
           <h1>No se pudo cargar la Camara del dispositivo</h1>
-  
         </div>
       </Container>
     );
   }
-  
-  
 }
 
 QrReader.propTypes = {

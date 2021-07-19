@@ -15,7 +15,7 @@ import React from 'react';
 import useStyles from '../hooks/useStyles';
 import QrReader from './QrReader';
 
-export default function QrReaderHoc(props) {
+export default function QrReaderCopy(props) {
   const classes = useStyles();
   const { open, title, formats, handleScan, showClose } = props;
 
@@ -33,15 +33,15 @@ export default function QrReaderHoc(props) {
           )}
         </Toolbar>
       </AppBar>
-      <QrReader title={title} {...{ formats, handleScan }} />
+      <QrReader {...{ formats, handleScan }} />
     </Dialog>
   );
 }
 
-QrReaderHoc.defaultProps = {
+QrReaderCopy.defaultProps = {
   showClose: true,
 };
-QrReaderHoc.propTypes = {
+QrReaderCopy.propTypes = {
   handleScan: PropTypes.func.isRequired,
   handleClose: PropTypes.func,
   open: PropTypes.bool.isRequired,
