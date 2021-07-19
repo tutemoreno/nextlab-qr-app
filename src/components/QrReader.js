@@ -45,15 +45,20 @@ export default function QrReader(props) {
     }, []);
 
     useEffect(() => {
-      let intervalId, stream;
+      let intervalId,
+        stream,
+        handled = false;
 
       const startScan = async () => {
         try {
-          console.log('scan');
+          if (handled) return;
 
           const data = await barcodeDetector.detect(videoRef.current);
 
-          if (data.length) props.handleScan(data[0]);
+          if (data.length) {
+            handled = true;
+            props.handleScan(data[0]);
+          }
         } catch (error) {
           console.log(error, 'QR error');
         }
