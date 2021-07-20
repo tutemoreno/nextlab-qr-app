@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import React, { createContext, useContext } from 'react';
 import xmlParser from 'xml-js';
 import { useFormContent } from '../hooks/useForm';
-import { getStore, setStore } from '../utils/store';
+import { getStore, removeStore, setStore } from '../utils/store';
 
 const {
     REACT_APP_NEXTLAB_TOKEN,
@@ -65,8 +65,14 @@ function useProvideAuth() {
     return usr.isValid;
   };
 
+  const signOut = () => {
+    removeStore(REACT_APP_STORE_PATH);
+    setUser(null);
+  };
+
   return {
     user,
     signIn,
+    signOut,
   };
 }

@@ -9,8 +9,6 @@ import { PublicRoute } from './PublicRoute.js';
 export const AppRouter = () => {
   const auth = useAuth();
 
-  const [movieCounter, setMovieCounter] = useState(1);
-
   // useEffect(() => {
 
   //     if ( ( auth && auth.user && auth.user.isValid ) ) {
