@@ -53,6 +53,7 @@ export default function Login() {
 
     try {
       const loggedIn = await auth.signIn(content);
+
       if (loggedIn) history.replace(from);
 
       // if (!loggedIn) {
@@ -87,55 +88,60 @@ export default function Login() {
           Iniciar Sesion
         </Typography>
         <form className={classes.form} onSubmit={signIn}>
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            id="username"
-            label="Nombre de usuario"
-            name="username"
-            value={username}
-            onChange={onChange}
-            autoComplete="username"
-            autoFocus
-          />
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Contraseña"
-            type="password"
-            id="password"
-            value={password}
-            onChange={onChange}
-            autoComplete="current-password"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="remember"
-                checked={remember}
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                variant="outlined"
+                required
+                fullWidth
+                id="username"
+                label="Nombre de usuario"
+                name="username"
+                value={username}
                 onChange={onChange}
-                color="primary"
+                autoComplete="username"
+                autoFocus
               />
-            }
-            name="remember"
-            label="Recordarme"
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary"
-            className={classes.button}
-          >
-            Iniciar Sesion
-          </Button>
-          <Grid>
-            <Grid item xs>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                variant="outlined"
+                required
+                fullWidth
+                name="password"
+                label="Contraseña"
+                type="password"
+                id="password"
+                value={password}
+                onChange={onChange}
+                autoComplete="current-password"
+              />
+            </Grid>
+            <Grid item>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="remember"
+                    checked={remember}
+                    onChange={onChange}
+                    color="primary"
+                  />
+                }
+                name="remember"
+                label="Recordarme"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                color="primary"
+              >
+                Iniciar Sesion
+              </Button>
+            </Grid>
+            <Grid item xs={12}>
               <Link href="#" variant="body2">
                 Olvidé mi contraseña
               </Link>

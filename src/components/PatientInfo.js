@@ -396,7 +396,7 @@ export default function PatientInfo() {
     <>
       <Navbar />
 
-      <Container minWidth="xs">
+      <Container>
         <QrReader {...scannerState} handleClose={closeScanner} />
         <div className={classes.paper}>
           <Avatar className={classes.avatar}>
@@ -687,7 +687,7 @@ export default function PatientInfo() {
               </AccordionDetails>
             </Accordion>
 
-            <Grid container spacing={2}>
+            <Grid container spacing={2} style={{ marginTop: '16px' }}>
               <Grid item xs={6}>
                 <Button
                   type="button"

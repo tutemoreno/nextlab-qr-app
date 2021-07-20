@@ -1,5 +1,6 @@
 import axios from 'axios';
 import PropTypes from 'prop-types';
+import qs from 'qs';
 import React, { createContext, useContext } from 'react';
 import xmlParser from 'xml-js';
 import { useFormContent } from '../hooks/useForm';
@@ -32,19 +33,18 @@ function useProvideAuth() {
     );
 
   const signIn = async (content) => {
-    const { username, password, remember } = content,
-      data = new URLSearchParams();
-
-    data.append('token', REACT_APP_NEXTLAB_TOKEN);
-    data.append('tipo', 'OR');
-    data.append('aplicacion', 'WEB');
-    data.append('usuario', username);
-    data.append('clave', password);
+    const { username, password, remember } = content;
 
     const response = await axios({
       method: 'post',
       url: `${REACT_APP_USER_SERVICE}/usuario_valido`,
-      data,
+      data: qs.stringify({
+        tipo: 'OR',
+        aplicacion: 'WEB',
+        usuario: username,
+        clave: password,
+        token: REACT_APP_NEXTLAB_TOKEN,
+      }),
     });
 
     const parsedInfo = xmlParser.xml2js(response.data, {
@@ -59,10 +59,12 @@ function useProvideAuth() {
       } = parsedInfo,
       usr = { username, isValid: isValid === 'true' };
 
-    setUser(usr);
-    setStore(REACT_APP_STORE_PATH, usr, remember);
+    if (isValid) {
+      setUser(usr);
+      setStore(REACT_APP_STORE_PATH, usr, remember);
+    }
 
-    return usr.isValid;
+    return isValid;
   };
 
   const signOut = () => {
