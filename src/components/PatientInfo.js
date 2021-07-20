@@ -40,7 +40,7 @@ const initialState = {
   document: '',
   documentType: 'DNI',
   // fetch
-  code: '',
+  patientCode: '',
   firstName: '',
   secondName: '',
   lastName: '',
@@ -77,7 +77,11 @@ const initialAccordionState = {
   contact: false,
 };
 
-const { REACT_APP_PATIENT_SERVICE, REACT_APP_NEXTLAB_TOKEN } = process.env;
+const {
+  REACT_APP_PATIENT_SERVICE,
+  REACT_APP_NEXTLAB_SERVICE,
+  REACT_APP_NEXTLAB_TOKEN,
+} = process.env;
 
 export default function PatientInfo() {
   const { content, setContent, onChange } = useFormContent(initialState),
@@ -91,6 +95,7 @@ export default function PatientInfo() {
       document,
       documentType,
       // fetch patient
+      patientCode,
       firstName,
       secondName,
       firstSurname,
@@ -223,6 +228,7 @@ export default function PatientInfo() {
 
         const {
           Paciente: {
+            Codigo: { value: patientCode },
             Nombre: { value: firstName },
             Nombre2: { value: secondName },
             Apellido: { value: firstSurname },
@@ -236,14 +242,15 @@ export default function PatientInfo() {
         } = parsedInfo;
 
         setAccordionState({
-          ...initialAccordionState,
           analysis: false,
           document: false,
           patient: true,
+          contact: true,
         });
 
         setContent((prevState) => ({
           ...prevState,
+          patientCode,
           firstName,
           secondName,
           firstSurname,
@@ -274,6 +281,119 @@ export default function PatientInfo() {
     });
     setAccordionState(initialAccordionState);
     setContent(initialState);
+  };
+
+  const sendOrder = async () => {
+    try {
+      const response = await axios({
+        method: 'post',
+        url: REACT_APP_NEXTLAB_SERVICE,
+        params: { op: 'RealizarPedido' },
+        data: qs.stringify({
+          ReqPedido: {
+            Sucursal: branch,
+            Numero: '105777', // TODO: hardcode
+            FechaPedido: '',
+            FechaEntrega: '',
+            Origen: { Codigo: origin, Descripcion: 'Ambulatorio' }, // TODO: hardcode
+            Observacion: observation,
+            Paciente: {
+              Historia: '',
+              TipoDocumento: documentType,
+              NumeroDocumento: document,
+              Apellido: firstSurname,
+              Apellido2: secondSurname,
+              Apellido3: '',
+              Nombre: firstName,
+              Nombre2: secondName,
+              Sexo: gender,
+              FechaNacimiento: birthDate,
+              Observacion: observation,
+              Telefono: phone,
+              Email: email,
+            },
+            Direccion: address,
+            CodigoPostal: '',
+            Provincia: { Codigo: '', Descripcion: '' },
+            Ciudad: { Codigo: '', Descripcion: '' },
+            Distrito: { Codigo: '', Descripcion: '' },
+            Barrio: { Codigo: '', Descripcion: '' },
+            Medico: {
+              // TODO: hardcode
+              Codigo: '00000',
+              Matricula: '00000',
+              NombreCompleto: 'Medico XXX',
+              Especialidad: '',
+              Email: '',
+            },
+            Servicio: { Codigo: 'A', Descripcion: '' }, // TODO: hardcode
+            Unidad: { Codigo: '', Descripcion: '' },
+            Sala: '',
+            Piso: '',
+            Cama: '',
+            Seguro: {
+              // TODO: hardcode
+              Codigo: 'OSD',
+              Descripcion: 'OSDE',
+              CodigoPlan: 'EXE',
+              DescripcionPlan: 'EXENTOS',
+            },
+            FechaReceta: '',
+            NumeroCarnet: '9518300', // TODO: hardcode
+            Diagnosticos: [{ Codigo: '412', Descripcion: 'Hipertiroidismo' }], // TODO: hardcode
+            Peticiones: [{ Codigo: 'N', Urgente: 'N' }], // TODO: hardcode
+          },
+          token: REACT_APP_NEXTLAB_TOKEN,
+        }),
+      });
+
+      console.log('[RESPONSE]', response);
+
+      if (response.status == 200) {
+        const parsedInfo = xmlParser.xml2js(response.data, {
+          compact: true,
+          textKey: 'value',
+        });
+
+        console.log('[PARSED]', parsedInfo);
+
+        // const {
+        //   Paciente: {
+        //     Nombre: { value: firstName },
+        //     Nombre2: { value: secondName },
+        //     Apellido: { value: firstSurname },
+        //     Apellido2: { value: secondSurname },
+        //     Sexo: { value: gender },
+        //     FechaNac: { value: birthDate },
+        //     Celular: { value: cellPhone },
+        //     Telefono: { value: phone },
+        //     Direccion: { value: address },
+        //   },
+        // } = parsedInfo;
+
+        // setAccordionState({
+        //   analysis: false,
+        //   document: false,
+        //   patient: true,
+        //   contact: true,
+        // });
+
+        // setContent((prevState) => ({
+        //   ...prevState,
+        //   firstName,
+        //   secondName,
+        //   firstSurname,
+        //   secondSurname,
+        //   gender,
+        //   birthDate: new Date(birthDate),
+        //   cellPhone: cellPhone ? cellPhone.replace('-', '') : '',
+        //   phone: phone ? phone.replace('-', '') : '',
+        //   address,
+        // }));
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -588,7 +708,7 @@ export default function PatientInfo() {
                 variant="contained"
                 color="primary"
                 className={classes.button}
-                onClick={() => {}}
+                onClick={sendOrder}
               >
                 Guardar
               </Button>
