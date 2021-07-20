@@ -10,8 +10,8 @@ import {
   Typography,
 } from '@material-ui/core';
 import Snackbar from '@material-ui/core/Snackbar';
-import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import MuiAlert from '@material-ui/lab/Alert';
+import LockOutline from 'mdi-material-ui/LockOutline';
 import React from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/auth';
@@ -81,7 +81,7 @@ export default function Login() {
         </Snackbar>
 
         <Avatar className={classes.avatar}>
-          <LockOutlinedIcon />
+          <LockOutline />
         </Avatar>
         <Typography component="h1" variant="h5">
           Iniciar Sesion

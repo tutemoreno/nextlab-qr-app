@@ -12,7 +12,7 @@ import {
   Toolbar,
   Typography,
 } from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
+import Close from 'mdi-material-ui/Close';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 import { useFormInput } from '../hooks/useForm';
@@ -112,7 +112,7 @@ export default function QrReader(props) {
             </Typography>
             {showClose && (
               <IconButton color="inherit" onClick={handleClose}>
-                <CloseIcon />
+                <Close />
               </IconButton>
             )}
           </Toolbar>

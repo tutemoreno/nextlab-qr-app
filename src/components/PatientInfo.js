@@ -15,19 +15,14 @@ import {
   TextField,
   Typography,
 } from '@material-ui/core';
-import {
-  ExpandMore as ExpandMoreIcon,
-  LockOutlined as LockOutlinedIcon,
-  Search as SearchIcon,
-} from '@material-ui/icons';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
+import { ChevronDown, LockOutline, Magnify, QrcodeScan } from 'mdi-material-ui';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
 import xmlParser from 'xml-js';
 import { useFormContent } from '../hooks/useForm';
 import useStyles from '../hooks/useStyles';
-import QrCodeIcon from '../icons/QrCode';
 import { Navbar } from './Navbar';
 import QrReader from './QrReader';
 
@@ -401,11 +396,11 @@ export default function PatientInfo() {
     <>
       <Navbar />
 
-      <Container>
+      <Container minWidth="xs">
         <QrReader {...scannerState} handleClose={closeScanner} />
         <div className={classes.paper}>
           <Avatar className={classes.avatar}>
-            <LockOutlinedIcon />
+            <LockOutline />
           </Avatar>
           <Typography component="h1" variant="h5">
             Información del paciente
@@ -415,7 +410,7 @@ export default function PatientInfo() {
               expanded={accordionState.analysis}
               onChange={() => expandAccordion('analysis')}
             >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <AccordionSummary expandIcon={<ChevronDown />}>
                 <Typography>Analisis</Typography>
               </AccordionSummary>
               <AccordionDetails>
@@ -436,7 +431,7 @@ export default function PatientInfo() {
               expanded={accordionState.document}
               onChange={() => expandAccordion('document')}
             >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <AccordionSummary expandIcon={<ChevronDown />}>
                 <Typography>Documento</Typography>
               </AccordionSummary>
               <AccordionDetails>
@@ -482,7 +477,7 @@ export default function PatientInfo() {
                           endAdornment: (
                             <InputAdornment position="end">
                               <IconButton onClick={openDocumentScanner}>
-                                <QrCodeIcon fontSize="large" />
+                                <QrcodeScan fontSize="large" />
                               </IconButton>
                             </InputAdornment>
                           ),
@@ -497,7 +492,7 @@ export default function PatientInfo() {
                       alignItems="center"
                     >
                       <IconButton type="submit" style={{ padding: '0px' }}>
-                        <SearchIcon fontSize="large" />
+                        <Magnify fontSize="large" />
                       </IconButton>
                     </Grid>
                   </Grid>
@@ -509,7 +504,7 @@ export default function PatientInfo() {
               expanded={accordionState.patient}
               onChange={() => expandAccordion('patient')}
             >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <AccordionSummary expandIcon={<ChevronDown />}>
                 <Typography>Paciente</Typography>
               </AccordionSummary>
               <AccordionDetails>
@@ -615,7 +610,7 @@ export default function PatientInfo() {
               expanded={accordionState.contact}
               onChange={() => expandAccordion('contact')}
             >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <AccordionSummary expandIcon={<ChevronDown />}>
                 <Typography>Contacto</Typography>
               </AccordionSummary>
               <AccordionDetails>
@@ -712,7 +707,7 @@ export default function PatientInfo() {
                   variant="contained"
                   color="primary"
                   className={classes.button}
-                  onClick={() => {}}
+                  onClick={sendOrder}
                 >
                   Guardar
                 </Button>
