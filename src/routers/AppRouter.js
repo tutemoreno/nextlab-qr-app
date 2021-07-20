@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Redirect, Switch } from 'react-router-dom';
 import Login from '../components/Login';
 import PatientInfo from '../components/PatientInfo';
@@ -9,16 +9,6 @@ import { PublicRoute } from './PublicRoute.js';
 export const AppRouter = () => {
   const auth = useAuth();
 
-  // useEffect(() => {
-
-  //     if ( ( auth && auth.user && auth.user.isValid ) ) {
-  //         console.log('esta logeado');
-  //     } else {
-  //         console.log('no esta logeado');
-  //     }
-
-  // }, [auth.user])
-
   return (
     <Router>
       <div>
@@ -26,7 +16,7 @@ export const AppRouter = () => {
           <PublicRoute
             exact
             path="/login"
-            component={ Login }
+            component={Login}
             isAuthenticated={
               auth && auth.user && auth.user.isValid ? true : false
             }
@@ -35,7 +25,7 @@ export const AppRouter = () => {
           <PrivateRoute
             exact
             path="/"
-            component={ PatientInfo }
+            component={PatientInfo}
             isAuthenticated={
               auth && auth.user && auth.user.isValid ? true : false
             }
