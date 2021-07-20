@@ -28,7 +28,7 @@ import xmlParser from 'xml-js';
 import { useFormContent } from '../hooks/useForm';
 import useStyles from '../hooks/useStyles';
 import QrCodeIcon from '../icons/QrCode';
-import QrReaderDialog from './QrReader copy';
+import QrReader from './QrReader';
 
 const initialState = {
   // qr
@@ -278,7 +278,7 @@ export default function PatientInfo() {
 
   return (
     <Container>
-      <QrReaderDialog {...scannerState} handleClose={closeScanner} />
+      <QrReader {...scannerState} handleClose={closeScanner} />
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
           <LockOutlinedIcon />

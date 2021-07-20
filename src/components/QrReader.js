@@ -2,23 +2,31 @@
 // https://itnext.io/accessing-the-webcam-with-javascript-and-react-33cbe92f49cb
 // https://googlechrome.github.io/samples/image-capture/index.html
 // https://webrtc.github.io/samples/
-import { Container, MenuItem, TextField } from '@material-ui/core';
+import {
+  AppBar,
+  Container,
+  Dialog,
+  IconButton,
+  MenuItem,
+  TextField,
+  Toolbar,
+  Typography,
+} from '@material-ui/core';
+import CloseIcon from '@material-ui/icons/Close';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 import { useFormInput } from '../hooks/useForm';
 import useStyles from '../hooks/useStyles';
 
 export default function QrReader(props) {
-  // import("./math").then(math => {
-  //   console.log(math.add(16, 26));
-  // });
   // formats ['qr_code', 'code_128', 'pdf417']
 
   const classes = useStyles();
 
   try {
+    const { open, title, formats, handleScan, handleClose, showClose } = props;
     const barcodeDetector = new window.BarcodeDetector({
-      formats: props.formats,
+      formats,
     });
     const deviceState = useFormInput('');
     const [devices, setDevices] = useState([]);
@@ -57,7 +65,7 @@ export default function QrReader(props) {
 
           if (data.length) {
             handled = true;
-            props.handleScan(data[0]);
+            handleScan(data[0]);
           }
         } catch (error) {
           console.log(error, 'QR error');
@@ -94,29 +102,43 @@ export default function QrReader(props) {
     }, [deviceState.input.value]);
 
     return (
-      <Container maxWidth="xs">
-        <TextField
-          id="selectedDevice"
-          label="Camara seccionada"
-          name="selectedDevice"
-          margin="normal"
-          variant="outlined"
-          fullWidth
-          {...deviceState.input}
-          select
-        >
-          {devices.map((e) => (
-            <MenuItem key={e.deviceId} value={e.deviceId}>
-              {e.label}
-            </MenuItem>
-          ))}
-        </TextField>
-        <video
-          style={{ width: 'inherit', height: 'inherit' }}
-          autoPlay
-          ref={videoRef}
-        />
-      </Container>
+      <Dialog fullScreen open={open}>
+        <AppBar position="static">
+          <Toolbar>
+            <Typography variant="h6" className={classes.title}>
+              {title}
+            </Typography>
+            {showClose && (
+              <IconButton color="inherit" onClick={handleClose}>
+                <CloseIcon />
+              </IconButton>
+            )}
+          </Toolbar>
+        </AppBar>
+        <Container>
+          <TextField
+            id="selectedDevice"
+            label="Camara seccionada"
+            name="selectedDevice"
+            margin="normal"
+            variant="outlined"
+            fullWidth
+            {...deviceState.input}
+            select
+          >
+            {devices.map((e) => (
+              <MenuItem key={e.deviceId} value={e.deviceId}>
+                {e.label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <video
+            style={{ width: 'inherit', height: 'inherit' }}
+            autoPlay
+            ref={videoRef}
+          />
+        </Container>
+      </Dialog>
     );
   } catch (error) {
     console.log(error, 'QR Exception');
@@ -130,7 +152,15 @@ export default function QrReader(props) {
   }
 }
 
+QrReader.defaultProps = {
+  showClose: true,
+};
+
 QrReader.propTypes = {
+  open: PropTypes.bool.isRequired,
   handleScan: PropTypes.func.isRequired,
   formats: PropTypes.array.isRequired,
+  title: PropTypes.string.isRequired,
+  handleClose: PropTypes.func,
+  showClose: PropTypes.bool,
 };
