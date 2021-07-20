@@ -41,7 +41,7 @@ const initialState = {
   document: '',
   documentType: 'DNI',
   // fetch
-  code: '',
+  patientCode: '',
   firstName: '',
   secondName: '',
   lastName: '',
@@ -78,7 +78,11 @@ const initialAccordionState = {
   contact: false,
 };
 
-const { REACT_APP_PATIENT_SERVICE, REACT_APP_NEXTLAB_TOKEN } = process.env;
+const {
+  REACT_APP_PATIENT_SERVICE,
+  REACT_APP_NEXTLAB_SERVICE,
+  REACT_APP_NEXTLAB_TOKEN,
+} = process.env;
 
 export default function PatientInfo() {
   const { content, setContent, onChange } = useFormContent(initialState),
@@ -92,6 +96,7 @@ export default function PatientInfo() {
       document,
       documentType,
       // fetch patient
+      patientCode,
       firstName,
       secondName,
       firstSurname,
@@ -224,6 +229,7 @@ export default function PatientInfo() {
 
         const {
           Paciente: {
+            Codigo: { value: patientCode },
             Nombre: { value: firstName },
             Nombre2: { value: secondName },
             Apellido: { value: firstSurname },
@@ -237,14 +243,15 @@ export default function PatientInfo() {
         } = parsedInfo;
 
         setAccordionState({
-          ...initialAccordionState,
           analysis: false,
           document: false,
           patient: true,
+          contact: true,
         });
 
         setContent((prevState) => ({
           ...prevState,
+          patientCode,
           firstName,
           secondName,
           firstSurname,
@@ -275,6 +282,119 @@ export default function PatientInfo() {
     });
     setAccordionState(initialAccordionState);
     setContent(initialState);
+  };
+
+  const sendOrder = async () => {
+    try {
+      const response = await axios({
+        method: 'post',
+        url: REACT_APP_NEXTLAB_SERVICE,
+        params: { op: 'RealizarPedido' },
+        data: qs.stringify({
+          ReqPedido: {
+            Sucursal: branch,
+            Numero: '105777', // TODO: hardcode
+            FechaPedido: '',
+            FechaEntrega: '',
+            Origen: { Codigo: origin, Descripcion: 'Ambulatorio' }, // TODO: hardcode
+            Observacion: observation,
+            Paciente: {
+              Historia: '',
+              TipoDocumento: documentType,
+              NumeroDocumento: document,
+              Apellido: firstSurname,
+              Apellido2: secondSurname,
+              Apellido3: '',
+              Nombre: firstName,
+              Nombre2: secondName,
+              Sexo: gender,
+              FechaNacimiento: birthDate,
+              Observacion: observation,
+              Telefono: phone,
+              Email: email,
+            },
+            Direccion: address,
+            CodigoPostal: '',
+            Provincia: { Codigo: '', Descripcion: '' },
+            Ciudad: { Codigo: '', Descripcion: '' },
+            Distrito: { Codigo: '', Descripcion: '' },
+            Barrio: { Codigo: '', Descripcion: '' },
+            Medico: {
+              // TODO: hardcode
+              Codigo: '00000',
+              Matricula: '00000',
+              NombreCompleto: 'Medico XXX',
+              Especialidad: '',
+              Email: '',
+            },
+            Servicio: { Codigo: 'A', Descripcion: '' }, // TODO: hardcode
+            Unidad: { Codigo: '', Descripcion: '' },
+            Sala: '',
+            Piso: '',
+            Cama: '',
+            Seguro: {
+              // TODO: hardcode
+              Codigo: 'OSD',
+              Descripcion: 'OSDE',
+              CodigoPlan: 'EXE',
+              DescripcionPlan: 'EXENTOS',
+            },
+            FechaReceta: '',
+            NumeroCarnet: '9518300', // TODO: hardcode
+            Diagnosticos: [{ Codigo: '412', Descripcion: 'Hipertiroidismo' }], // TODO: hardcode
+            Peticiones: [{ Codigo: 'N', Urgente: 'N' }], // TODO: hardcode
+          },
+          token: REACT_APP_NEXTLAB_TOKEN,
+        }),
+      });
+
+      console.log('[RESPONSE]', response);
+
+      if (response.status == 200) {
+        const parsedInfo = xmlParser.xml2js(response.data, {
+          compact: true,
+          textKey: 'value',
+        });
+
+        console.log('[PARSED]', parsedInfo);
+
+        // const {
+        //   Paciente: {
+        //     Nombre: { value: firstName },
+        //     Nombre2: { value: secondName },
+        //     Apellido: { value: firstSurname },
+        //     Apellido2: { value: secondSurname },
+        //     Sexo: { value: gender },
+        //     FechaNac: { value: birthDate },
+        //     Celular: { value: cellPhone },
+        //     Telefono: { value: phone },
+        //     Direccion: { value: address },
+        //   },
+        // } = parsedInfo;
+
+        // setAccordionState({
+        //   analysis: false,
+        //   document: false,
+        //   patient: true,
+        //   contact: true,
+        // });
+
+        // setContent((prevState) => ({
+        //   ...prevState,
+        //   firstName,
+        //   secondName,
+        //   firstSurname,
+        //   secondSurname,
+        //   gender,
+        //   birthDate: new Date(birthDate),
+        //   cellPhone: cellPhone ? cellPhone.replace('-', '') : '',
+        //   phone: phone ? phone.replace('-', '') : '',
+        //   address,
+        // }));
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -568,6 +688,7 @@ export default function PatientInfo() {
                       />
                     </Grid>
                   </Grid>
+<<<<<<< HEAD
                 </form>
               </AccordionDetails>
             </Accordion>
@@ -597,6 +718,224 @@ export default function PatientInfo() {
                   Guardar
                 </Button>
               </Grid>
+=======
+                </Grid>
+              </form>
+            </AccordionDetails>
+          </Accordion>
+
+          <Accordion
+            expanded={accordionState.patient}
+            onChange={() => expandAccordion('patient')}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>Paciente</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <form className={classes.form}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="text"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="firstName"
+                      autoComplete="given-name"
+                      label="Primer nombre"
+                      id="firstName"
+                      value={firstName}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="text"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="secondName"
+                      label="Segundo nombre"
+                      id="secondName"
+                      value={secondName}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="text"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="firstSurname"
+                      autoComplete="family-name"
+                      label="Primer apellido"
+                      id="firstSurname"
+                      value={firstSurname}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="text"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="secondSurname"
+                      label="Segundo apellido"
+                      id="secondSurname"
+                      value={secondSurname}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <KeyboardDatePicker
+                      variant="inline"
+                      autoOk
+                      inputVariant="outlined"
+                      fullWidth
+                      disableFuture
+                      format="dd/MM/yyyy"
+                      id="birthDate"
+                      label="Fecha de nacimiento"
+                      value={birthDate}
+                      onChange={(date) =>
+                        onChange({
+                          target: {
+                            value: date,
+                            name: 'birthDate',
+                            type: 'date',
+                          },
+                        })
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      id="gender"
+                      label="Género"
+                      name="gender"
+                      variant="outlined"
+                      fullWidth
+                      value={gender}
+                      onChange={onChange}
+                      select
+                    >
+                      <MenuItem value={'M'}>Masculino</MenuItem>
+                      <MenuItem value={'F'}>Femenino</MenuItem>
+                    </TextField>
+                  </Grid>
+                </Grid>
+              </form>
+            </AccordionDetails>
+          </Accordion>
+
+          <Accordion
+            expanded={accordionState.contact}
+            onChange={() => expandAccordion('contact')}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>Contacto</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <form className={classes.form}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="email"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="email"
+                      label="Email"
+                      id="email"
+                      value={email}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="number"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="cellPhone"
+                      label="Celular"
+                      id="cellPhone"
+                      value={cellPhone}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="number"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="phone"
+                      label="Teléfono fijo"
+                      id="phone"
+                      value={phone}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="text"
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="address"
+                      label="Dirección"
+                      id="address"
+                      value={address}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      type="text"
+                      variant="outlined"
+                      multiline
+                      fullWidth
+                      rows={4}
+                      name="observation"
+                      label="Observaciones"
+                      id="observation"
+                      value={observation}
+                      onChange={onChange}
+                    />
+                  </Grid>
+                </Grid>
+              </form>
+            </AccordionDetails>
+          </Accordion>
+
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <Button
+                type="button"
+                fullWidth
+                variant="contained"
+                color="secondary"
+                className={classes.button}
+                onClick={newAnalysis}
+              >
+                Nuevo
+              </Button>
+            </Grid>
+            <Grid item xs={6}>
+              <Button
+                type="button"
+                fullWidth
+                variant="contained"
+                color="primary"
+                className={classes.button}
+                onClick={sendOrder}
+              >
+                Guardar
+              </Button>
+>>>>>>> b6b2b569a5480bb3dcb1e9c3fb6591eac1c0fbcb
             </Grid>
           </div>
         </div>
