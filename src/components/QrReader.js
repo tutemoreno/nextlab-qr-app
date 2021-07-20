@@ -89,9 +89,7 @@ export default function QrReader(props) {
         }
       };
 
-      if (deviceState.input.value) startVideo();
-
-      return () => {
+      const cleanUp = () => {
         clearInterval(intervalId);
 
         if (stream)
@@ -99,7 +97,11 @@ export default function QrReader(props) {
             track.stop();
           });
       };
-    }, [deviceState.input.value]);
+
+      if (open && deviceState.input.value) startVideo();
+
+      return cleanUp;
+    }, [open, deviceState.input.value]);
 
     return (
       <Dialog fullScreen open={open}>
