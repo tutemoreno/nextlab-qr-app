@@ -712,7 +712,7 @@ export default function PatientInfo() {
                   variant="contained"
                   color="primary"
                   className={classes.button}
-                  onClick={() => {}}
+                  onClick={sendOrder}
                 >
                   Guardar
                 </Button>
