@@ -7,16 +7,16 @@ import {
   Grid,
   Link,
   TextField,
-  Typography
+  Typography,
 } from '@material-ui/core';
-import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Snackbar from '@material-ui/core/Snackbar';
+import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import MuiAlert from '@material-ui/lab/Alert';
 import React from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/auth';
-import useStyles from '../hooks/useStyles';
 import { useFormContent } from '../hooks/useForm';
+import useStyles from '../hooks/useStyles';
 
 const initialState = {
   username: '',
@@ -24,11 +24,9 @@ const initialState = {
   remember: false,
 };
 
-
-
 export default function Login() {
-
   const [openError, setOpenError] = React.useState(false);
+  //const [errorMessage, setErrorMessage] = React.useState('');
 
   const handleCloseError = (event, reason) => {
     if (reason === 'clickaway') {
@@ -54,31 +52,30 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      
       const loggedIn = await auth.signIn(content);
-  
       if (loggedIn) history.replace(from);
 
+      // if (!loggedIn) {
+      //   //setErrorMessage('Usuario y contraseña incorrectos');
+      //   setOpenError(() => {
+      //     console.log('fin setOpen');
+      //   });
+      // }
     } catch (error) {
       console.log(error);
       setOpenError(true);
     }
-
   };
 
   return (
     <Container maxWidth="xs">
       <div className={classes.paper}>
-
-        <Snackbar 
-          open={ openError } 
-          autoHideDuration={ 2000 } 
-          onClose={ handleCloseError }
+        <Snackbar
+          open={openError}
+          autoHideDuration={2000}
+          onClose={handleCloseError}
         >
-          <Alert 
-            onClose={ handleCloseError } 
-            severity="error"
-          >
+          <Alert onClose={handleCloseError} severity="error">
             Error de comunicación
           </Alert>
         </Snackbar>
