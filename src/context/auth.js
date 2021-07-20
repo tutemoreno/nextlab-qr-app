@@ -34,6 +34,7 @@ function useProvideAuth() {
 
   const signIn = async (content) => {
     const { username, password, remember } = content;
+    let isValid = false;
 
     const response = await axios({
       method: 'post',
@@ -47,21 +48,20 @@ function useProvideAuth() {
       }),
     });
 
-    const parsedInfo = xmlParser.xml2js(response.data, {
-      compact: true,
-      textKey: 'value',
-    });
+    if (response.status == 200) {
+      const parsedInfo = xmlParser.xml2js(response.data, {
+        compact: true,
+        textKey: 'value',
+      });
 
-    const {
-        Usuario: {
-          EsValido: { value: isValid },
-        },
-      } = parsedInfo,
-      usr = { username, isValid: isValid === 'true' };
+      isValid = parsedInfo.Usuario.EsValido.value == 'true';
 
-    if (isValid) {
-      setUser(usr);
-      setStore(REACT_APP_STORE_PATH, usr, remember);
+      if (isValid) {
+        const usr = { username, isValid };
+
+        setUser(usr);
+        setStore(REACT_APP_STORE_PATH, usr, remember);
+      }
     }
 
     return isValid;
