@@ -13,7 +13,6 @@ import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import LockOutline from 'mdi-material-ui/LockOutline';
 import React from 'react';
-import { useHistory, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/auth';
 import { useFormContent } from '../hooks/useForm';
 import useStyles from '../hooks/useStyles';
@@ -26,7 +25,7 @@ const initialState = {
 
 export default function Login() {
   const [openError, setOpenError] = React.useState(false);
-  //const [errorMessage, setErrorMessage] = React.useState('');
+  const [errorMessage, setErrorMessage] = React.useState('');
 
   const handleCloseError = (event, reason) => {
     if (reason === 'clickaway') {
@@ -42,9 +41,6 @@ export default function Login() {
 
   const { content, onChange } = useFormContent(initialState),
     { username, password, remember } = content,
-    history = useHistory(),
-    location = useLocation(),
-    { from } = location.state || { from: { pathname: '/' } },
     auth = useAuth(),
     classes = useStyles();
 
@@ -54,16 +50,13 @@ export default function Login() {
     try {
       const loggedIn = await auth.signIn(content);
 
-      if (loggedIn) history.replace(from);
-
-      // if (!loggedIn) {
-      //   //setErrorMessage('Usuario y contraseña incorrectos');
-      //   setOpenError(() => {
-      //     console.log('fin setOpen');
-      //   });
-      // }
+      if (!loggedIn) {
+        setErrorMessage('Usuario/Contraseña incorrectos');
+        setOpenError(true);
+      }
     } catch (error) {
       console.log(error);
+      setErrorMessage('Error de comunicación');
       setOpenError(true);
     }
   };
@@ -77,7 +70,7 @@ export default function Login() {
           onClose={handleCloseError}
         >
           <Alert onClose={handleCloseError} severity="error">
-            Error de comunicación
+            {errorMessage ? errorMessage : 'Error'}
           </Alert>
         </Snackbar>
 
