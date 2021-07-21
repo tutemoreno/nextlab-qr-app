@@ -413,10 +413,14 @@ export default function PatientInfo() {
               <AccordionSummary expandIcon={<ChevronDown />}>
                 <Typography>Analisis</Typography>
               </AccordionSummary>
-              <AccordionDetails>
-                <List>
+              <AccordionDetails className={classes.accordion}>
+                <List className={classes.accordion}>
                   {analysis.map((item) => (
-                    <ListItem divider key={item.CodigoAnalisis}>
+                    <ListItem
+                      divider
+                      key={item.CodigoAnalisis}
+                      className={classes.accordion}
+                    >
                       <ListItemText
                         primary={item.CodigoAnalisis}
                         secondary={item.Descripcion}
@@ -434,7 +438,7 @@ export default function PatientInfo() {
               <AccordionSummary expandIcon={<ChevronDown />}>
                 <Typography>Documento</Typography>
               </AccordionSummary>
-              <AccordionDetails>
+              <AccordionDetails className={classes.accordion}>
                 <form
                   className={classes.form}
                   onSubmit={(e) => {
@@ -507,7 +511,7 @@ export default function PatientInfo() {
               <AccordionSummary expandIcon={<ChevronDown />}>
                 <Typography>Paciente</Typography>
               </AccordionSummary>
-              <AccordionDetails>
+              <AccordionDetails className={classes.accordion}>
                 <form className={classes.form}>
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
@@ -613,7 +617,7 @@ export default function PatientInfo() {
               <AccordionSummary expandIcon={<ChevronDown />}>
                 <Typography>Contacto</Typography>
               </AccordionSummary>
-              <AccordionDetails>
+              <AccordionDetails className={classes.accordion}>
                 <form className={classes.form}>
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
@@ -697,7 +701,7 @@ export default function PatientInfo() {
                   className={classes.button}
                   onClick={newAnalysis}
                 >
-                  Nuevo
+                  Cancelar
                 </Button>
               </Grid>
               <Grid item xs={6}>
@@ -709,7 +713,7 @@ export default function PatientInfo() {
                   className={classes.button}
                   onClick={sendOrder}
                 >
-                  Guardar
+                  Enviar
                 </Button>
               </Grid>
             </Grid>
