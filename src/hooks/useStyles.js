@@ -25,4 +25,7 @@ export default makeStyles((theme) => ({
   selectEmpty: {
     marginTop: theme.spacing(2),
   },
+  accordion: {
+    paddingTop: '0px',
+  },
 }));
