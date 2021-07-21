@@ -291,6 +291,7 @@ export default function PatientInfo() {
     });
     setAccordionState(initialAccordionState);
     setContent(initialState);
+    setHasError(false);
   };
 
   const sendOrden = async () => {
