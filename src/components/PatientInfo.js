@@ -161,6 +161,7 @@ export default function PatientInfo() {
   });
   const [accordionState, setAccordionState] = useState(initialAccordionState);
   const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
+  const [hasError, setHasError] = useState(false);
   const classes = useStyles();
 
   const openDocumentScanner = () => {
@@ -399,6 +400,8 @@ export default function PatientInfo() {
     }
   };
 
+  const hideOnError = () => (hasError ? classes.hidden : '');
+
   return (
     <>
       <Navbar />
@@ -412,7 +415,7 @@ export default function PatientInfo() {
           <Typography component="h1" variant="h5">
             Información del paciente
           </Typography>
-          <div className={classes.form}>
+          <div className={(classes.form, hideOnError())}>
             <Accordion
               expanded={accordionState.analisis}
               onChange={() => expandAccordion('analisis')}
@@ -697,9 +700,10 @@ export default function PatientInfo() {
                 </form>
               </AccordionDetails>
             </Accordion>
-
-            <Grid container spacing={2} style={{ marginTop: '16px' }}>
-              <Grid item xs={6}>
+          </div>
+          <div className={classes.form}>
+            <Grid container spacing={2}>
+              <Grid item xs={hasError ? 12 : 6}>
                 <Button
                   type="button"
                   fullWidth
@@ -708,7 +712,7 @@ export default function PatientInfo() {
                   className={classes.button}
                   onClick={newOrden}
                 >
-                  Cancelar
+                  {hasError ? 'Reintentar' : 'Cancelar'}
                 </Button>
               </Grid>
               <Grid item xs={6}>
@@ -717,7 +721,7 @@ export default function PatientInfo() {
                   fullWidth
                   variant="contained"
                   color="primary"
-                  className={classes.button}
+                  className={(classes.button, hideOnError())}
                   onClick={sendOrden}
                 >
                   Enviar

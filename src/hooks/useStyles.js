@@ -28,4 +28,7 @@ export default makeStyles((theme) => ({
   accordion: {
     paddingTop: '0px',
   },
+  hidden: {
+    display: 'none',
+  },
 }));
