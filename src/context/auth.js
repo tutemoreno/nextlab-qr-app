@@ -2,9 +2,14 @@ import axios from 'axios';
 import PropTypes from 'prop-types';
 import qs from 'qs';
 import React, { createContext, useContext } from 'react';
-import xmlParser from 'xml-js';
+import xml2js from 'xml2js';
 import { useFormContent } from '../hooks/useForm';
 import { getStore, removeStore, setStore } from '../utils/store';
+
+const xml2jsParser = new xml2js.Parser({
+  explicitArray: false,
+  charkey: 'value',
+});
 
 const {
     REACT_APP_NEXTLAB_TOKEN,
@@ -49,12 +54,9 @@ function useProvideAuth() {
     });
 
     if (response.status == 200) {
-      const parsedInfo = xmlParser.xml2js(response.data, {
-        compact: true,
-        textKey: 'value',
-      });
+      const parsedInfo = await xml2jsParser.parseStringPromise(response.data);
 
-      isValid = parsedInfo.Usuario.EsValido.value == 'true';
+      isValid = parsedInfo.Usuario.EsValido == 'true';
 
       if (isValid) {
         const usr = { username, isValid };

@@ -17,10 +17,15 @@ import {
 } from '@material-ui/core';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
-import { ChevronDown, LockOutline, Magnify, QrcodeScan } from 'mdi-material-ui';
+import {
+  BarcodeScan,
+  ChevronDown,
+  LockOutline,
+  Magnify,
+} from 'mdi-material-ui';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
-import xmlParser from 'xml-js';
+import xml2js from 'xml2js';
 import { useFormContent } from '../hooks/useForm';
 import useStyles from '../hooks/useStyles';
 import { Navbar } from './Navbar';
@@ -79,6 +84,13 @@ const {
   REACT_APP_NEXTLAB_TOKEN,
 } = process.env;
 
+const xmlParser = new xml2js.Parser({
+  explicitArray: false,
+  charkey: 'value',
+});
+
+const xmlBuilder = new xml2js.Builder();
+
 export default function PatientInfo() {
   const { content, setContent, onChange } = useFormContent(initialState),
     {
@@ -115,13 +127,10 @@ export default function PatientInfo() {
       });
 
       if (response.status == 200) {
-        const parsedXml = xmlParser.xml2js(response.data, {
-          compact: true,
-          textKey: 'value',
-        });
+        const parsedInfo = await xmlParser.parseStringPromise(response.data);
 
         const { Sucursal, Origen, NroMuestra, Analisis } = JSON.parse(
-          parsedXml.string.value,
+          parsedInfo.string.value,
         );
 
         setContent((prevState) => ({
@@ -183,14 +192,11 @@ export default function PatientInfo() {
           data: qs.stringify({ token: REACT_APP_NEXTLAB_TOKEN }),
         });
 
-        const parsedInfo = xmlParser.xml2js(response.data, {
-          compact: true,
-          textKey: 'value',
-        });
+        const parsedInfo = await xmlParser.parseStringPromise(response.data);
 
         setDocumentTypes(
           parsedInfo.ListaTipoDocumento.Lista.TipoDocumento.map((e) => {
-            return { id: e.TipoDoc.value, name: e.Descripcion.value };
+            return { id: e.TipoDoc, name: e.Descripcion };
           }),
         );
       } catch (error) {
@@ -214,26 +220,23 @@ export default function PatientInfo() {
         }),
       });
 
-      if (response.status == 200) {
-        const parsedInfo = xmlParser.xml2js(response.data, {
-          compact: true,
-          textKey: 'value',
-        });
+      console.log(response.data);
 
-        console.log(parsedInfo);
+      if (response.status == 200) {
+        const parsedInfo = await xmlParser.parseStringPromise(response.data);
 
         const {
           Paciente: {
-            Codigo: { value: patientCode },
-            Nombre: { value: firstName },
-            Nombre2: { value: secondName },
-            Apellido: { value: firstSurname },
-            Apellido2: { value: secondSurname },
-            Sexo: { value: gender },
-            FechaNac: { value: birthDate },
-            Celular: { value: cellPhone },
-            Telefono: { value: phone },
-            Direccion: { value: address },
+            Codigo: patientCode,
+            Nombre: firstName,
+            Nombre2: secondName,
+            Apellido: firstSurname,
+            Apellido2: secondSurname,
+            Sexo: gender,
+            FechaNac: birthDate,
+            Celular: cellPhone,
+            Telefono: phone,
+            Direccion: address,
           },
         } = parsedInfo;
 
@@ -280,76 +283,97 @@ export default function PatientInfo() {
   };
 
   const sendOrder = async () => {
+    const data = qs.stringify(
+      {
+        token: REACT_APP_NEXTLAB_TOKEN,
+        pedido: {
+          Sucursal: '00',
+        },
+      },
+      { encode: false, encodeValuesOnly: true },
+    );
+    console.log(data);
+    console.log(
+      qs.stringify({
+        documento: document,
+        tipoDoc: documentType,
+        codigo: 0,
+        token: REACT_APP_NEXTLAB_TOKEN,
+      }),
+    );
     try {
-      const response = await axios({
-        method: 'post',
-        url: REACT_APP_NEXTLAB_SERVICE,
-        params: { op: 'RealizarPedido' },
-        data: qs.stringify({
-          ReqPedido: {
-            Sucursal: branch,
-            Numero: '105777', // TODO: hardcode
-            FechaPedido: '',
-            FechaEntrega: '',
-            Origen: { Codigo: origin, Descripcion: 'Ambulatorio' }, // TODO: hardcode
-            Observacion: observation,
-            Paciente: {
-              Historia: '',
-              TipoDocumento: documentType,
-              NumeroDocumento: document,
-              Apellido: firstSurname,
-              Apellido2: secondSurname,
-              Apellido3: '',
-              Nombre: firstName,
-              Nombre2: secondName,
-              Sexo: gender,
-              FechaNacimiento: birthDate,
+      const response = await axios(
+        {
+          method: 'post',
+          url: REACT_APP_NEXTLAB_SERVICE,
+          params: { op: 'RealizarPedido3' },
+          data,
+          _data: qs.stringify({
+            ReqPedido: {
+              Sucursal: branch,
+              Numero: '105777', // TODO: hardcode
+              FechaPedido: '',
+              FechaEntrega: '',
+              Origen: { Codigo: origin, Descripcion: 'Ambulatorio' }, // TODO: hardcode
               Observacion: observation,
-              Telefono: phone,
-              Email: email,
+              Paciente: {
+                Historia: '',
+                TipoDocumento: documentType,
+                NumeroDocumento: document,
+                Apellido: firstSurname,
+                Apellido2: secondSurname,
+                Apellido3: '',
+                Nombre: firstName,
+                Nombre2: secondName,
+                Sexo: gender,
+                FechaNacimiento: birthDate,
+                Observacion: observation,
+                Telefono: phone,
+                Email: email,
+              },
+              Direccion: address,
+              CodigoPostal: '',
+              Provincia: { Codigo: '', Descripcion: '' },
+              Ciudad: { Codigo: '', Descripcion: '' },
+              Distrito: { Codigo: '', Descripcion: '' },
+              Barrio: { Codigo: '', Descripcion: '' },
+              Medico: {
+                // TODO: hardcode
+                Codigo: '00000',
+                Matricula: '00000',
+                NombreCompleto: 'Medico XXX',
+                Especialidad: '',
+                Email: '',
+              },
+              Servicio: { Codigo: 'A', Descripcion: '' }, // TODO: hardcode
+              Unidad: { Codigo: '', Descripcion: '' },
+              Sala: '',
+              Piso: '',
+              Cama: '',
+              Seguro: {
+                // TODO: hardcode
+                Codigo: 'OSD',
+                Descripcion: 'OSDE',
+                CodigoPlan: 'EXE',
+                DescripcionPlan: 'EXENTOS',
+              },
+              FechaReceta: '',
+              NumeroCarnet: '9518300', // TODO: hardcode
+              Diagnosticos: [{ Codigo: '412', Descripcion: 'Hipertiroidismo' }], // TODO: hardcode
+              Peticiones: [{ Codigo: 'N', Urgente: 'N' }], // TODO: hardcode
             },
-            Direccion: address,
-            CodigoPostal: '',
-            Provincia: { Codigo: '', Descripcion: '' },
-            Ciudad: { Codigo: '', Descripcion: '' },
-            Distrito: { Codigo: '', Descripcion: '' },
-            Barrio: { Codigo: '', Descripcion: '' },
-            Medico: {
-              // TODO: hardcode
-              Codigo: '00000',
-              Matricula: '00000',
-              NombreCompleto: 'Medico XXX',
-              Especialidad: '',
-              Email: '',
-            },
-            Servicio: { Codigo: 'A', Descripcion: '' }, // TODO: hardcode
-            Unidad: { Codigo: '', Descripcion: '' },
-            Sala: '',
-            Piso: '',
-            Cama: '',
-            Seguro: {
-              // TODO: hardcode
-              Codigo: 'OSD',
-              Descripcion: 'OSDE',
-              CodigoPlan: 'EXE',
-              DescripcionPlan: 'EXENTOS',
-            },
-            FechaReceta: '',
-            NumeroCarnet: '9518300', // TODO: hardcode
-            Diagnosticos: [{ Codigo: '412', Descripcion: 'Hipertiroidismo' }], // TODO: hardcode
-            Peticiones: [{ Codigo: 'N', Urgente: 'N' }], // TODO: hardcode
-          },
-          token: REACT_APP_NEXTLAB_TOKEN,
-        }),
-      });
+            token: REACT_APP_NEXTLAB_TOKEN,
+          }),
+        },
+        {
+          headers: { 'Content-Type': 'text/xml' },
+        },
+      );
 
       console.log('[RESPONSE]', response);
 
       if (response.status == 200) {
-        const parsedInfo = xmlParser.xml2js(response.data, {
-          compact: true,
-          textKey: 'value',
-        });
+        const parsedInfo = await xmlParser.parseStringPromise(response.data);
 
         console.log('[PARSED]', parsedInfo);
 
@@ -481,7 +505,7 @@ export default function PatientInfo() {
                           endAdornment: (
                             <InputAdornment position="end">
                               <IconButton onClick={openDocumentScanner}>
-                                <QrcodeScan fontSize="large" />
+                                <BarcodeScan fontSize="large" />
                               </IconButton>
                             </InputAdornment>
                           ),
