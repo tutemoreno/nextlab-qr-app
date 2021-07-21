@@ -87,9 +87,14 @@ const {
 const xmlParser = new xml2js.Parser({
   explicitArray: false,
   charkey: 'value',
+  trim: true,
+  normalize: true,
+  ignoreAttrs: true,
 });
 
-const xmlBuilder = new xml2js.Builder();
+const xmlBuilder = new xml2js.Builder({
+  xmldec: { version: '1.0', encoding: 'utf-8' },
+});
 
 export default function PatientInfo() {
   const { content, setContent, onChange } = useFormContent(initialState),
@@ -283,38 +288,26 @@ export default function PatientInfo() {
   };
 
   const sendOrder = async () => {
-    const data = qs.stringify(
-      {
-        token: REACT_APP_NEXTLAB_TOKEN,
-        pedido: {
-          Sucursal: '00',
+    const data = xmlBuilder.buildObject({
+      'soap12:Envelope': {
+        $: {
+          'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+          'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
+          'xmlns:soap12': 'http://www.w3.org/2003/05/soap-envelope',
         },
-      },
-      { encode: false, encodeValuesOnly: true },
-    );
-    console.log(data);
-    console.log(
-      qs.stringify({
-        documento: document,
-        tipoDoc: documentType,
-        codigo: 0,
-        token: REACT_APP_NEXTLAB_TOKEN,
-      }),
-    );
-    try {
-      const response = await axios(
-        {
-          method: 'post',
-          url: REACT_APP_NEXTLAB_SERVICE,
-          params: { op: 'RealizarPedido3' },
-          data,
-          _data: qs.stringify({
-            ReqPedido: {
+        'soap12:Body': {
+          RealizarPedido: {
+            $: {
+              xmlns: 'http://tempuri.org/',
+            },
+            token: REACT_APP_NEXTLAB_TOKEN,
+            pedido: {
               Sucursal: branch,
               Numero: '105777', // TODO: hardcode
-              FechaPedido: '',
-              FechaEntrega: '',
+              FechaPedido: new Date().toISOString(),
+              FechaEntrega: new Date().toISOString(),
               Origen: { Codigo: origin, Descripcion: 'Ambulatorio' }, // TODO: hardcode
+              Urgente: 'N',
               Observacion: observation,
               Paciente: {
                 Historia: '',
@@ -326,7 +319,7 @@ export default function PatientInfo() {
                 Nombre: firstName,
                 Nombre2: secondName,
                 Sexo: gender,
-                FechaNacimiento: birthDate,
+                FechaNacimiento: birthDate.toISOString(),
                 Observacion: observation,
                 Telefono: phone,
                 Email: email,
@@ -357,59 +350,44 @@ export default function PatientInfo() {
                 CodigoPlan: 'EXE',
                 DescripcionPlan: 'EXENTOS',
               },
-              FechaReceta: '',
+              FechaReceta: new Date().toISOString(),
               NumeroCarnet: '9518300', // TODO: hardcode
-              Diagnosticos: [{ Codigo: '412', Descripcion: 'Hipertiroidismo' }], // TODO: hardcode
-              Peticiones: [{ Codigo: 'N', Urgente: 'N' }], // TODO: hardcode
+              Diagnosticos: {
+                // TODO: hardcode
+                ReqDiagnostico: [
+                  { Codigo: '412', Descripcion: 'Hipertiroidismo' },
+                ],
+              },
+              Peticiones: { ReqPeticion: [{ Codigo: 'N', Urgente: 'N' }] }, // TODO: hardcode
             },
-            token: REACT_APP_NEXTLAB_TOKEN,
-          }),
+          },
         },
-        {
-          headers: { 'Content-Type': 'text/xml' },
-        },
-      );
+      },
+    });
 
-      console.log('[RESPONSE]', response);
+    try {
+      const response = await axios({
+        method: 'post',
+        url: REACT_APP_NEXTLAB_SERVICE,
+        params: { op: 'RealizarPedido' },
+        data,
+        headers: { 'content-type': 'application/soap+xml; charset=utf-8' },
+      });
 
       if (response.status == 200) {
         const parsedInfo = await xmlParser.parseStringPromise(response.data);
 
-        console.log('[PARSED]', parsedInfo);
+        const {
+          'soap:Envelope': {
+            'soap:Body': {
+              RealizarPedidoResponse: {
+                RealizarPedidoResult: { NumeroOrden, Respuesta },
+              },
+            },
+          },
+        } = parsedInfo;
 
-        // const {
-        //   Paciente: {
-        //     Nombre: { value: firstName },
-        //     Nombre2: { value: secondName },
-        //     Apellido: { value: firstSurname },
-        //     Apellido2: { value: secondSurname },
-        //     Sexo: { value: gender },
-        //     FechaNac: { value: birthDate },
-        //     Celular: { value: cellPhone },
-        //     Telefono: { value: phone },
-        //     Direccion: { value: address },
-        //   },
-        // } = parsedInfo;
-
-        // setAccordionState({
-        //   analysis: false,
-        //   document: false,
-        //   patient: true,
-        //   contact: true,
-        // });
-
-        // setContent((prevState) => ({
-        //   ...prevState,
-        //   firstName,
-        //   secondName,
-        //   firstSurname,
-        //   secondSurname,
-        //   gender,
-        //   birthDate: new Date(birthDate),
-        //   cellPhone: cellPhone ? cellPhone.replace('-', '') : '',
-        //   phone: phone ? phone.replace('-', '') : '',
-        //   address,
-        // }));
+        console.log(NumeroOrden, Respuesta);
       }
     } catch (error) {
       console.log(error);
