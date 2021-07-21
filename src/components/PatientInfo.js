@@ -34,9 +34,9 @@ import QrReader from './QrReader';
 const initialState = {
   // qr
   branch: '',
-  origin: '',
+  origen: '',
   sampleNumber: '',
-  analysis: [],
+  analisis: [],
   // manual
   document: '',
   documentType: 'DNI',
@@ -72,7 +72,7 @@ const initialScannerState = {
 const initialDocumentTypesState = [{ id: 'DNI', name: 'Doc. Nac. Identidad' }];
 
 const initialAccordionState = {
-  analysis: true,
+  analisis: true,
   document: true,
   patient: false,
   contact: false,
@@ -101,9 +101,9 @@ export default function PatientInfo() {
     {
       // barcode
       branch,
-      origin,
+      origen,
       sampleNumber,
-      analysis,
+      analisis,
       // manual
       document,
       documentType,
@@ -133,6 +133,11 @@ export default function PatientInfo() {
 
       if (response.status == 200) {
         const parsedInfo = await xmlParser.parseStringPromise(response.data);
+        const { error } = JSON.parse(parsedInfo.string.value);
+        if (error) {
+          // FIXME: deberia de llevar a una pantalla que indique el error en cuestion y no mostrar nada de la carga del documento
+          throw new Error(error.Descripcion);
+        }
 
         const { Sucursal, Origen, NroMuestra, Analisis } = JSON.parse(
           parsedInfo.string.value,
@@ -141,9 +146,9 @@ export default function PatientInfo() {
         setContent((prevState) => ({
           ...prevState,
           branch: Sucursal,
-          origin: Origen,
+          origen: Origen,
           sampleNumber: NroMuestra,
-          analysis: Analisis,
+          analisis: Analisis,
         }));
       }
     } catch (error) {
@@ -246,7 +251,7 @@ export default function PatientInfo() {
         } = parsedInfo;
 
         setAccordionState({
-          analysis: false,
+          analisis: false,
           document: false,
           patient: true,
           contact: true,
@@ -278,7 +283,7 @@ export default function PatientInfo() {
     }));
   };
 
-  const newAnalysis = () => {
+  const newOrden = () => {
     setScannerState({
       ...initialScannerState,
       handleScan: onBloodScan,
@@ -409,15 +414,15 @@ export default function PatientInfo() {
           </Typography>
           <div className={classes.form}>
             <Accordion
-              expanded={accordionState.analysis}
-              onChange={() => expandAccordion('analysis')}
+              expanded={accordionState.analisis}
+              onChange={() => expandAccordion('analisis')}
             >
               <AccordionSummary expandIcon={<ChevronDown />}>
                 <Typography>Analisis</Typography>
               </AccordionSummary>
               <AccordionDetails className={classes.accordion}>
                 <List className={classes.accordion}>
-                  {analysis.map((item) => (
+                  {analisis.map((item) => (
                     <ListItem
                       divider
                       key={item.CodigoAnalisis}
@@ -701,7 +706,7 @@ export default function PatientInfo() {
                   variant="contained"
                   color="secondary"
                   className={classes.button}
-                  onClick={newAnalysis}
+                  onClick={newOrden}
                 >
                   Cancelar
                 </Button>
