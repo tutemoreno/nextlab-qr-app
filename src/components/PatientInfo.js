@@ -133,15 +133,15 @@ export default function PatientInfo() {
 
       if (response.status == 200) {
         const parsedInfo = await xmlParser.parseStringPromise(response.data);
-        const { error } = JSON.parse(parsedInfo.string.value);
+
+        const parsedJson = JSON.parse(parsedInfo.string.value);
+
+        const { Sucursal, Origen, NroMuestra, Analisis, error } = parsedJson;
+
         if (error) {
           // FIXME: deberia de llevar a una pantalla que indique el error en cuestion y no mostrar nada de la carga del documento
           throw new Error(error.Descripcion);
         }
-
-        const { Sucursal, Origen, NroMuestra, Analisis } = JSON.parse(
-          parsedInfo.string.value,
-        );
 
         setContent((prevState) => ({
           ...prevState,
@@ -292,7 +292,7 @@ export default function PatientInfo() {
     setContent(initialState);
   };
 
-  const sendOrder = async () => {
+  const sendOrden = async () => {
     const data = xmlBuilder.buildObject({
       'soap12:Envelope': {
         $: {
@@ -311,7 +311,7 @@ export default function PatientInfo() {
               Numero: '105777', // TODO: hardcode
               FechaPedido: new Date().toISOString(),
               FechaEntrega: new Date().toISOString(),
-              Origen: { Codigo: origin, Descripcion: 'Ambulatorio' }, // TODO: hardcode
+              Origen: { Codigo: origen, Descripcion: 'Ambulatorio' }, // TODO: hardcode
               Urgente: 'N',
               Observacion: observation,
               Paciente: {
@@ -718,7 +718,7 @@ export default function PatientInfo() {
                   variant="contained"
                   color="primary"
                   className={classes.button}
-                  onClick={sendOrder}
+                  onClick={sendOrden}
                 >
                   Enviar
                 </Button>
