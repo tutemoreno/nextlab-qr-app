@@ -77,6 +77,7 @@ const {
   REACT_APP_PATIENT_SERVICE,
   REACT_APP_NEXTLAB_SERVICE,
   REACT_APP_NEXTLAB_TOKEN,
+  REACT_APP_MEDICO,
 } = process.env;
 
 const xmlParser = new xml2js.Parser({
@@ -127,6 +128,7 @@ export default function PatientInfo() {
     try {
       const { Sucursal, Origen, NroMuestra, Analisis, error } = await getQrInfo(
         rawValue,
+        origen,
       );
 
       if (error) {
@@ -267,10 +269,10 @@ export default function PatientInfo() {
             token: REACT_APP_NEXTLAB_TOKEN,
             pedido: {
               Sucursal: branch,
-              Numero: 0,
+              Numero: '',
               FechaPedido: new Date().toISOString(),
               FechaEntrega: new Date().toISOString(),
-              Origen: { Codigo: origen, Descripcion: 'Ambulatorio' }, // TODO: hardcode
+              Origen: { Codigo: origen, Descripcion: '' },
               Urgente: 'N',
               Observacion: observation,
               Paciente: {
@@ -295,34 +297,37 @@ export default function PatientInfo() {
               Distrito: { Codigo: '', Descripcion: '' },
               Barrio: { Codigo: '', Descripcion: '' },
               Medico: {
-                // TODO: hardcode
-                Codigo: '00000',
-                Matricula: '00000',
-                NombreCompleto: 'Medico XXX',
+                Codigo: REACT_APP_MEDICO,
+                Matricula: '',
+                NombreCompleto: '',
                 Especialidad: '',
                 Email: '',
               },
-              Servicio: { Codigo: 'A', Descripcion: '' }, // TODO: hardcode
+              Servicio: {},
               Unidad: { Codigo: '', Descripcion: '' },
               Sala: '',
               Piso: '',
               Cama: '',
               Seguro: {
-                // TODO: hardcode
-                Codigo: 'OSD',
-                Descripcion: 'OSDE',
-                CodigoPlan: 'EXE',
-                DescripcionPlan: 'EXENTOS',
+                Codigo: 'C0163', // TODO: traer del origen
+                Descripcion: '',
+                CodigoPlan: 'LAB', // TODO: traer del origen
+                DescripcionPlan: '',
               },
               FechaReceta: new Date().toISOString(),
-              NumeroCarnet: '', // TODO: hardcode
+              NumeroCarnet: '',
               Diagnosticos: {
-                // TODO: hardcode
-                ReqDiagnostico: [
-                  // { Codigo: '412', Descripcion: 'Hipertiroidismo' },
-                ],
+                ReqDiagnostico: [],
               },
-              Peticiones: { ReqPeticion: [{ Codigo: 'N', Urgente: 'N' }] }, // TODO: hardcode
+              // Peticiones: {
+              //   ReqPeticion: [
+              //     analisis.map((a) => ({
+              //       Codigo: a.CodigoAnalisis,
+              //       Urgente: 'N',
+              //     })),
+              //   ],
+              // },
+              Peticiones: { ReqPeticion: [{ Codigo: '412', Urgente: 'N' }] }, // TODO: traer de los analisis escaneados
             },
           },
         },
@@ -478,11 +483,11 @@ async function getPatientInfo(document, documentType) {
   });
 }
 
-async function getQrInfo(idQr) {
+async function getQrInfo(idQr, codOri) {
   const parsedInfo = await axiosRequest({
     method: 'post',
     url: `${REACT_APP_PATIENT_SERVICE}/GetQr`,
-    data: qs.stringify({ idQr, token: REACT_APP_NEXTLAB_TOKEN }),
+    data: qs.stringify({ token: REACT_APP_NEXTLAB_TOKEN, idQr, codOri }),
   });
 
   return JSON.parse(parsedInfo.string);
