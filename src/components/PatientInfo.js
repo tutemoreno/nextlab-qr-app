@@ -277,7 +277,7 @@ export default function PatientInfo() {
             token: REACT_APP_NEXTLAB_TOKEN,
             pedido: {
               Sucursal: branch,
-              Numero: '105777', // TODO: hardcode
+              Numero: 0,
               FechaPedido: new Date().toISOString(),
               FechaEntrega: new Date().toISOString(),
               Origen: { Codigo: origen, Descripcion: 'Ambulatorio' }, // TODO: hardcode
@@ -325,11 +325,11 @@ export default function PatientInfo() {
                 DescripcionPlan: 'EXENTOS',
               },
               FechaReceta: new Date().toISOString(),
-              NumeroCarnet: '9518300', // TODO: hardcode
+              NumeroCarnet: '', // TODO: hardcode
               Diagnosticos: {
                 // TODO: hardcode
                 ReqDiagnostico: [
-                  { Codigo: '412', Descripcion: 'Hipertiroidismo' },
+                  // { Codigo: '412', Descripcion: 'Hipertiroidismo' },
                 ],
               },
               Peticiones: { ReqPeticion: [{ Codigo: 'N', Urgente: 'N' }] }, // TODO: hardcode
