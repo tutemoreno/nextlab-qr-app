@@ -1,17 +1,19 @@
 import {
   Avatar,
+  Box,
   Button,
   Container,
   Grid,
   IconButton,
   InputAdornment,
   MenuItem,
+  Paper,
   TextField,
   Typography,
 } from '@material-ui/core';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
-import { BarcodeScan, Magnify } from 'mdi-material-ui';
+import { Alert, BarcodeScan, Magnify } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
@@ -68,7 +70,7 @@ const initialAccordionState = {
   contact: false,
 };
 
-const initialHasError = {
+const initialErrorState = {
   error: false,
   message: '',
 };
@@ -93,33 +95,10 @@ const xmlBuilder = new xml2js.Builder({
 });
 
 export default function PatientInfo() {
-  const { content, setContent, onChange } = useFormContent(initialState),
-    {
-      // barcode
-      branch,
-      origen,
-      sampleNumber,
-      analisis,
-      // manual
-      document,
-      documentType,
-      // fetch patient
-      patientCode,
-      firstName,
-      secondName,
-      firstSurname,
-      secondSurname,
-      birthDate,
-      gender,
-      email,
-      cellPhone,
-      phone,
-      address,
-      observation,
-    } = content;
+  const { content, setContent, onChange } = useFormContent(initialState);
 
   const [accordionState, setAccordionState] = useState(initialAccordionState);
-  const [hasError, setHasError] = useState(false);
+  const [errorState, setErrorState] = useState(initialErrorState);
   const classes = useStyles();
 
   const onBloodScan = async ({ rawValue }) => {
@@ -128,11 +107,11 @@ export default function PatientInfo() {
     try {
       const { Sucursal, Origen, NroMuestra, Analisis, error } = await getQrInfo(
         rawValue,
-        origen,
+        content.origen,
       );
 
       if (error) {
-        setHasError({
+        setErrorState({
           error: true,
           message: error.Descripcion,
         });
@@ -180,7 +159,7 @@ export default function PatientInfo() {
     }));
 
     try {
-      const { Paciente } = await getPatientInfo(document, documentType);
+      const { Paciente } = await getPatientInfo(document, content.documentType);
       onGetPatientInfo(Paciente);
     } catch (error) {
       console.log(error);
@@ -229,7 +208,7 @@ export default function PatientInfo() {
 
   const handlePatientSubmit = async () => {
     try {
-      const { Paciente } = await getPatientInfo(document, documentType);
+      const { Paciente } = await getPatientInfo(document, content.documentType);
       onGetPatientInfo(Paciente);
     } catch (error) {
       console.log(error);
@@ -250,10 +229,33 @@ export default function PatientInfo() {
     });
     setAccordionState(initialAccordionState);
     setContent(initialState);
-    setHasError(false);
+    setErrorState(initialErrorState);
   };
 
   const sendOrden = async () => {
+    const {
+      // barcode
+      branch,
+      origen,
+      sampleNumber,
+      analisis,
+      // manual
+      document,
+      documentType,
+      // fetch patient
+      patientCode,
+      firstName,
+      secondName,
+      firstSurname,
+      secondSurname,
+      birthDate,
+      gender,
+      email,
+      cellPhone,
+      phone,
+      address,
+      observation,
+    } = content;
     const data = xmlBuilder.buildObject({
       'soap12:Envelope': {
         $: {
@@ -359,14 +361,27 @@ export default function PatientInfo() {
     }
   };
 
-  const hideOnError = hasError ? classes.hidden : '';
-
   const documentFormState = {
     content,
     onChange,
     openScanner: openDocumentScanner,
     handleSubmit: handlePatientSubmit,
   };
+
+  const [displayNoneOnError, setDisplayNoneOnError] = useState('');
+  const [buttonResetState, setButtonResetState] = useState({
+    label: 'Cancelar',
+    columns: 6,
+  });
+  useEffect(() => {
+    if (errorState.error) {
+      setDisplayNoneOnError('none');
+      setButtonResetState({ label: 'Reintentar', columns: 12 });
+    } else {
+      setDisplayNoneOnError('');
+      setButtonResetState({ label: 'Cancelar', columns: 6 });
+    }
+  }, [errorState.error]);
 
   return (
     <>
@@ -379,33 +394,37 @@ export default function PatientInfo() {
           <Typography component="h1" variant="h5">
             Información del paciente
           </Typography>
-          <Typography
-            className={`${!hideOnError}`}
-            component="h1"
-            variant="h5"
-            style={{ margin: '40px 5px 20px 5px' }}
-          >
-            {hasError.message}
-          </Typography>
 
-          {/* <div
-            className={`${classes.form} ${classes.displayColumn} ${hideOnError}`}
+          <Box
+            width="100%"
+            mt={3}
+            clone
+            display={errorState.error ? 'flex' : 'none'}
+            flexDirection="column"
+            alignItems="center"
           >
-            <Avatar className={classes.avatar}>
-              <Alert fontSize="large" />
-            </Avatar>
-            <Typography component="h1" variant="h4">
-              ERROR ERROR ERROR
-            </Typography>
-          </div> */}
-          <div className={`${classes.form} ${hideOnError}`}>
+            <Paper>
+              <Avatar className={classes.avatar}>
+                <Alert fontSize="large" />
+              </Avatar>
+              <Typography
+                component="h1"
+                variant="h5"
+                style={{ margin: '40px 5px 20px 5px' }}
+              >
+                {errorState.message}
+              </Typography>
+            </Paper>
+          </Box>
+
+          <Box width="100%" display={displayNoneOnError}>
             <AccordionHoc
               title="Analisis"
               expanded={accordionState.analisis}
               onChange={() => expandAccordion('analisis')}
             >
               <ListHoc
-                items={analisis.map((e) => {
+                items={content.analisis.map((e) => {
                   const { CodigoAnalisis, Descripcion } = e;
                   return { id: CodigoAnalisis, Descripcion };
                 })}
@@ -435,10 +454,11 @@ export default function PatientInfo() {
             >
               <ContactForm content={content} onChange={onChange} />
             </AccordionHoc>
-          </div>
-          <div className={classes.form}>
+          </Box>
+
+          <Box width="100%" mt={3}>
             <Grid container spacing={2}>
-              <Grid item xs={hasError ? 12 : 6}>
+              <Grid item xs={buttonResetState.columns}>
                 <Button
                   type="button"
                   fullWidth
@@ -447,23 +467,25 @@ export default function PatientInfo() {
                   className={classes.button}
                   onClick={newOrden}
                 >
-                  {hasError ? 'Reintentar' : 'Cancelar'}
+                  {buttonResetState.label}
                 </Button>
               </Grid>
-              <Grid item xs={6}>
-                <Button
-                  type="button"
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  className={`${classes.button} ${hideOnError}`}
-                  onClick={sendOrden}
-                >
-                  Enviar
-                </Button>
-              </Grid>
+              <Box clone display={displayNoneOnError}>
+                <Grid item xs={6}>
+                  <Button
+                    type="button"
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                    className={`${classes.button}`}
+                    onClick={sendOrden}
+                  >
+                    Enviar
+                  </Button>
+                </Grid>
+              </Box>
             </Grid>
-          </div>
+          </Box>
         </div>
       </Container>
     </>
