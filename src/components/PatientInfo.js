@@ -1,28 +1,25 @@
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Avatar,
   Button,
   Container,
   Grid,
   IconButton,
   InputAdornment,
-  List,
-  ListItem,
-  ListItemText,
   MenuItem,
   TextField,
   Typography,
 } from '@material-ui/core';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
-import { BarcodeScan, ChevronDown, Magnify } from 'mdi-material-ui';
+import { BarcodeScan, Magnify } from 'mdi-material-ui';
+import PropTypes from 'prop-types';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
 import xml2js from 'xml2js';
 import { useFormContent } from '../hooks/useForm';
 import useStyles from '../hooks/useStyles';
+import AccordionHoc from './AccordionHoc';
+import ListHoc from './ListHoc';
 import { Navbar } from './Navbar';
 import QrReader from './QrReader';
 
@@ -63,8 +60,6 @@ const initialScannerState = {
   title: 'Escanee la muestra',
   showClose: false,
 };
-
-const initialDocumentTypesState = [{ id: 'DNI', name: 'Doc. Nac. Identidad' }];
 
 const initialAccordionState = {
   analisis: true,
@@ -121,10 +116,11 @@ export default function PatientInfo() {
       address,
       observation,
     } = content;
+
   const [accordionState, setAccordionState] = useState(initialAccordionState);
-  const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
-  const [hasError, setHasError] = useState(initialHasError);
+  const [hasError, setHasError] = useState(false);
   const classes = useStyles();
+
   const onBloodScan = async ({ rawValue }) => {
     closeScanner();
 
@@ -192,12 +188,6 @@ export default function PatientInfo() {
   const closeScanner = () => {
     setScannerState((prevState) => ({ ...prevState, open: false }));
   };
-
-  useEffect(() => {
-    (async () => {
-      setDocumentTypes(await getDocumentTypes());
-    })();
-  }, []);
 
   const onGetPatientInfo = (Paciente) => {
     const {
@@ -366,6 +356,13 @@ export default function PatientInfo() {
 
   const hideOnError = hasError ? classes.hidden : '';
 
+  const documentFormState = {
+    content,
+    onChange,
+    openScanner: openDocumentScanner,
+    handleSubmit: handlePatientSubmit,
+  };
+
   return (
     <>
       <Navbar />
@@ -397,290 +394,42 @@ export default function PatientInfo() {
             </Typography>
           </div> */}
           <div className={`${classes.form} ${hideOnError}`}>
-            <Accordion
+            <AccordionHoc
+              title="Analisis"
               expanded={accordionState.analisis}
               onChange={() => expandAccordion('analisis')}
             >
-              <AccordionSummary expandIcon={<ChevronDown />}>
-                <Typography>Analisis</Typography>
-              </AccordionSummary>
-              <AccordionDetails className={classes.accordion}>
-                <List className={classes.accordion}>
-                  {analisis.map((item) => (
-                    <ListItem
-                      divider
-                      key={item.CodigoAnalisis}
-                      className={classes.accordion}
-                    >
-                      <ListItemText
-                        primary={item.CodigoAnalisis}
-                        secondary={item.Descripcion}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              </AccordionDetails>
-            </Accordion>
+              <ListHoc
+                items={analisis.map((e) => {
+                  const { CodigoAnalisis, Descripcion } = e;
+                  return { id: CodigoAnalisis, Descripcion };
+                })}
+              />
+            </AccordionHoc>
 
-            <Accordion
+            <AccordionHoc
+              title="Documento"
               expanded={accordionState.document}
               onChange={() => expandAccordion('document')}
             >
-              <AccordionSummary expandIcon={<ChevronDown />}>
-                <Typography>Documento</Typography>
-              </AccordionSummary>
-              <AccordionDetails className={classes.accordion}>
-                <form
-                  className={classes.form}
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handlePatientSubmit();
-                  }}
-                >
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={5}>
-                      <TextField
-                        id="documentType"
-                        label="Tipo de documento"
-                        name="documentType"
-                        variant="outlined"
-                        fullWidth
-                        value={documentType}
-                        onChange={onChange}
-                        select
-                        xs="6"
-                      >
-                        {documentTypes.map((e) => (
-                          <MenuItem key={e.id} value={e.id}>
-                            {e.name}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    </Grid>
-                    <Grid item xs>
-                      <TextField
-                        type="text"
-                        variant="outlined"
-                        required
-                        fullWidth
-                        name="document"
-                        label="Documento"
-                        id="document"
-                        value={document}
-                        onChange={onChange}
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton onClick={openDocumentScanner}>
-                                <BarcodeScan fontSize="large" />
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                    </Grid>
-                    <Grid
-                      item
-                      container
-                      xs={2}
-                      direction="row"
-                      alignItems="center"
-                    >
-                      <IconButton type="submit" style={{ padding: '0px' }}>
-                        <Magnify fontSize="large" />
-                      </IconButton>
-                    </Grid>
-                  </Grid>
-                </form>
-              </AccordionDetails>
-            </Accordion>
+              <DocumentForm {...documentFormState} />
+            </AccordionHoc>
 
-            <Accordion
+            <AccordionHoc
+              title="Paciente"
               expanded={accordionState.patient}
               onChange={() => expandAccordion('patient')}
             >
-              <AccordionSummary expandIcon={<ChevronDown />}>
-                <Typography>Paciente</Typography>
-              </AccordionSummary>
-              <AccordionDetails className={classes.accordion}>
-                <form className={classes.form}>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        type="text"
-                        variant="outlined"
-                        required
-                        fullWidth
-                        name="firstName"
-                        autoComplete="given-name"
-                        label="Primer nombre"
-                        id="firstName"
-                        value={firstName}
-                        onChange={onChange}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        type="text"
-                        variant="outlined"
-                        required
-                        fullWidth
-                        name="secondName"
-                        label="Segundo nombre"
-                        id="secondName"
-                        value={secondName}
-                        onChange={onChange}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        type="text"
-                        variant="outlined"
-                        required
-                        fullWidth
-                        name="firstSurname"
-                        autoComplete="family-name"
-                        label="Primer apellido"
-                        id="firstSurname"
-                        value={firstSurname}
-                        onChange={onChange}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        type="text"
-                        variant="outlined"
-                        required
-                        fullWidth
-                        name="secondSurname"
-                        label="Segundo apellido"
-                        id="secondSurname"
-                        value={secondSurname}
-                        onChange={onChange}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <KeyboardDatePicker
-                        variant="inline"
-                        autoOk
-                        inputVariant="outlined"
-                        fullWidth
-                        disableFuture
-                        format="dd/MM/yyyy"
-                        id="birthDate"
-                        label="Fecha de nacimiento"
-                        value={birthDate}
-                        onChange={(date) =>
-                          onChange({
-                            target: {
-                              value: date,
-                              name: 'birthDate',
-                              type: 'date',
-                            },
-                          })
-                        }
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        id="gender"
-                        label="Género"
-                        name="gender"
-                        variant="outlined"
-                        fullWidth
-                        value={gender}
-                        onChange={onChange}
-                        select
-                      >
-                        <MenuItem value={'M'}>Masculino</MenuItem>
-                        <MenuItem value={'F'}>Femenino</MenuItem>
-                      </TextField>
-                    </Grid>
-                  </Grid>
-                </form>
-              </AccordionDetails>
-            </Accordion>
+              <PatientForm content={content} onChange={onChange} />
+            </AccordionHoc>
 
-            <Accordion
+            <AccordionHoc
+              title="Contacto"
               expanded={accordionState.contact}
               onChange={() => expandAccordion('contact')}
             >
-              <AccordionSummary expandIcon={<ChevronDown />}>
-                <Typography>Contacto</Typography>
-              </AccordionSummary>
-              <AccordionDetails className={classes.accordion}>
-                <form className={classes.form}>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        type="email"
-                        variant="outlined"
-                        required
-                        fullWidth
-                        name="email"
-                        label="Email"
-                        id="email"
-                        value={email}
-                        onChange={onChange}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        type="number"
-                        variant="outlined"
-                        required
-                        fullWidth
-                        name="cellPhone"
-                        label="Celular"
-                        id="cellPhone"
-                        value={cellPhone}
-                        onChange={onChange}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        type="number"
-                        variant="outlined"
-                        required
-                        fullWidth
-                        name="phone"
-                        label="Teléfono fijo"
-                        id="phone"
-                        value={phone}
-                        onChange={onChange}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        type="text"
-                        variant="outlined"
-                        required
-                        fullWidth
-                        name="address"
-                        label="Dirección"
-                        id="address"
-                        value={address}
-                        onChange={onChange}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        type="text"
-                        variant="outlined"
-                        multiline
-                        fullWidth
-                        rows={4}
-                        name="observation"
-                        label="Observaciones"
-                        id="observation"
-                        value={observation}
-                        onChange={onChange}
-                      />
-                    </Grid>
-                  </Grid>
-                </form>
-              </AccordionDetails>
-            </Accordion>
+              <ContactForm content={content} onChange={onChange} />
+            </AccordionHoc>
           </div>
           <div className={classes.form}>
             <Grid container spacing={2}>
@@ -716,18 +465,6 @@ export default function PatientInfo() {
   );
 }
 
-async function getDocumentTypes() {
-  const parsedInfo = await axiosRequest({
-    method: 'post',
-    url: `${REACT_APP_PATIENT_SERVICE}/GetTiposDeDocumento`,
-    data: qs.stringify({ token: REACT_APP_NEXTLAB_TOKEN }),
-  });
-
-  return parsedInfo.ListaTipoDocumento.Lista.TipoDocumento.map((e) => {
-    return { id: e.TipoDoc, name: e.Descripcion };
-  });
-}
-
 async function getPatientInfo(document, documentType) {
   return await axiosRequest({
     method: 'post',
@@ -751,9 +488,299 @@ async function getQrInfo(idQr) {
   return JSON.parse(parsedInfo.string);
 }
 
+async function getDocumentTypes() {
+  const parsedInfo = await axiosRequest({
+    method: 'post',
+    url: `${REACT_APP_PATIENT_SERVICE}/GetTiposDeDocumento`,
+    data: qs.stringify({ token: REACT_APP_NEXTLAB_TOKEN }),
+  });
+
+  return parsedInfo.ListaTipoDocumento.Lista.TipoDocumento.map((e) => {
+    return { id: e.TipoDoc, name: e.Descripcion };
+  });
+}
+
 async function axiosRequest(cfg) {
   // return parsed
   const response = await axios(cfg);
 
   return await xmlParser.parseStringPromise(response.data);
 }
+
+const initialDocumentTypesState = [{ id: 'DNI', name: 'Doc. Nac. Identidad' }];
+
+function DocumentForm(props) {
+  const { handleSubmit, onChange, content, openScanner } = props;
+  const { documentType, document } = content;
+  const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
+  const classes = useStyles();
+
+  useEffect(() => {
+    (async () => {
+      setDocumentTypes(await getDocumentTypes());
+    })();
+  }, []);
+
+  return (
+    <form
+      className={classes.form}
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit();
+      }}
+    >
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={5}>
+          <TextField
+            id="documentType"
+            label="Tipo de documento"
+            name="documentType"
+            variant="outlined"
+            fullWidth
+            value={documentType}
+            onChange={onChange}
+            select
+            xs="6"
+          >
+            {documentTypes.map((e) => (
+              <MenuItem key={e.id} value={e.id}>
+                {e.name}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Grid>
+        <Grid item xs>
+          <TextField
+            type="text"
+            variant="outlined"
+            required
+            fullWidth
+            name="document"
+            label="Documento"
+            id="document"
+            value={document}
+            onChange={onChange}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={openScanner}>
+                    <BarcodeScan fontSize="large" />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Grid>
+        <Grid item container xs={2} direction="row" alignItems="center">
+          <IconButton type="submit" style={{ padding: '0px' }}>
+            <Magnify fontSize="large" />
+          </IconButton>
+        </Grid>
+      </Grid>
+    </form>
+  );
+}
+DocumentForm.propTypes = {
+  onChange: PropTypes.func.isRequired,
+  openScanner: PropTypes.func.isRequired,
+  handleSubmit: PropTypes.func.isRequired,
+  content: PropTypes.object.isRequired,
+};
+
+function ContactForm(props) {
+  const classes = useStyles();
+  const { content, onChange } = props;
+  const { email, cellPhone, phone, address, observation } = content;
+
+  return (
+    <form className={classes.form}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            type="email"
+            variant="outlined"
+            required
+            fullWidth
+            name="email"
+            label="Email"
+            id="email"
+            value={email}
+            onChange={onChange}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            type="number"
+            variant="outlined"
+            required
+            fullWidth
+            name="cellPhone"
+            label="Celular"
+            id="cellPhone"
+            value={cellPhone}
+            onChange={onChange}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            type="number"
+            variant="outlined"
+            required
+            fullWidth
+            name="phone"
+            label="Teléfono fijo"
+            id="phone"
+            value={phone}
+            onChange={onChange}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            type="text"
+            variant="outlined"
+            required
+            fullWidth
+            name="address"
+            label="Dirección"
+            id="address"
+            value={address}
+            onChange={onChange}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            type="text"
+            variant="outlined"
+            multiline
+            fullWidth
+            rows={4}
+            name="observation"
+            label="Observaciones"
+            id="observation"
+            value={observation}
+            onChange={onChange}
+          />
+        </Grid>
+      </Grid>
+    </form>
+  );
+}
+ContactForm.propTypes = {
+  onChange: PropTypes.func.isRequired,
+  content: PropTypes.object.isRequired,
+};
+
+function PatientForm(props) {
+  const classes = useStyles();
+  const { content, onChange } = props;
+  const {
+    firstName,
+    secondName,
+    firstSurname,
+    secondSurname,
+    birthDate,
+    gender,
+  } = content;
+
+  return (
+    <form className={classes.form}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            type="text"
+            variant="outlined"
+            required
+            fullWidth
+            name="firstName"
+            autoComplete="given-name"
+            label="Primer nombre"
+            id="firstName"
+            value={firstName}
+            onChange={onChange}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            type="text"
+            variant="outlined"
+            required
+            fullWidth
+            name="secondName"
+            label="Segundo nombre"
+            id="secondName"
+            value={secondName}
+            onChange={onChange}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            type="text"
+            variant="outlined"
+            required
+            fullWidth
+            name="firstSurname"
+            autoComplete="family-name"
+            label="Primer apellido"
+            id="firstSurname"
+            value={firstSurname}
+            onChange={onChange}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            type="text"
+            variant="outlined"
+            required
+            fullWidth
+            name="secondSurname"
+            label="Segundo apellido"
+            id="secondSurname"
+            value={secondSurname}
+            onChange={onChange}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <KeyboardDatePicker
+            variant="inline"
+            autoOk
+            inputVariant="outlined"
+            fullWidth
+            disableFuture
+            format="dd/MM/yyyy"
+            id="birthDate"
+            label="Fecha de nacimiento"
+            value={birthDate}
+            onChange={(date) =>
+              onChange({
+                target: {
+                  value: date,
+                  name: 'birthDate',
+                  type: 'date',
+                },
+              })
+            }
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            id="gender"
+            label="Género"
+            name="gender"
+            variant="outlined"
+            fullWidth
+            value={gender}
+            onChange={onChange}
+            select
+          >
+            <MenuItem value={'M'}>Masculino</MenuItem>
+            <MenuItem value={'F'}>Femenino</MenuItem>
+          </TextField>
+        </Grid>
+      </Grid>
+    </form>
+  );
+}
+PatientForm.propTypes = {
+  onChange: PropTypes.func.isRequired,
+  content: PropTypes.object.isRequired,
+};
