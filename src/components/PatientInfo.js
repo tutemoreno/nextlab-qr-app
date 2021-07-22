@@ -13,16 +13,11 @@ import {
   ListItemText,
   MenuItem,
   TextField,
-  Typography
+  Typography,
 } from '@material-ui/core';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
-import {
-  BarcodeScan,
-  ChevronDown,
-  LockOutline,
-  Magnify
-} from 'mdi-material-ui';
+import { BarcodeScan, ChevronDown, Magnify } from 'mdi-material-ui';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
 import xml2js from 'xml2js';
@@ -78,6 +73,11 @@ const initialAccordionState = {
   contact: false,
 };
 
+const initialHasError = {
+  error: false,
+  message: '',
+};
+
 const {
   REACT_APP_PATIENT_SERVICE,
   REACT_APP_NEXTLAB_SERVICE,
@@ -123,7 +123,7 @@ export default function PatientInfo() {
     } = content;
   const [accordionState, setAccordionState] = useState(initialAccordionState);
   const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
-  const [hasError, setHasError] = useState(false);
+  const [hasError, setHasError] = useState(initialHasError);
   const classes = useStyles();
   const onBloodScan = async ({ rawValue }) => {
     closeScanner();
@@ -134,7 +134,11 @@ export default function PatientInfo() {
       );
 
       if (error) {
-        // FIXME: deberia de llevar a una pantalla que indique el error en cuestion y no mostrar nada de la carga del documento
+        setHasError({
+          error: true,
+          message: error.Descripcion,
+        });
+
         throw new Error(error.Descripcion);
       }
 
@@ -369,12 +373,19 @@ export default function PatientInfo() {
       <Container>
         <QrReader {...scannerState} handleClose={closeScanner} />
         <div className={classes.displayColumn}>
-          <Avatar className={classes.avatar}>
-            <LockOutline />
-          </Avatar>
+          <Avatar className={classes.avatar}></Avatar>
           <Typography component="h1" variant="h5">
             Información del paciente
           </Typography>
+          <Typography
+            className={`${!hideOnError}`}
+            component="h1"
+            variant="h5"
+            style={{ margin: '40px 5px 20px 5px' }}
+          >
+            {hasError.message}
+          </Typography>
+
           {/* <div
             className={`${classes.form} ${classes.displayColumn} ${hideOnError}`}
           >
@@ -737,7 +748,7 @@ async function getQrInfo(idQr) {
     data: qs.stringify({ idQr, token: REACT_APP_NEXTLAB_TOKEN }),
   });
 
-  return JSON.parse(parsedInfo.string.value);
+  return JSON.parse(parsedInfo.string);
 }
 
 async function axiosRequest(cfg) {
