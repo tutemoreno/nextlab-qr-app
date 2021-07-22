@@ -13,7 +13,7 @@ import {
   ListItemText,
   MenuItem,
   TextField,
-  Typography,
+  Typography
 } from '@material-ui/core';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
@@ -21,7 +21,7 @@ import {
   BarcodeScan,
   ChevronDown,
   LockOutline,
-  Magnify,
+  Magnify
 } from 'mdi-material-ui';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
@@ -121,36 +121,30 @@ export default function PatientInfo() {
       address,
       observation,
     } = content;
+  const [accordionState, setAccordionState] = useState(initialAccordionState);
+  const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
+  const [hasError, setHasError] = useState(false);
+  const classes = useStyles();
   const onBloodScan = async ({ rawValue }) => {
+    closeScanner();
+
     try {
-      closeScanner();
+      const { Sucursal, Origen, NroMuestra, Analisis, error } = await getQrInfo(
+        rawValue,
+      );
 
-      const response = await axios({
-        method: 'post',
-        url: `${REACT_APP_PATIENT_SERVICE}/GetQr`,
-        data: qs.stringify({ idQr: rawValue, token: REACT_APP_NEXTLAB_TOKEN }),
-      });
-
-      if (response.status == 200) {
-        const parsedInfo = await xmlParser.parseStringPromise(response.data);
-
-        const parsedJson = JSON.parse(parsedInfo.string.value);
-
-        const { Sucursal, Origen, NroMuestra, Analisis, error } = parsedJson;
-
-        if (error) {
-          // FIXME: deberia de llevar a una pantalla que indique el error en cuestion y no mostrar nada de la carga del documento
-          throw new Error(error.Descripcion);
-        }
-
-        setContent((prevState) => ({
-          ...prevState,
-          branch: Sucursal,
-          origen: Origen,
-          sampleNumber: NroMuestra,
-          analisis: Analisis,
-        }));
+      if (error) {
+        // FIXME: deberia de llevar a una pantalla que indique el error en cuestion y no mostrar nada de la carga del documento
+        throw new Error(error.Descripcion);
       }
+
+      setContent((prevState) => ({
+        ...prevState,
+        branch: Sucursal,
+        origen: Origen,
+        sampleNumber: NroMuestra,
+        analisis: Analisis,
+      }));
     } catch (error) {
       console.log(error);
     }
@@ -159,10 +153,6 @@ export default function PatientInfo() {
     ...initialScannerState,
     handleScan: onBloodScan,
   });
-  const [accordionState, setAccordionState] = useState(initialAccordionState);
-  const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
-  const [hasError, setHasError] = useState(false);
-  const classes = useStyles();
 
   const openDocumentScanner = () => {
     setScannerState({
@@ -173,7 +163,7 @@ export default function PatientInfo() {
     });
   };
 
-  const onDocumentScan = ({ rawValue }) => {
+  const onDocumentScan = async ({ rawValue }) => {
     closeScanner();
 
     const split = rawValue.split('@');
@@ -187,7 +177,12 @@ export default function PatientInfo() {
       document,
     }));
 
-    getPatientInfo(document);
+    try {
+      const { Paciente } = await getPatientInfo(document, documentType);
+      onGetPatientInfo(Paciente);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const closeScanner = () => {
@@ -195,83 +190,51 @@ export default function PatientInfo() {
   };
 
   useEffect(() => {
-    const getDocumentTypes = async () => {
-      try {
-        const response = await axios({
-          method: 'post',
-          url: `${REACT_APP_PATIENT_SERVICE}/GetTiposDeDocumento`,
-          data: qs.stringify({ token: REACT_APP_NEXTLAB_TOKEN }),
-        });
-
-        const parsedInfo = await xmlParser.parseStringPromise(response.data);
-
-        setDocumentTypes(
-          parsedInfo.ListaTipoDocumento.Lista.TipoDocumento.map((e) => {
-            return { id: e.TipoDoc, name: e.Descripcion };
-          }),
-        );
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    getDocumentTypes();
+    (async () => {
+      setDocumentTypes(await getDocumentTypes());
+    })();
   }, []);
 
-  const getPatientInfo = async (document) => {
+  const onGetPatientInfo = (Paciente) => {
+    const {
+      Codigo: patientCode,
+      Nombre: firstName,
+      Nombre2: secondName,
+      Apellido: firstSurname,
+      Apellido2: secondSurname,
+      Sexo: gender,
+      FechaNac: birthDate,
+      Celular: cellPhone,
+      Telefono: phone,
+      Direccion: address,
+    } = Paciente;
+
+    setAccordionState({
+      analisis: false,
+      document: false,
+      patient: true,
+      contact: true,
+    });
+
+    setContent((prevState) => ({
+      ...prevState,
+      patientCode,
+      firstName,
+      secondName,
+      firstSurname,
+      secondSurname,
+      gender,
+      birthDate: new Date(birthDate),
+      cellPhone: cellPhone ? cellPhone.replace('-', '') : '',
+      phone: phone ? phone.replace('-', '') : '',
+      address,
+    }));
+  };
+
+  const handlePatientSubmit = async () => {
     try {
-      const response = await axios({
-        method: 'post',
-        url: `${REACT_APP_PATIENT_SERVICE}/paciente_datos`,
-        data: qs.stringify({
-          documento: document,
-          tipoDoc: documentType,
-          codigo: 0,
-          token: REACT_APP_NEXTLAB_TOKEN,
-        }),
-      });
-
-      console.log(response.data);
-
-      if (response.status == 200) {
-        const parsedInfo = await xmlParser.parseStringPromise(response.data);
-
-        const {
-          Paciente: {
-            Codigo: patientCode,
-            Nombre: firstName,
-            Nombre2: secondName,
-            Apellido: firstSurname,
-            Apellido2: secondSurname,
-            Sexo: gender,
-            FechaNac: birthDate,
-            Celular: cellPhone,
-            Telefono: phone,
-            Direccion: address,
-          },
-        } = parsedInfo;
-
-        setAccordionState({
-          analisis: false,
-          document: false,
-          patient: true,
-          contact: true,
-        });
-
-        setContent((prevState) => ({
-          ...prevState,
-          patientCode,
-          firstName,
-          secondName,
-          firstSurname,
-          secondSurname,
-          gender,
-          birthDate: new Date(birthDate),
-          cellPhone: cellPhone ? cellPhone.replace('-', '') : '',
-          phone: phone ? phone.replace('-', '') : '',
-          address,
-        }));
-      }
+      const { Paciente } = await getPatientInfo(document, documentType);
+      onGetPatientInfo(Paciente);
     } catch (error) {
       console.log(error);
     }
@@ -373,7 +336,7 @@ export default function PatientInfo() {
     });
 
     try {
-      const response = await axios({
+      const parsedInfo = await axiosRequest({
         method: 'post',
         url: REACT_APP_NEXTLAB_SERVICE,
         params: { op: 'RealizarPedido' },
@@ -381,27 +344,23 @@ export default function PatientInfo() {
         headers: { 'content-type': 'application/soap+xml; charset=utf-8' },
       });
 
-      if (response.status == 200) {
-        const parsedInfo = await xmlParser.parseStringPromise(response.data);
-
-        const {
-          'soap:Envelope': {
-            'soap:Body': {
-              RealizarPedidoResponse: {
-                RealizarPedidoResult: { NumeroOrden, Respuesta },
-              },
+      const {
+        'soap:Envelope': {
+          'soap:Body': {
+            RealizarPedidoResponse: {
+              RealizarPedidoResult: { NumeroOrden, Respuesta },
             },
           },
-        } = parsedInfo;
+        },
+      } = parsedInfo;
 
-        console.log(NumeroOrden, Respuesta);
-      }
+      console.log(NumeroOrden, Respuesta);
     } catch (error) {
       console.log(error);
     }
   };
 
-  const hideOnError = () => (hasError ? classes.hidden : '');
+  const hideOnError = hasError ? classes.hidden : '';
 
   return (
     <>
@@ -409,14 +368,24 @@ export default function PatientInfo() {
 
       <Container>
         <QrReader {...scannerState} handleClose={closeScanner} />
-        <div className={classes.paper}>
+        <div className={classes.displayColumn}>
           <Avatar className={classes.avatar}>
             <LockOutline />
           </Avatar>
           <Typography component="h1" variant="h5">
             Información del paciente
           </Typography>
-          <div className={(classes.form, hideOnError())}>
+          {/* <div
+            className={`${classes.form} ${classes.displayColumn} ${hideOnError}`}
+          >
+            <Avatar className={classes.avatar}>
+              <Alert fontSize="large" />
+            </Avatar>
+            <Typography component="h1" variant="h4">
+              ERROR ERROR ERROR
+            </Typography>
+          </div> */}
+          <div className={`${classes.form} ${hideOnError}`}>
             <Accordion
               expanded={accordionState.analisis}
               onChange={() => expandAccordion('analisis')}
@@ -454,7 +423,7 @@ export default function PatientInfo() {
                   className={classes.form}
                   onSubmit={(e) => {
                     e.preventDefault();
-                    getPatientInfo(document);
+                    handlePatientSubmit();
                   }}
                 >
                   <Grid container spacing={2}>
@@ -722,7 +691,7 @@ export default function PatientInfo() {
                   fullWidth
                   variant="contained"
                   color="primary"
-                  className={(classes.button, hideOnError())}
+                  className={`${classes.button} ${hideOnError}`}
                   onClick={sendOrden}
                 >
                   Enviar
@@ -734,4 +703,46 @@ export default function PatientInfo() {
       </Container>
     </>
   );
+}
+
+async function getDocumentTypes() {
+  const parsedInfo = await axiosRequest({
+    method: 'post',
+    url: `${REACT_APP_PATIENT_SERVICE}/GetTiposDeDocumento`,
+    data: qs.stringify({ token: REACT_APP_NEXTLAB_TOKEN }),
+  });
+
+  return parsedInfo.ListaTipoDocumento.Lista.TipoDocumento.map((e) => {
+    return { id: e.TipoDoc, name: e.Descripcion };
+  });
+}
+
+async function getPatientInfo(document, documentType) {
+  return await axiosRequest({
+    method: 'post',
+    url: `${REACT_APP_PATIENT_SERVICE}/paciente_datos`,
+    data: qs.stringify({
+      documento: document,
+      tipoDoc: documentType,
+      codigo: 0,
+      token: REACT_APP_NEXTLAB_TOKEN,
+    }),
+  });
+}
+
+async function getQrInfo(idQr) {
+  const parsedInfo = await axiosRequest({
+    method: 'post',
+    url: `${REACT_APP_PATIENT_SERVICE}/GetQr`,
+    data: qs.stringify({ idQr, token: REACT_APP_NEXTLAB_TOKEN }),
+  });
+
+  return JSON.parse(parsedInfo.string.value);
+}
+
+async function axiosRequest(cfg) {
+  // return parsed
+  const response = await axios(cfg);
+
+  return await xmlParser.parseStringPromise(response.data);
 }

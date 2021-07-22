@@ -63,7 +63,7 @@ export default function Login() {
 
   return (
     <Container maxWidth="xs">
-      <div className={classes.paper}>
+      <div className={classes.displayColumn}>
         <Snackbar
           open={openError}
           autoHideDuration={2000}

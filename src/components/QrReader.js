@@ -146,7 +146,7 @@ export default function QrReader(props) {
     console.log(error, 'QR Exception');
     return (
       <Container maxWidth="xs">
-        <div className={classes.paper}>
+        <div className={classes.displayColumn}>
           <h1>No se pudo cargar la Camara del dispositivo</h1>
         </div>
       </Container>
