@@ -4,9 +4,9 @@ import React from 'react';
 
 export default function HeaderHoc(props) {
   return (
-    <Box display="flex" flexDirection="column" alignItems="center" mt={3}>
-      <Box clone bgcolor="secondary.main">
-        <Avatar>{props.avatarIcon}</Avatar>
+    <Box display="flex" flexDirection="column" alignItems="center" my={3}>
+      <Box clone width={64} height={64} bgcolor="secondary.main">
+        <Avatar>{props.avatarChildren}</Avatar>
       </Box>
       <Typography component="h1" variant="h5">
         {props.title}
@@ -16,5 +16,5 @@ export default function HeaderHoc(props) {
 }
 HeaderHoc.propTypes = {
   title: PropTypes.string.isRequired,
-  avatarIcon: PropTypes.element,
+  avatarChildren: PropTypes.element,
 };

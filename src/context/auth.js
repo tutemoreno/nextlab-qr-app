@@ -1,9 +1,8 @@
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import qs from 'qs';
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import xml2js from 'xml2js';
-import { useFormContent } from '../hooks/useForm';
 import { getStore, removeStore, setStore } from '../utils/store';
 
 const xml2jsParser = new xml2js.Parser({
@@ -32,10 +31,8 @@ export const useAuth = () => {
 };
 
 function useProvideAuth() {
-  const store = getStore(REACT_APP_STORE_PATH),
-    { content: user, setContent: setUser } = useFormContent(
-      store ? store : null,
-    );
+  const store = getStore(REACT_APP_STORE_PATH);
+  const [user, setUser] = useState(store ? store : null);
 
   const signIn = async (content) => {
     const { username, password, remember } = content;

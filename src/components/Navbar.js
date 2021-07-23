@@ -1,10 +1,9 @@
-import { Button, Grid, Typography } from '@material-ui/core';
+import { Box, Button, Grid, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { useAuth } from '../context/auth';
-import { getStore } from '../utils/store';
 
-export const Navbar = () => {
+export default function Navbar() {
   const useStyles = makeStyles((theme) => ({
     root: {
       flexGrow: 1,
@@ -26,18 +25,10 @@ export const Navbar = () => {
 
   const classes = useStyles();
 
-  const { REACT_APP_STORE_PATH } = process.env;
-
-  const store = getStore(REACT_APP_STORE_PATH);
-
-  const auth = useAuth();
-
-  const handleClickLogout = () => {
-    auth.signOut();
-  };
+  const { user, signOut } = useAuth();
 
   return (
-    <div>
+    <Box>
       <Grid container className={classes.logout}>
         <Typography
           variant="button"
@@ -45,16 +36,12 @@ export const Navbar = () => {
           gutterBottom
           className={classes.marginRight}
         >
-          {store !== null ? store.username : ''}
+          {user ? user.username : ''}
         </Typography>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={handleClickLogout}
-        >
+        <Button variant="contained" color="secondary" onClick={signOut}>
           Logout
         </Button>
       </Grid>
-    </div>
+    </Box>
   );
-};
+}

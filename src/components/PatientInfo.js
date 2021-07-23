@@ -1,15 +1,12 @@
 import {
-  Avatar,
   Box,
   Button,
-  Container,
   Grid,
   IconButton,
   InputAdornment,
   MenuItem,
   Paper,
   TextField,
-  Typography,
 } from '@material-ui/core';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
@@ -23,7 +20,6 @@ import useStyles from '../hooks/useStyles';
 import AccordionHoc from './AccordionHoc';
 import HeaderHoc from './HeaderHoc';
 import ListHoc from './ListHoc';
-import { Navbar } from './Navbar';
 import QrReader from './QrReader';
 
 const initialState = {
@@ -72,8 +68,13 @@ const initialAccordionState = {
 };
 
 const initialErrorState = {
-  error: false,
+  error: true,
   message: '',
+};
+
+const initialButtonResetState = {
+  label: 'Cancelar',
+  columns: 6,
 };
 
 const {
@@ -231,6 +232,7 @@ export default function PatientInfo() {
     setAccordionState(initialAccordionState);
     setContent(initialState);
     setErrorState(initialErrorState);
+    setButtonResetState(initialButtonResetState);
   };
 
   const sendOrden = async () => {
@@ -369,10 +371,9 @@ export default function PatientInfo() {
   };
 
   const [displayNoneOnError, setDisplayNoneOnError] = useState('');
-  const [buttonResetState, setButtonResetState] = useState({
-    label: 'Cancelar',
-    columns: 6,
-  });
+  const [buttonResetState, setButtonResetState] = useState(
+    initialButtonResetState,
+  );
   useEffect(() => {
     if (errorState.error) {
       setDisplayNoneOnError('none');
@@ -385,107 +386,98 @@ export default function PatientInfo() {
 
   return (
     <>
-      <Navbar />
+      <QrReader {...scannerState} handleClose={closeScanner} />
 
-      <Container>
-        <QrReader {...scannerState} handleClose={closeScanner} />
+      <Box display="flex" flexDirection="column" alignItems="center" mt={3}>
+        <HeaderHoc title="Información del paciente" />
 
-        <Box display="flex" flexDirection="column" alignItems="center" mt={3}>
-          <HeaderHoc title="Información del paciente" />
+        <Box
+          width="100%"
+          mt={3}
+          py={3}
+          clone
+          display={errorState.error ? 'flex' : 'none'}
+          flexDirection="column"
+          alignItems="center"
+        >
+          <Paper>
+            <HeaderHoc
+              title={errorState.message}
+              avatarChildren={<Alert fontSize="large" />}
+            />
+          </Paper>
+        </Box>
 
-          <Box
-            width="100%"
-            mt={3}
-            clone
-            display={errorState.error ? 'flex' : 'none'}
-            flexDirection="column"
-            alignItems="center"
+        <Box mt={3} display={displayNoneOnError}>
+          <AccordionHoc
+            title="Analisis"
+            expanded={accordionState.analisis}
+            onChange={() => expandAccordion('analisis')}
           >
-            <Paper>
-              <Avatar className={classes.avatar}>
-                <Alert fontSize="large" />
-              </Avatar>
-              <Typography
-                component="h1"
-                variant="h5"
-                style={{ margin: '40px 5px 20px 5px' }}
+            <ListHoc
+              items={content.analisis.map((e) => {
+                const { CodigoAnalisis, Descripcion } = e;
+                return { id: CodigoAnalisis, Descripcion };
+              })}
+            />
+          </AccordionHoc>
+
+          <AccordionHoc
+            title="Documento"
+            expanded={accordionState.document}
+            onChange={() => expandAccordion('document')}
+          >
+            <DocumentForm {...documentFormState} />
+          </AccordionHoc>
+
+          <AccordionHoc
+            title="Paciente"
+            expanded={accordionState.patient}
+            onChange={() => expandAccordion('patient')}
+          >
+            <PatientForm content={content} onChange={onChange} />
+          </AccordionHoc>
+
+          <AccordionHoc
+            title="Contacto"
+            expanded={accordionState.contact}
+            onChange={() => expandAccordion('contact')}
+          >
+            <ContactForm content={content} onChange={onChange} />
+          </AccordionHoc>
+        </Box>
+
+        <Box width="100%" mt={3}>
+          <Grid container spacing={2}>
+            <Grid item xs={buttonResetState.columns}>
+              <Button
+                type="button"
+                fullWidth
+                variant="contained"
+                color="secondary"
+                className={classes.button}
+                onClick={newOrden}
               >
-                {errorState.message}
-              </Typography>
-            </Paper>
-          </Box>
-
-          <Box mt={3} display={displayNoneOnError}>
-            <AccordionHoc
-              title="Analisis"
-              expanded={accordionState.analisis}
-              onChange={() => expandAccordion('analisis')}
-            >
-              <ListHoc
-                items={content.analisis.map((e) => {
-                  const { CodigoAnalisis, Descripcion } = e;
-                  return { id: CodigoAnalisis, Descripcion };
-                })}
-              />
-            </AccordionHoc>
-
-            <AccordionHoc
-              title="Documento"
-              expanded={accordionState.document}
-              onChange={() => expandAccordion('document')}
-            >
-              <DocumentForm {...documentFormState} />
-            </AccordionHoc>
-
-            <AccordionHoc
-              title="Paciente"
-              expanded={accordionState.patient}
-              onChange={() => expandAccordion('patient')}
-            >
-              <PatientForm content={content} onChange={onChange} />
-            </AccordionHoc>
-
-            <AccordionHoc
-              title="Contacto"
-              expanded={accordionState.contact}
-              onChange={() => expandAccordion('contact')}
-            >
-              <ContactForm content={content} onChange={onChange} />
-            </AccordionHoc>
-          </Box>
-
-          <Box width="100%" mt={3}>
-            <Grid container spacing={2}>
-              <Grid item xs={buttonResetState.columns}>
+                {buttonResetState.label}
+              </Button>
+            </Grid>
+            <Box clone display={displayNoneOnError}>
+              <Grid item xs={6}>
                 <Button
                   type="button"
                   fullWidth
                   variant="contained"
-                  color="secondary"
-                  className={classes.button}
-                  onClick={newOrden}
+                  color="primary"
+                  className={`${classes.button}`}
+                  onClick={sendOrden}
                 >
-                  {buttonResetState.label}
+                  Enviar
                 </Button>
               </Grid>
-              <Box clone display={displayNoneOnError}>
-                <Grid item xs={6}>
-                  <Button
-                    type="button"
-                    fullWidth
-                    variant="contained"
-                    color="primary"
-                    className={`${classes.button}`}
-                    onClick={sendOrden}
-                  >
-                    Enviar
-                  </Button>
-                </Grid>
-              </Box>
-            </Grid>
-          </Box>
+            </Box>
+          </Grid>
         </Box>
-      </Container>
+      </Box>
     </>
   );
 }

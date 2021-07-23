@@ -4,7 +4,7 @@
 // https://webrtc.github.io/samples/
 import {
   AppBar,
-  Container,
+  Box,
   Dialog,
   IconButton,
   MenuItem,
@@ -117,7 +117,7 @@ export default function QrReader(props) {
             )}
           </Toolbar>
         </AppBar>
-        <Container>
+        <Box width="100%">
           <TextField
             id="selectedDevice"
             label="Camara seccionada"
@@ -139,17 +139,17 @@ export default function QrReader(props) {
             autoPlay
             ref={videoRef}
           />
-        </Container>
+        </Box>
       </Dialog>
     );
   } catch (error) {
     console.log(error, 'QR Exception');
     return (
-      <Container maxWidth="xs">
+      <Box maxWidth="xs">
         <div className={classes.displayColumn}>
           <h1>No se pudo cargar la Camara del dispositivo</h1>
         </div>
-      </Container>
+      </Box>
     );
   }
 }

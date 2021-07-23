@@ -72,9 +72,9 @@ export default function Login() {
             {errorMessage ? errorMessage : 'Error'}
           </Alert>
         </Snackbar>
-        <HeaderHoc title="Iniciar Sesion" avatarIcon={<LockOutline />} />
+        <HeaderHoc title="Iniciar Sesion" avatarChildren={<LockOutline />} />
 
-        <form className={classes.form} onSubmit={signIn}>
+        <form onSubmit={signIn}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField
