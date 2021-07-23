@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Button,
   Checkbox,
   Container,
@@ -7,7 +6,6 @@ import {
   Grid,
   Link,
   TextField,
-  Typography,
 } from '@material-ui/core';
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
@@ -16,6 +14,7 @@ import React from 'react';
 import { useAuth } from '../context/auth';
 import { useFormContent } from '../hooks/useForm';
 import useStyles from '../hooks/useStyles';
+import HeaderHoc from './HeaderHoc';
 
 const initialState = {
   username: '',
@@ -73,13 +72,8 @@ export default function Login() {
             {errorMessage ? errorMessage : 'Error'}
           </Alert>
         </Snackbar>
+        <HeaderHoc title="Iniciar Sesion" avatarIcon={<LockOutline />} />
 
-        <Avatar className={classes.avatar}>
-          <LockOutline />
-        </Avatar>
-        <Typography component="h1" variant="h5">
-          Iniciar Sesion
-        </Typography>
         <form className={classes.form} onSubmit={signIn}>
           <Grid container spacing={2}>
             <Grid item xs={12}>

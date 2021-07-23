@@ -21,6 +21,7 @@ import xml2js from 'xml2js';
 import { useFormContent } from '../hooks/useForm';
 import useStyles from '../hooks/useStyles';
 import AccordionHoc from './AccordionHoc';
+import HeaderHoc from './HeaderHoc';
 import ListHoc from './ListHoc';
 import { Navbar } from './Navbar';
 import QrReader from './QrReader';
@@ -389,11 +390,9 @@ export default function PatientInfo() {
 
       <Container>
         <QrReader {...scannerState} handleClose={closeScanner} />
-        <div className={classes.displayColumn}>
-          <Avatar className={classes.avatar}></Avatar>
-          <Typography component="h1" variant="h5">
-            Información del paciente
-          </Typography>
+
+        <Box display="flex" flexDirection="column" alignItems="center" mt={3}>
+          <HeaderHoc title="Información del paciente" />
 
           <Box
             width="100%"
@@ -417,7 +416,7 @@ export default function PatientInfo() {
             </Paper>
           </Box>
 
-          <Box width="100%" display={displayNoneOnError}>
+          <Box mt={3} display={displayNoneOnError}>
             <AccordionHoc
               title="Analisis"
               expanded={accordionState.analisis}
@@ -486,7 +485,7 @@ export default function PatientInfo() {
               </Box>
             </Grid>
           </Box>
-        </div>
+        </Box>
       </Container>
     </>
   );
