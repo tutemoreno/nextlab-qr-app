@@ -321,15 +321,14 @@ export default function PatientInfo() {
               Diagnosticos: {
                 ReqDiagnostico: [],
               },
-              // Peticiones: {
-              //   ReqPeticion: [
-              //     analisis.map((a) => ({
-              //       Codigo: a.CodigoAnalisis,
-              //       Urgente: 'N',
-              //     })),
-              //   ],
-              // },
-              Peticiones: { ReqPeticion: [{ Codigo: '412', Urgente: 'N' }] }, // TODO: traer de los analisis escaneados
+              Peticiones: [
+                analisis.map((a) => ({
+                  ReqPeticion: {
+                    Codigo: a.CodigoAnalisis,
+                    Urgente: 'N',
+                  },
+                })),
+              ],
             },
           },
         },
