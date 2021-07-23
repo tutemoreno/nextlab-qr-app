@@ -5,19 +5,9 @@ import React from 'react';
 export default function ListHoc(props) {
   const { items } = props;
   return (
-    <List
-      style={{
-        paddingTop: '0px',
-      }}
-    >
+    <List disablePadding>
       {items.map((item) => (
-        <ListItem
-          divider
-          key={item.id}
-          style={{
-            paddingTop: '0px',
-          }}
-        >
+        <ListItem divider key={item.id}>
           <ListItemText primary={item.id} secondary={item.Descripcion} />
         </ListItem>
       ))}

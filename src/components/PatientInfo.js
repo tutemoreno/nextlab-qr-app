@@ -68,7 +68,7 @@ const initialAccordionState = {
 };
 
 const initialErrorState = {
-  error: true,
+  error: false,
   message: '',
 };
 
