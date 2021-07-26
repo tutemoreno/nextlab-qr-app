@@ -11,8 +11,8 @@ export default function App() {
     <MuiPickersUtilsProvider utils={DateFnsUtils}>
       <ProvideAuth>
         <>
-          <CssBaseline />
           <Navbar />
+          <CssBaseline />
           <Container>
             <AppRouter />
           </Container>

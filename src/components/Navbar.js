@@ -13,33 +13,38 @@ import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/auth';
 
-export default function Navbar(props) {
+export default function Navbar() {
   const { user, signOut } = useAuth();
-  const ref = useRef(null);
   const [backgroundHeight, setBackgroundHeight] = useState(0);
+  const ref = useRef(null);
 
   useEffect(() => {
-    const { current: offsetHeight } = ref;
-
-    setBackgroundHeight(offsetHeight);
-    console.log('width', ref.current.offsetHeight);
+    setBackgroundHeight(ref.current.offsetHeight);
   }, []);
 
   return (
     <>
-      <HideOnScroll {...props}>
+      <HideOnScroll>
         <AppBar ref={ref}>
           <Toolbar>
-            <IconButton edge="start" color="inherit">
+            <IconButton color="inherit">
               <Menu />
             </IconButton>
             <Typography style={{ flexGrow: 1 }} variant="h6">
               Nextlab
             </Typography>
+
             {user && (
               <>
-                <Typography variant="h6">{user.username}</Typography>
-                <Button variant="contained" color="secondary" onClick={signOut}>
+                <Box clone px={2}>
+                  <Typography variant="h6">{user.username}</Typography>
+                </Box>
+                <Button
+                  variant="contained"
+                  type="button"
+                  color="secondary"
+                  onClick={signOut}
+                >
                   Logout
                 </Button>
               </>
@@ -47,10 +52,7 @@ export default function Navbar(props) {
           </Toolbar>
         </AppBar>
       </HideOnScroll>
-      <Box
-        bgcolor="red"
-        height={ref.current ? ref.current.offsetHeight : 0}
-      ></Box>
+      <Box height={backgroundHeight} />
     </>
   );
 }

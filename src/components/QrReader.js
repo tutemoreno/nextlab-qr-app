@@ -3,31 +3,23 @@
 // https://googlechrome.github.io/samples/image-capture/index.html
 // https://webrtc.github.io/samples/
 import {
-  AppBar,
   Box,
-  Dialog,
   IconButton,
   MenuItem,
   TextField,
-  Toolbar,
   Typography,
 } from '@material-ui/core';
-import Close from 'mdi-material-ui/Close';
+import CloseCircle from 'mdi-material-ui/CloseCircle';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 import { useFormInput } from '../hooks/useForm';
-import useStyles from '../hooks/useStyles';
 
 export default function QrReader(props) {
   // formats ['qr_code', 'code_128', 'pdf417']
 
-  const classes = useStyles();
-
   try {
     const { open, title, formats, handleScan, handleClose, showClose } = props;
-    const barcodeDetector = new window.BarcodeDetector({
-      formats,
-    });
+    const barcodeDetector = new window.BarcodeDetector({ formats });
     const deviceState = useFormInput('');
     const [devices, setDevices] = useState([]);
     const videoRef = useRef(null);
@@ -104,25 +96,28 @@ export default function QrReader(props) {
     }, [open, deviceState.input.value]);
 
     return (
-      <Dialog fullScreen open={open}>
-        <AppBar position="static">
-          <Toolbar>
-            <Typography variant="h6" className={classes.title}>
-              {title}
-            </Typography>
-            {showClose && (
-              <IconButton color="inherit" onClick={handleClose}>
-                <Close />
-              </IconButton>
-            )}
-          </Toolbar>
-        </AppBar>
-        <Box width="100%">
+      <>
+        <Box display="flex" p={2} bgcolor="background.paper">
+          <Box clone flexGrow={1}>
+            <Typography variant="subtitle1">{title}</Typography>
+          </Box>
+
+          {showClose && (
+            <IconButton color="secondary" onClick={handleClose}>
+              <CloseCircle variant="contained" />
+            </IconButton>
+          )}
+        </Box>
+        <video
+          style={{ width: 'inherit', height: 'inherit' }}
+          autoPlay
+          ref={videoRef}
+        />
+        <Box p={2}>
           <TextField
             id="selectedDevice"
             label="Camara seccionada"
             name="selectedDevice"
-            margin="normal"
             variant="outlined"
             fullWidth
             {...deviceState.input}
@@ -134,19 +129,14 @@ export default function QrReader(props) {
               </MenuItem>
             ))}
           </TextField>
-          <video
-            style={{ width: 'inherit', height: 'inherit' }}
-            autoPlay
-            ref={videoRef}
-          />
         </Box>
-      </Dialog>
+      </>
     );
   } catch (error) {
     console.log(error, 'QR Exception');
     return (
       <Box maxWidth="xs">
-        <div className={classes.displayColumn}>
+        <div>
           <h1>No se pudo cargar la Camara del dispositivo</h1>
         </div>
       </Box>

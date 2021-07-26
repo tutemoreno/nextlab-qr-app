@@ -29,7 +29,7 @@ const initialState = {
   sampleNumber: '',
   analisis: [],
   // manual
-  document: '',
+  documentId: '',
   documentType: 'DNI',
   // fetch
   patientCode: '',
@@ -58,6 +58,7 @@ const initialScannerState = {
   formats: ['code_128'],
   title: 'Escanee la muestra',
   showClose: false,
+  display: '',
 };
 
 const initialAccordionState = {
@@ -75,6 +76,11 @@ const initialErrorState = {
 const initialButtonResetState = {
   label: 'Cancelar',
   columns: 6,
+};
+
+const initialDisplayOnErrorState = {
+  hide: '',
+  show: 'none',
 };
 
 const {
@@ -98,10 +104,8 @@ const xmlBuilder = new xml2js.Builder({
 
 export default function PatientInfo() {
   const { content, setContent, onChange } = useFormContent(initialState);
-
   const [accordionState, setAccordionState] = useState(initialAccordionState);
   const [errorState, setErrorState] = useState(initialErrorState);
-  const classes = useStyles();
 
   const onBloodScan = async ({ rawValue }) => {
     closeScanner();
@@ -143,25 +147,38 @@ export default function PatientInfo() {
       title: 'Escanee el código de barras del documento',
       formats: ['pdf417'],
       handleScan: onDocumentScan,
+      display: '',
     });
   };
 
   const onDocumentScan = async ({ rawValue }) => {
+    const { documentType } = content;
     closeScanner();
 
     const split = rawValue.split('@');
-    let document;
+    let parsedInfo;
 
-    if (split[0].length) document = split[4];
-    else document = split[1];
+    if (split[0].length) {
+      const tmpSurname = split[1].replace(/\s+/g, ' ').split(' '),
+        tmpName = split[2].replace(/\s+/g, ' ').split(' '),
+        tmpDate = split[6].split('/');
 
-    setContent((prevState) => ({
-      ...prevState,
-      document,
-    }));
+      parsedInfo = {
+        documentId: split[4],
+        documentType,
+        gender: split[3],
+        birthDate: new Date(Date.UTC(tmpDate[2], tmpDate[1] - 1, tmpDate[0])),
+        firstName: tmpName[0],
+        secondName: tmpName[1],
+        firstSurname: tmpSurname[0],
+        secondSurname: tmpSurname[1],
+      };
+    } else {
+      parsedInfo = { documentId: split[1] };
+    }
 
     try {
-      const { Paciente } = await getPatientInfo(document, content.documentType);
+      const { Paciente } = await getPatientInfo(parsedInfo);
       onGetPatientInfo(Paciente);
     } catch (error) {
       console.log(error);
@@ -169,12 +186,18 @@ export default function PatientInfo() {
   };
 
   const closeScanner = () => {
-    setScannerState((prevState) => ({ ...prevState, open: false }));
+    setScannerState((prevState) => ({
+      ...prevState,
+      open: false,
+      display: 'none',
+    }));
   };
 
   const onGetPatientInfo = (Paciente) => {
+    console.log(Paciente);
     const {
       Codigo: patientCode,
+      Documento: documentId,
       Nombre: firstName,
       Nombre2: secondName,
       Apellido: firstSurname,
@@ -195,6 +218,7 @@ export default function PatientInfo() {
 
     setContent((prevState) => ({
       ...prevState,
+      documentId,
       patientCode,
       firstName,
       secondName,
@@ -209,9 +233,8 @@ export default function PatientInfo() {
   };
 
   const handlePatientSubmit = async () => {
-    const { document, documentType } = content;
     try {
-      const { Paciente } = await getPatientInfo(document, documentType);
+      const { Paciente } = await getPatientInfo(content);
       onGetPatientInfo(Paciente);
     } catch (error) {
       console.log(error);
@@ -244,7 +267,7 @@ export default function PatientInfo() {
       sampleNumber,
       analisis,
       // manual
-      document,
+      documentId,
       documentType,
       // fetch patient
       patientCode,
@@ -284,7 +307,7 @@ export default function PatientInfo() {
               Paciente: {
                 Historia: '',
                 TipoDocumento: documentType,
-                NumeroDocumento: document,
+                NumeroDocumento: documentId,
                 Apellido: firstSurname,
                 Apellido2: secondSurname,
                 Apellido3: '',
@@ -364,32 +387,36 @@ export default function PatientInfo() {
     }
   };
 
-  const documentFormState = {
-    content,
-    onChange,
-    openScanner: openDocumentScanner,
-    handleSubmit: handlePatientSubmit,
-  };
-
-  const [displayNoneOnError, setDisplayNoneOnError] = useState('');
+  const [displayOnError, setDisplayOnError] = useState(
+    initialDisplayOnErrorState,
+  );
   const [buttonResetState, setButtonResetState] = useState(
     initialButtonResetState,
   );
+
   useEffect(() => {
     if (errorState.error) {
-      setDisplayNoneOnError('none');
+      setDisplayOnError({ hide: 'none', show: '' });
       setButtonResetState({ label: 'Reintentar', columns: 12 });
     } else {
-      setDisplayNoneOnError('');
+      setDisplayOnError({ hide: '', show: 'none' });
       setButtonResetState({ label: 'Cancelar', columns: 6 });
     }
   }, [errorState.error]);
 
   return (
     <>
-      <QrReader {...scannerState} handleClose={closeScanner} />
-
-      <Box display="flex" flexDirection="column" alignItems="center" mt={3}>
+      <Box clone display={scannerState.display} width="100%" mt={1}>
+        <Paper>
+          <QrReader {...scannerState} handleClose={closeScanner} />
+        </Paper>
+      </Box>
+      <Box
+        display={scannerState.open ? 'none' : 'flex'}
+        flexDirection="column"
+        alignItems="center"
+        mt={3}
+      >
         <HeaderHoc title="Información del paciente" />
 
         <Box
@@ -397,7 +424,7 @@ export default function PatientInfo() {
           mt={3}
           py={3}
           clone
-          display={errorState.error ? 'flex' : 'none'}
+          display={displayOnError.show}
           flexDirection="column"
           alignItems="center"
         >
@@ -409,26 +436,18 @@ export default function PatientInfo() {
           </Paper>
         </Box>
 
-        <Box mt={3} display={displayNoneOnError}>
-          <AccordionHoc
-            title="Analisis"
-            expanded={accordionState.analisis}
-            onChange={() => expandAccordion('analisis')}
-          >
-            <ListHoc
-              items={content.analisis.map((e) => {
-                const { CodigoAnalisis, Descripcion } = e;
-                return { id: CodigoAnalisis, Descripcion };
-              })}
-            />
-          </AccordionHoc>
-
+        <Box mt={1} display={displayOnError.hide}>
           <AccordionHoc
             title="Documento"
             expanded={accordionState.document}
             onChange={() => expandAccordion('document')}
           >
-            <DocumentForm {...documentFormState} />
+            <DocumentForm
+              content={content}
+              onChange={onChange}
+              openScanner={openDocumentScanner}
+              handleSubmit={handlePatientSubmit}
+            />
           </AccordionHoc>
 
           <AccordionHoc
@@ -446,6 +465,19 @@ export default function PatientInfo() {
           >
             <ContactForm content={content} onChange={onChange} />
           </AccordionHoc>
+
+          <AccordionHoc
+            title="Analisis"
+            expanded={accordionState.analisis}
+            onChange={() => expandAccordion('analisis')}
+          >
+            <ListHoc
+              items={content.analisis.map((e) => {
+                const { CodigoAnalisis, Descripcion } = e;
+                return { id: CodigoAnalisis, Descripcion };
+              })}
+            />
+          </AccordionHoc>
         </Box>
 
         <Box width="100%" mt={3}>
@@ -456,20 +488,18 @@ export default function PatientInfo() {
                 fullWidth
                 variant="contained"
                 color="secondary"
-                className={classes.button}
                 onClick={newOrden}
               >
                 {buttonResetState.label}
               </Button>
             </Grid>
-            <Box clone display={displayNoneOnError}>
+            <Box clone display={displayOnError.hide}>
               <Grid item xs={6}>
                 <Button
                   type="button"
                   fullWidth
                   variant="contained"
                   color="primary"
-                  className={`${classes.button}`}
                   onClick={sendOrden}
                 >
                   Enviar
@@ -483,13 +513,30 @@ export default function PatientInfo() {
   );
 }
 
-async function getPatientInfo(document, documentType) {
+async function getPatientInfo(content) {
+  const {
+    documentId,
+    documentType,
+    gender,
+    birthDate,
+    firstName,
+    secondName,
+    firstSurname,
+    secondSurname,
+  } = content;
+
+  console.log(birthDate.toISOString());
+
   return await axiosRequest({
     method: 'post',
     url: `${REACT_APP_PATIENT_SERVICE}/paciente_datos`,
     data: qs.stringify({
-      documento: document,
+      documento: documentId,
       tipoDoc: documentType,
+      sexo: gender,
+      fecha_nacimiento: birthDate.toISOString(),
+      nombre: [firstName, secondName].join(' '),
+      apellido: [firstSurname, secondSurname].join(' '),
       codigo: 0,
       token: REACT_APP_NEXTLAB_TOKEN,
     }),
@@ -529,7 +576,7 @@ const initialDocumentTypesState = [{ id: 'DNI', name: 'Doc. Nac. Identidad' }];
 
 function DocumentForm(props) {
   const { handleSubmit, onChange, content, openScanner } = props;
-  const { documentType, document } = content;
+  const { documentType, documentId } = content;
   const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
   const classes = useStyles();
 
@@ -573,10 +620,10 @@ function DocumentForm(props) {
             variant="outlined"
             required
             fullWidth
-            name="document"
+            name="documentId"
             label="Documento"
-            id="document"
-            value={document}
+            id="documentId"
+            value={documentId}
             onChange={onChange}
             InputProps={{
               endAdornment: (
