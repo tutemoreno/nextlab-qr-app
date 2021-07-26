@@ -209,8 +209,9 @@ export default function PatientInfo() {
   };
 
   const handlePatientSubmit = async () => {
+    const { document, documentType } = content;
     try {
-      const { Paciente } = await getPatientInfo(document, content.documentType);
+      const { Paciente } = await getPatientInfo(document, documentType);
       onGetPatientInfo(Paciente);
     } catch (error) {
       console.log(error);

@@ -8,47 +8,29 @@ import {
   Typography,
   useScrollTrigger,
 } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
 import Menu from 'mdi-material-ui/Menu';
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/auth';
 
 export default function Navbar(props) {
-  const useStyles = makeStyles((theme) => ({
-    root: {
-      flexGrow: 1,
-    },
-    paper: {
-      padding: theme.spacing(2),
-      textAlign: 'center',
-      color: theme.palette.text.secondary,
-    },
-    logout: {
-      padding: theme.spacing(2, 2, 0, 2),
-      justifyContent: 'flex-end',
-      alignItems: 'flex-end',
-    },
-    marginRight: {
-      marginRight: theme.spacing(1),
-    },
-  }));
-
-  const classes = useStyles();
-
   const { user, signOut } = useAuth();
+  const ref = useRef(null);
+  const [backgroundHeight, setBackgroundHeight] = useState(0);
+
+  useEffect(() => {
+    const { current: offsetHeight } = ref;
+
+    setBackgroundHeight(offsetHeight);
+    console.log('width', ref.current.offsetHeight);
+  }, []);
 
   return (
     <>
       <HideOnScroll {...props}>
-        <AppBar>
+        <AppBar ref={ref}>
           <Toolbar>
-            <IconButton
-              edge="start"
-              className={classes.menuButton}
-              color="inherit"
-              aria-label="menu"
-            >
+            <IconButton edge="start" color="inherit">
               <Menu />
             </IconButton>
             <Typography style={{ flexGrow: 1 }} variant="h6">
@@ -65,7 +47,10 @@ export default function Navbar(props) {
           </Toolbar>
         </AppBar>
       </HideOnScroll>
-      <Box height={64}></Box>
+      <Box
+        bgcolor="red"
+        height={ref.current ? ref.current.offsetHeight : 0}
+      ></Box>
     </>
   );
 }
@@ -78,7 +63,7 @@ function HideOnScroll(props) {
   const trigger = useScrollTrigger();
 
   return (
-    <Slide _appear={false} direction="down" in={!trigger}>
+    <Slide direction="down" in={!trigger}>
       {children}
     </Slide>
   );
