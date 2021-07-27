@@ -1,5 +1,5 @@
 import DateFnsUtils from '@date-io/date-fns';
-import { Container, CssBaseline } from '@material-ui/core';
+import { CssBaseline } from '@material-ui/core';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import React from 'react';
 import Navbar from './components/Navbar.js';
@@ -13,9 +13,7 @@ export default function App() {
         <>
           <Navbar />
           <CssBaseline />
-          <Container>
-            <AppRouter />
-          </Container>
+          <AppRouter />
         </>
       </ProvideAuth>
     </MuiPickersUtilsProvider>

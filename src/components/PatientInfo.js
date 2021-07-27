@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Container,
   Grid,
   IconButton,
   InputAdornment,
@@ -14,9 +15,9 @@ import { Alert, BarcodeScan, Magnify } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
+import { Transition, TransitionGroup } from 'react-transition-group';
 import xml2js from 'xml2js';
 import { useFormContent } from '../hooks/useForm';
-import useStyles from '../hooks/useStyles';
 import AccordionHoc from './AccordionHoc';
 import HeaderHoc from './HeaderHoc';
 import ListHoc from './ListHoc';
@@ -264,13 +265,11 @@ export default function PatientInfo() {
       // barcode
       branch,
       origen,
-      sampleNumber,
       analisis,
       // manual
       documentId,
       documentType,
       // fetch patient
-      patientCode,
       firstName,
       secondName,
       firstSurname,
@@ -278,7 +277,6 @@ export default function PatientInfo() {
       birthDate,
       gender,
       email,
-      cellPhone,
       phone,
       address,
       observation,
@@ -404,112 +402,149 @@ export default function PatientInfo() {
     }
   }, [errorState.error]);
 
+  const defaultStyle = {
+    transition: `all 1000ms ease-in-out`,
+    transform: 'translateX(-100%)',
+  };
+
+  const transitionStyles = {
+    entering: { opacity: 1, transform: 'translateX(0%)' },
+    entered: { opacity: 1, transform: 'translateX(0%)' },
+    exiting: { opacity: 0, transform: 'translateX(-100%)' },
+    exited: { opacity: 0, transform: 'translateX(-100%)' },
+  };
+
   return (
-    <>
-      <Box clone display={scannerState.display} width="100%" mt={1}>
-        <Paper>
-          <QrReader {...scannerState} handleClose={closeScanner} />
-        </Paper>
-      </Box>
-      <Box
-        display={scannerState.open ? 'none' : 'flex'}
-        flexDirection="column"
-        alignItems="center"
-        mt={3}
-      >
-        <HeaderHoc title="Información del paciente" />
-
-        <Box
-          width="100%"
-          mt={3}
-          py={3}
-          clone
-          display={displayOnError.show}
-          flexDirection="column"
-          alignItems="center"
-        >
-          <Paper>
-            <HeaderHoc
-              title={errorState.message}
-              avatarChildren={<Alert fontSize="large" />}
-            />
-          </Paper>
-        </Box>
-
-        <Box mt={1} display={displayOnError.hide}>
-          <AccordionHoc
-            title="Documento"
-            expanded={accordionState.document}
-            onChange={() => expandAccordion('document')}
-          >
-            <DocumentForm
-              content={content}
-              onChange={onChange}
-              openScanner={openDocumentScanner}
-              handleSubmit={handlePatientSubmit}
-            />
-          </AccordionHoc>
-
-          <AccordionHoc
-            title="Paciente"
-            expanded={accordionState.patient}
-            onChange={() => expandAccordion('patient')}
-          >
-            <PatientForm content={content} onChange={onChange} />
-          </AccordionHoc>
-
-          <AccordionHoc
-            title="Contacto"
-            expanded={accordionState.contact}
-            onChange={() => expandAccordion('contact')}
-          >
-            <ContactForm content={content} onChange={onChange} />
-          </AccordionHoc>
-
-          <AccordionHoc
-            title="Analisis"
-            expanded={accordionState.analisis}
-            onChange={() => expandAccordion('analisis')}
-          >
-            <ListHoc
-              items={content.analisis.map((e) => {
-                const { CodigoAnalisis, Descripcion } = e;
-                return { id: CodigoAnalisis, Descripcion };
-              })}
-            />
-          </AccordionHoc>
-        </Box>
-
-        <Box width="100%" mt={3}>
-          <Grid container spacing={2}>
-            <Grid item xs={buttonResetState.columns}>
-              <Button
-                type="button"
-                fullWidth
-                variant="contained"
-                color="secondary"
-                onClick={newOrden}
+    <Container>
+      <TransitionGroup component={null}>
+        {scannerState.open ? (
+          <Transition appear key="scanner" timeout={1000}>
+            {(state) => (
+              <Box
+                _display={scannerState.display}
+                mt={1}
+                style={{
+                  ...defaultStyle,
+                  ...transitionStyles[state],
+                }}
               >
-                {buttonResetState.label}
-              </Button>
-            </Grid>
-            <Box clone display={displayOnError.hide}>
-              <Grid item xs={6}>
-                <Button
-                  type="button"
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  onClick={sendOrden}
+                <Paper elevation={24}>
+                  <QrReader {...scannerState} handleClose={closeScanner} />
+                </Paper>
+              </Box>
+            )}
+          </Transition>
+        ) : (
+          <Transition appear key="form" timeout={1000}>
+            {(state) => (
+              <Box
+                display="flex"
+                _display={scannerState.open ? 'none' : 'flex'}
+                flexDirection="column"
+                alignItems="center"
+                mt={1}
+                style={{
+                  ...defaultStyle,
+                  ...transitionStyles[state],
+                }}
+              >
+                <HeaderHoc title="Información del paciente" />
+
+                <Box
+                  width="100%"
+                  mt={3}
+                  py={3}
+                  clone
+                  display={displayOnError.show}
+                  flexDirection="column"
+                  alignItems="center"
                 >
-                  Enviar
-                </Button>
-              </Grid>
-            </Box>
-          </Grid>
-        </Box>
-      </Box>
-    </>
+                  <Paper>
+                    <HeaderHoc
+                      title={errorState.message}
+                      icon={<Alert fontSize="large" />}
+                    />
+                  </Paper>
+                </Box>
+
+                <Box mt={1} display={displayOnError.hide}>
+                  <AccordionHoc
+                    title="Documento"
+                    expanded={accordionState.document}
+                    onChange={() => expandAccordion('document')}
+                  >
+                    <DocumentForm
+                      content={content}
+                      onChange={onChange}
+                      openScanner={openDocumentScanner}
+                      handleSubmit={handlePatientSubmit}
+                    />
+                  </AccordionHoc>
+
+                  <AccordionHoc
+                    title="Paciente"
+                    expanded={accordionState.patient}
+                    onChange={() => expandAccordion('patient')}
+                  >
+                    <PatientForm content={content} onChange={onChange} />
+                  </AccordionHoc>
+
+                  <AccordionHoc
+                    title="Contacto"
+                    expanded={accordionState.contact}
+                    onChange={() => expandAccordion('contact')}
+                  >
+                    <ContactForm content={content} onChange={onChange} />
+                  </AccordionHoc>
+
+                  <AccordionHoc
+                    title="Analisis"
+                    expanded={accordionState.analisis}
+                    onChange={() => expandAccordion('analisis')}
+                  >
+                    <ListHoc
+                      items={content.analisis.map((e) => {
+                        const { CodigoAnalisis, Descripcion } = e;
+                        return { id: CodigoAnalisis, Descripcion };
+                      })}
+                    />
+                  </AccordionHoc>
+                </Box>
+
+                <Box width="100%" mt={3}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={buttonResetState.columns}>
+                      <Button
+                        type="button"
+                        fullWidth
+                        variant="contained"
+                        color="secondary"
+                        onClick={newOrden}
+                      >
+                        {buttonResetState.label}
+                      </Button>
+                    </Grid>
+                    <Box clone display={displayOnError.hide}>
+                      <Grid item xs={6}>
+                        <Button
+                          type="button"
+                          fullWidth
+                          variant="contained"
+                          color="primary"
+                          onClick={sendOrden}
+                        >
+                          Enviar
+                        </Button>
+                      </Grid>
+                    </Box>
+                  </Grid>
+                </Box>
+              </Box>
+            )}
+          </Transition>
+        )}
+      </TransitionGroup>
+    </Container>
   );
 }
 
@@ -578,7 +613,6 @@ function DocumentForm(props) {
   const { handleSubmit, onChange, content, openScanner } = props;
   const { documentType, documentId } = content;
   const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
-  const classes = useStyles();
 
   useEffect(() => {
     (async () => {
@@ -587,62 +621,63 @@ function DocumentForm(props) {
   }, []);
 
   return (
-    <form
-      className={classes.form}
-      onSubmit={(e) => {
-        e.preventDefault();
-        handleSubmit();
-      }}
-    >
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={5}>
-          <TextField
-            id="documentType"
-            label="Tipo de documento"
-            name="documentType"
-            variant="outlined"
-            fullWidth
-            value={documentType}
-            onChange={onChange}
-            select
-            xs="6"
-          >
-            {documentTypes.map((e) => (
-              <MenuItem key={e.id} value={e.id}>
-                {e.name}
-              </MenuItem>
-            ))}
-          </TextField>
+    <Box clone width="100%">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit();
+        }}
+      >
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={5}>
+            <TextField
+              id="documentType"
+              label="Tipo de documento"
+              name="documentType"
+              variant="outlined"
+              fullWidth
+              value={documentType}
+              onChange={onChange}
+              select
+              xs="6"
+            >
+              {documentTypes.map((e) => (
+                <MenuItem key={e.id} value={e.id}>
+                  {e.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+          <Grid item xs>
+            <TextField
+              type="text"
+              variant="outlined"
+              required
+              fullWidth
+              name="documentId"
+              label="Documento"
+              id="documentId"
+              value={documentId}
+              onChange={onChange}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={openScanner}>
+                      <BarcodeScan fontSize="large" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+          <Grid item container xs={2} direction="row" alignItems="center">
+            <IconButton type="submit" style={{ padding: '0px' }}>
+              <Magnify fontSize="large" />
+            </IconButton>
+          </Grid>
         </Grid>
-        <Grid item xs>
-          <TextField
-            type="text"
-            variant="outlined"
-            required
-            fullWidth
-            name="documentId"
-            label="Documento"
-            id="documentId"
-            value={documentId}
-            onChange={onChange}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={openScanner}>
-                    <BarcodeScan fontSize="large" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Grid>
-        <Grid item container xs={2} direction="row" alignItems="center">
-          <IconButton type="submit" style={{ padding: '0px' }}>
-            <Magnify fontSize="large" />
-          </IconButton>
-        </Grid>
-      </Grid>
-    </form>
+      </form>
+    </Box>
   );
 }
 DocumentForm.propTypes = {
@@ -653,81 +688,82 @@ DocumentForm.propTypes = {
 };
 
 function ContactForm(props) {
-  const classes = useStyles();
   const { content, onChange } = props;
   const { email, cellPhone, phone, address, observation } = content;
 
   return (
-    <form className={classes.form}>
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            type="email"
-            variant="outlined"
-            required
-            fullWidth
-            name="email"
-            label="Email"
-            id="email"
-            value={email}
-            onChange={onChange}
-          />
+    <Box clone width="100%">
+      <form>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="email"
+              variant="outlined"
+              required
+              fullWidth
+              name="email"
+              label="Email"
+              id="email"
+              value={email}
+              onChange={onChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="number"
+              variant="outlined"
+              required
+              fullWidth
+              name="cellPhone"
+              label="Celular"
+              id="cellPhone"
+              value={cellPhone}
+              onChange={onChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="number"
+              variant="outlined"
+              required
+              fullWidth
+              name="phone"
+              label="Teléfono fijo"
+              id="phone"
+              value={phone}
+              onChange={onChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="text"
+              variant="outlined"
+              required
+              fullWidth
+              name="address"
+              label="Dirección"
+              id="address"
+              value={address}
+              onChange={onChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              type="text"
+              variant="outlined"
+              multiline
+              fullWidth
+              rows={4}
+              name="observation"
+              label="Observaciones"
+              id="observation"
+              value={observation}
+              onChange={onChange}
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            type="number"
-            variant="outlined"
-            required
-            fullWidth
-            name="cellPhone"
-            label="Celular"
-            id="cellPhone"
-            value={cellPhone}
-            onChange={onChange}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            type="number"
-            variant="outlined"
-            required
-            fullWidth
-            name="phone"
-            label="Teléfono fijo"
-            id="phone"
-            value={phone}
-            onChange={onChange}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            type="text"
-            variant="outlined"
-            required
-            fullWidth
-            name="address"
-            label="Dirección"
-            id="address"
-            value={address}
-            onChange={onChange}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            type="text"
-            variant="outlined"
-            multiline
-            fullWidth
-            rows={4}
-            name="observation"
-            label="Observaciones"
-            id="observation"
-            value={observation}
-            onChange={onChange}
-          />
-        </Grid>
-      </Grid>
-    </form>
+      </form>
+    </Box>
   );
 }
 ContactForm.propTypes = {
@@ -736,7 +772,6 @@ ContactForm.propTypes = {
 };
 
 function PatientForm(props) {
-  const classes = useStyles();
   const { content, onChange } = props;
   const {
     firstName,
@@ -748,101 +783,103 @@ function PatientForm(props) {
   } = content;
 
   return (
-    <form className={classes.form}>
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            type="text"
-            variant="outlined"
-            required
-            fullWidth
-            name="firstName"
-            autoComplete="given-name"
-            label="Primer nombre"
-            id="firstName"
-            value={firstName}
-            onChange={onChange}
-          />
+    <Box clone width="100%">
+      <form>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="text"
+              variant="outlined"
+              required
+              fullWidth
+              name="firstName"
+              autoComplete="given-name"
+              label="Primer nombre"
+              id="firstName"
+              value={firstName}
+              onChange={onChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="text"
+              variant="outlined"
+              required
+              fullWidth
+              name="secondName"
+              label="Segundo nombre"
+              id="secondName"
+              value={secondName}
+              onChange={onChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="text"
+              variant="outlined"
+              required
+              fullWidth
+              name="firstSurname"
+              autoComplete="family-name"
+              label="Primer apellido"
+              id="firstSurname"
+              value={firstSurname}
+              onChange={onChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="text"
+              variant="outlined"
+              required
+              fullWidth
+              name="secondSurname"
+              label="Segundo apellido"
+              id="secondSurname"
+              value={secondSurname}
+              onChange={onChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <KeyboardDatePicker
+              variant="inline"
+              autoOk
+              inputVariant="outlined"
+              fullWidth
+              disableFuture
+              format="dd/MM/yyyy"
+              id="birthDate"
+              label="Fecha de nacimiento"
+              value={birthDate}
+              onChange={(date) =>
+                onChange({
+                  target: {
+                    value: date,
+                    name: 'birthDate',
+                    type: 'date',
+                  },
+                })
+              }
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              id="gender"
+              label="Género"
+              name="gender"
+              variant="outlined"
+              fullWidth
+              value={gender}
+              onChange={onChange}
+              select
+            >
+              <MenuItem value={'M'}>Masculino</MenuItem>
+              <MenuItem value={'F'}>Femenino</MenuItem>
+            </TextField>
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            type="text"
-            variant="outlined"
-            required
-            fullWidth
-            name="secondName"
-            label="Segundo nombre"
-            id="secondName"
-            value={secondName}
-            onChange={onChange}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            type="text"
-            variant="outlined"
-            required
-            fullWidth
-            name="firstSurname"
-            autoComplete="family-name"
-            label="Primer apellido"
-            id="firstSurname"
-            value={firstSurname}
-            onChange={onChange}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            type="text"
-            variant="outlined"
-            required
-            fullWidth
-            name="secondSurname"
-            label="Segundo apellido"
-            id="secondSurname"
-            value={secondSurname}
-            onChange={onChange}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <KeyboardDatePicker
-            variant="inline"
-            autoOk
-            inputVariant="outlined"
-            fullWidth
-            disableFuture
-            format="dd/MM/yyyy"
-            id="birthDate"
-            label="Fecha de nacimiento"
-            value={birthDate}
-            onChange={(date) =>
-              onChange({
-                target: {
-                  value: date,
-                  name: 'birthDate',
-                  type: 'date',
-                },
-              })
-            }
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            id="gender"
-            label="Género"
-            name="gender"
-            variant="outlined"
-            fullWidth
-            value={gender}
-            onChange={onChange}
-            select
-          >
-            <MenuItem value={'M'}>Masculino</MenuItem>
-            <MenuItem value={'F'}>Femenino</MenuItem>
-          </TextField>
-        </Grid>
-      </Grid>
-    </form>
+      </form>
+    </Box>
   );
 }
 PatientForm.propTypes = {

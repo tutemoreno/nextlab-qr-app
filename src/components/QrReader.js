@@ -9,19 +9,23 @@ import {
   TextField,
   Typography,
 } from '@material-ui/core';
-import CloseCircle from 'mdi-material-ui/CloseCircle';
+import { AlertOutline, CloseCircle } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
-import React, { useEffect, useRef, useState } from 'react';
-import { useFormInput } from '../hooks/useForm';
+import React, { useEffect, useRef } from 'react';
+import { useFormContent } from '../hooks/useForm';
+import HeaderHoc from './HeaderHoc';
 
 export default function QrReader(props) {
   // formats ['qr_code', 'code_128', 'pdf417']
-
-  try {
+  if (window['BarcodeDetector']) {
     const { open, title, formats, handleScan, handleClose, showClose } = props;
     const barcodeDetector = new window.BarcodeDetector({ formats });
-    const deviceState = useFormInput('');
-    const [devices, setDevices] = useState([]);
+
+    const { content, onChange, setContent } = useFormContent({
+      device: '',
+      devices: [],
+    });
+    const { device, devices } = content;
     const videoRef = useRef(null);
 
     useEffect(() => {
@@ -33,9 +37,10 @@ export default function QrReader(props) {
             (device) => device.kind === 'videoinput',
           );
 
-          setDevices(videoDevices);
-
-          deviceState.setValue(videoDevices[videoDevices.length - 1].deviceId);
+          setContent({
+            device: videoDevices[videoDevices.length - 1].deviceId,
+            devices: videoDevices,
+          });
         } catch (error) {
           console.log(error, 'QR Error');
         }
@@ -68,7 +73,7 @@ export default function QrReader(props) {
         try {
           stream = await navigator.mediaDevices.getUserMedia({
             video: {
-              deviceId: deviceState.input.value,
+              deviceId: device,
               facingMode: 'environment',
             },
           });
@@ -90,14 +95,14 @@ export default function QrReader(props) {
           });
       };
 
-      if (open && deviceState.input.value) startVideo();
+      if (open && device) startVideo();
 
       return cleanUp;
-    }, [open, deviceState.input.value]);
+    }, [open, device]);
 
     return (
       <>
-        <Box display="flex" p={2} bgcolor="background.paper">
+        <Box display="flex" p={2}>
           <Box clone flexGrow={1}>
             <Typography variant="subtitle1">{title}</Typography>
           </Box>
@@ -108,11 +113,14 @@ export default function QrReader(props) {
             </IconButton>
           )}
         </Box>
-        <video
-          style={{ width: 'inherit', height: 'inherit' }}
-          autoPlay
-          ref={videoRef}
-        />
+        <Box width="100%">
+          <video
+            style={{ width: 'inherit', height: 'inherit' }}
+            autoPlay
+            muted
+            ref={videoRef}
+          />
+        </Box>
         <Box p={2}>
           <TextField
             id="selectedDevice"
@@ -120,7 +128,8 @@ export default function QrReader(props) {
             name="selectedDevice"
             variant="outlined"
             fullWidth
-            {...deviceState.input}
+            value={device}
+            onChange={onChange}
             select
           >
             {devices.map((e) => (
@@ -132,16 +141,15 @@ export default function QrReader(props) {
         </Box>
       </>
     );
-  } catch (error) {
-    console.log(error, 'QR Exception');
+  } else
     return (
-      <Box maxWidth="xs">
-        <div>
-          <h1>No se pudo cargar la Camara del dispositivo</h1>
-        </div>
-      </Box>
+      // <Box>
+      <HeaderHoc
+        title="No se pudo cargar la camara del dispositivo"
+        icon={<AlertOutline fontSize="large" />}
+      />
+      // </Box>
     );
-  }
 }
 
 QrReader.defaultProps = {

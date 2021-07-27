@@ -1,10 +1,12 @@
 import {
+  Box,
   Button,
   Checkbox,
   Container,
   FormControlLabel,
   Grid,
   Link,
+  Paper,
   TextField,
 } from '@material-ui/core';
 import Snackbar from '@material-ui/core/Snackbar';
@@ -13,7 +15,6 @@ import LockOutline from 'mdi-material-ui/LockOutline';
 import React from 'react';
 import { useAuth } from '../context/auth';
 import { useFormContent } from '../hooks/useForm';
-import useStyles from '../hooks/useStyles';
 import HeaderHoc from './HeaderHoc';
 
 const initialState = {
@@ -35,13 +36,12 @@ export default function Login() {
   };
 
   function Alert(props) {
-    return <MuiAlert elevation={6} variant="filled" {...props} />;
+    return <MuiAlert elevation={24} variant="filled" {...props} />;
   }
 
   const { content, onChange } = useFormContent(initialState),
     { username, password, remember } = content,
-    auth = useAuth(),
-    classes = useStyles();
+    auth = useAuth();
 
   const signIn = async (e) => {
     e.preventDefault();
@@ -62,7 +62,7 @@ export default function Login() {
 
   return (
     <Container maxWidth="xs">
-      <div className={classes.displayColumn}>
+      <Box display="flex" flexDirection="column" alignItems="center">
         <Snackbar
           open={openError}
           autoHideDuration={2000}
@@ -72,70 +72,76 @@ export default function Login() {
             {errorMessage ? errorMessage : 'Error'}
           </Alert>
         </Snackbar>
-        <HeaderHoc title="Iniciar Sesion" avatarChildren={<LockOutline />} />
-
-        <form onSubmit={signIn}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                variant="outlined"
-                required
-                fullWidth
-                id="username"
-                label="Nombre de usuario"
-                name="username"
-                value={username}
-                onChange={onChange}
-                autoComplete="username"
-                autoFocus
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                variant="outlined"
-                required
-                fullWidth
-                name="password"
-                label="Contraseña"
-                type="password"
-                id="password"
-                value={password}
-                onChange={onChange}
-                autoComplete="current-password"
-              />
-            </Grid>
-            <Grid item>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="remember"
-                    checked={remember}
+        <Box clone mt={1} p={2}>
+          <Paper elevation={24}>
+            <HeaderHoc
+              title="Iniciar Sesion"
+              icon={<LockOutline fontSize="large" />}
+            />
+            <form onSubmit={signIn}>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    variant="outlined"
+                    required
+                    fullWidth
+                    id="username"
+                    label="Nombre de usuario"
+                    name="username"
+                    value={username}
                     onChange={onChange}
-                    color="primary"
+                    autoComplete="username"
+                    autoFocus
                   />
-                }
-                name="remember"
-                label="Recordarme"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                color="primary"
-              >
-                Iniciar Sesion
-              </Button>
-            </Grid>
-            <Grid item xs={12}>
-              <Link href="#" variant="body2">
-                Olvidé mi contraseña
-              </Link>
-            </Grid>
-          </Grid>
-        </form>
-      </div>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    variant="outlined"
+                    required
+                    fullWidth
+                    name="password"
+                    label="Contraseña"
+                    type="password"
+                    id="password"
+                    value={password}
+                    onChange={onChange}
+                    autoComplete="current-password"
+                  />
+                </Grid>
+                <Grid item>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        name="remember"
+                        checked={remember}
+                        onChange={onChange}
+                        color="primary"
+                      />
+                    }
+                    name="remember"
+                    label="Recordarme"
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                  >
+                    Iniciar Sesion
+                  </Button>
+                </Grid>
+                <Grid item xs={12}>
+                  <Link href="#" variant="body2">
+                    Olvidé mi contraseña
+                  </Link>
+                </Grid>
+              </Grid>
+            </form>
+          </Paper>
+        </Box>
+      </Box>
     </Container>
   );
 }

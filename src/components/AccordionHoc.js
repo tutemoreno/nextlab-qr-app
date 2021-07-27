@@ -8,20 +8,16 @@ import ChevronDown from 'mdi-material-ui/ChevronDown';
 import PropTypes from 'prop-types';
 import React from 'react';
 
+const { REACT_APP_PAPER_ELEVATION } = process.env;
+
 export default function AccordionHoc(props) {
   const { children, title, expanded, onChange } = props;
   return (
-    <Accordion expanded={expanded} onChange={onChange}>
+    <Accordion elevation={24} expanded={expanded} onChange={onChange}>
       <AccordionSummary expandIcon={<ChevronDown />}>
         <Typography>{title}</Typography>
       </AccordionSummary>
-      <AccordionDetails
-        style={{
-          paddingTop: '0px',
-        }}
-      >
-        {children}
-      </AccordionDetails>
+      <AccordionDetails>{children}</AccordionDetails>
     </Accordion>
   );
 }
