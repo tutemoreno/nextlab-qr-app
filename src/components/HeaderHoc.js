@@ -6,7 +6,7 @@ const avatarSize = 64;
 
 export default function HeaderHoc(props) {
   return (
-    <Box display="flex" flexDirection="column" alignItems="center" my={2}>
+    <Box display="flex" flexDirection="column" alignItems="center" py={2}>
       <Box
         clone
         width={avatarSize}

@@ -15,7 +15,6 @@ import { Alert, BarcodeScan, Magnify } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
-import { Transition, TransitionGroup } from 'react-transition-group';
 import xml2js from 'xml2js';
 import { useFormContent } from '../hooks/useForm';
 import AccordionHoc from './AccordionHoc';
@@ -402,148 +401,111 @@ export default function PatientInfo() {
     }
   }, [errorState.error]);
 
-  const defaultStyle = {
-    transition: `all 1000ms ease-in-out`,
-    transform: 'translateX(-100%)',
-  };
-
-  const transitionStyles = {
-    entering: { opacity: 1, transform: 'translateX(0%)' },
-    entered: { opacity: 1, transform: 'translateX(0%)' },
-    exiting: { opacity: 0, transform: 'translateX(-100%)' },
-    exited: { opacity: 0, transform: 'translateX(-100%)' },
-  };
-
   return (
     <Container>
-      <TransitionGroup component={null}>
-        {scannerState.open ? (
-          <Transition appear key="scanner" timeout={1000}>
-            {(state) => (
-              <Box
-                _display={scannerState.display}
-                mt={1}
-                style={{
-                  ...defaultStyle,
-                  ...transitionStyles[state],
-                }}
-              >
-                <Paper elevation={24}>
-                  <QrReader {...scannerState} handleClose={closeScanner} />
-                </Paper>
-              </Box>
-            )}
-          </Transition>
-        ) : (
-          <Transition appear key="form" timeout={1000}>
-            {(state) => (
-              <Box
-                display="flex"
-                _display={scannerState.open ? 'none' : 'flex'}
-                flexDirection="column"
-                alignItems="center"
-                mt={1}
-                style={{
-                  ...defaultStyle,
-                  ...transitionStyles[state],
-                }}
-              >
-                <HeaderHoc title="Información del paciente" />
+      <Box clone display={scannerState.open ? 'block' : 'none'} mt={1}>
+        <Paper elevation={24}>
+          <QrReader {...scannerState} handleClose={closeScanner} />
+        </Paper>
+      </Box>
+      <Box
+        display={scannerState.open ? 'none' : 'flex'}
+        flexDirection="column"
+        alignItems="center"
+        mt={1}
+      >
+        <HeaderHoc title="Información del paciente" />
 
-                <Box
-                  width="100%"
-                  mt={3}
-                  py={3}
-                  clone
-                  display={displayOnError.show}
-                  flexDirection="column"
-                  alignItems="center"
+        <Box
+          width="100%"
+          mt={3}
+          py={3}
+          clone
+          display={displayOnError.show}
+          flexDirection="column"
+          alignItems="center"
+        >
+          <Paper>
+            <HeaderHoc
+              title={errorState.message}
+              icon={<Alert fontSize="large" />}
+            />
+          </Paper>
+        </Box>
+
+        <Box mt={1} display={displayOnError.hide}>
+          <AccordionHoc
+            title="Documento"
+            expanded={accordionState.document}
+            onChange={() => expandAccordion('document')}
+          >
+            <DocumentForm
+              content={content}
+              onChange={onChange}
+              openScanner={openDocumentScanner}
+              handleSubmit={handlePatientSubmit}
+            />
+          </AccordionHoc>
+
+          <AccordionHoc
+            title="Paciente"
+            expanded={accordionState.patient}
+            onChange={() => expandAccordion('patient')}
+          >
+            <PatientForm content={content} onChange={onChange} />
+          </AccordionHoc>
+
+          <AccordionHoc
+            title="Contacto"
+            expanded={accordionState.contact}
+            onChange={() => expandAccordion('contact')}
+          >
+            <ContactForm content={content} onChange={onChange} />
+          </AccordionHoc>
+
+          <AccordionHoc
+            title="Analisis"
+            expanded={accordionState.analisis}
+            onChange={() => expandAccordion('analisis')}
+          >
+            <ListHoc
+              items={content.analisis.map((e) => {
+                const { CodigoAnalisis, Descripcion } = e;
+                return { id: CodigoAnalisis, Descripcion };
+              })}
+            />
+          </AccordionHoc>
+        </Box>
+
+        <Box width="100%" mt={3}>
+          <Grid container spacing={2}>
+            <Grid item xs={buttonResetState.columns}>
+              <Button
+                type="button"
+                fullWidth
+                variant="contained"
+                color="secondary"
+                onClick={newOrden}
+              >
+                {buttonResetState.label}
+              </Button>
+            </Grid>
+            <Box clone display={displayOnError.hide}>
+              <Grid item xs={6}>
+                <Button
+                  type="button"
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  onClick={sendOrden}
                 >
-                  <Paper>
-                    <HeaderHoc
-                      title={errorState.message}
-                      icon={<Alert fontSize="large" />}
-                    />
-                  </Paper>
-                </Box>
-
-                <Box mt={1} display={displayOnError.hide}>
-                  <AccordionHoc
-                    title="Documento"
-                    expanded={accordionState.document}
-                    onChange={() => expandAccordion('document')}
-                  >
-                    <DocumentForm
-                      content={content}
-                      onChange={onChange}
-                      openScanner={openDocumentScanner}
-                      handleSubmit={handlePatientSubmit}
-                    />
-                  </AccordionHoc>
-
-                  <AccordionHoc
-                    title="Paciente"
-                    expanded={accordionState.patient}
-                    onChange={() => expandAccordion('patient')}
-                  >
-                    <PatientForm content={content} onChange={onChange} />
-                  </AccordionHoc>
-
-                  <AccordionHoc
-                    title="Contacto"
-                    expanded={accordionState.contact}
-                    onChange={() => expandAccordion('contact')}
-                  >
-                    <ContactForm content={content} onChange={onChange} />
-                  </AccordionHoc>
-
-                  <AccordionHoc
-                    title="Analisis"
-                    expanded={accordionState.analisis}
-                    onChange={() => expandAccordion('analisis')}
-                  >
-                    <ListHoc
-                      items={content.analisis.map((e) => {
-                        const { CodigoAnalisis, Descripcion } = e;
-                        return { id: CodigoAnalisis, Descripcion };
-                      })}
-                    />
-                  </AccordionHoc>
-                </Box>
-
-                <Box width="100%" mt={3}>
-                  <Grid container spacing={2}>
-                    <Grid item xs={buttonResetState.columns}>
-                      <Button
-                        type="button"
-                        fullWidth
-                        variant="contained"
-                        color="secondary"
-                        onClick={newOrden}
-                      >
-                        {buttonResetState.label}
-                      </Button>
-                    </Grid>
-                    <Box clone display={displayOnError.hide}>
-                      <Grid item xs={6}>
-                        <Button
-                          type="button"
-                          fullWidth
-                          variant="contained"
-                          color="primary"
-                          onClick={sendOrden}
-                        >
-                          Enviar
-                        </Button>
-                      </Grid>
-                    </Box>
-                  </Grid>
-                </Box>
-              </Box>
-            )}
-          </Transition>
-        )}
-      </TransitionGroup>
+                  Enviar
+                </Button>
+              </Grid>
+            </Box>
+          </Grid>
+        </Box>
+      </Box>
     </Container>
   );
 }

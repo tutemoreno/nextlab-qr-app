@@ -143,12 +143,10 @@ export default function QrReader(props) {
     );
   } else
     return (
-      // <Box>
       <HeaderHoc
         title="No se pudo cargar la camara del dispositivo"
         icon={<AlertOutline fontSize="large" />}
       />
-      // </Box>
     );
 }
 

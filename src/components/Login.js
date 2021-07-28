@@ -7,9 +7,9 @@ import {
   Grid,
   Link,
   Paper,
+  Snackbar,
   TextField,
 } from '@material-ui/core';
-import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import LockOutline from 'mdi-material-ui/LockOutline';
 import React from 'react';
