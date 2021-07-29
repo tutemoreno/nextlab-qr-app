@@ -15,6 +15,7 @@ import { Alert, BarcodeScan, Magnify } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
+import { CSSTransition, SwitchTransition } from 'react-transition-group';
 import xml2js from 'xml2js';
 import { useFormContent } from '../hooks/useForm';
 import AccordionHoc from './AccordionHoc';
@@ -58,7 +59,6 @@ const initialScannerState = {
   formats: ['code_128'],
   title: 'Escanee la muestra',
   showClose: false,
-  display: '',
 };
 
 const initialAccordionState = {
@@ -101,6 +101,15 @@ const xmlParser = new xml2js.Parser({
 const xmlBuilder = new xml2js.Builder({
   xmldec: { version: '1.0', encoding: 'utf-8' },
 });
+
+const duration = 3000;
+
+const transitionStyles = {
+  entering: { opacity: 1, transition: `opacity ${duration}ms` },
+  entered: { opacity: 1 },
+  exiting: { opacity: 0, transition: `opacity ${duration}ms` },
+  exited: { opacity: 0 },
+};
 
 export default function PatientInfo() {
   const { content, setContent, onChange } = useFormContent(initialState);
@@ -147,7 +156,6 @@ export default function PatientInfo() {
       title: 'Escanee el código de barras del documento',
       formats: ['pdf417'],
       handleScan: onDocumentScan,
-      display: '',
     });
   };
 
@@ -189,7 +197,6 @@ export default function PatientInfo() {
     setScannerState((prevState) => ({
       ...prevState,
       open: false,
-      display: 'none',
     }));
   };
 
@@ -403,109 +410,118 @@ export default function PatientInfo() {
 
   return (
     <Container>
-      <Box clone display={scannerState.open ? 'block' : 'none'} mt={1}>
-        <Paper elevation={24}>
-          <QrReader {...scannerState} handleClose={closeScanner} />
-        </Paper>
-      </Box>
-      <Box
-        display={scannerState.open ? 'none' : 'flex'}
-        flexDirection="column"
-        alignItems="center"
-        mt={1}
-      >
-        <HeaderHoc title="Información del paciente" />
-
-        <Box
-          width="100%"
-          mt={3}
-          py={3}
-          clone
-          display={displayOnError.show}
-          flexDirection="column"
-          alignItems="center"
-        >
-          <Paper>
-            <HeaderHoc
-              title={errorState.message}
-              icon={<Alert fontSize="large" />}
-            />
-          </Paper>
-        </Box>
-
-        <Box mt={1} display={displayOnError.hide}>
-          <AccordionHoc
-            title="Documento"
-            expanded={accordionState.document}
-            onChange={() => expandAccordion('document')}
-          >
-            <DocumentForm
-              content={content}
-              onChange={onChange}
-              openScanner={openDocumentScanner}
-              handleSubmit={handlePatientSubmit}
-            />
-          </AccordionHoc>
-
-          <AccordionHoc
-            title="Paciente"
-            expanded={accordionState.patient}
-            onChange={() => expandAccordion('patient')}
-          >
-            <PatientForm content={content} onChange={onChange} />
-          </AccordionHoc>
-
-          <AccordionHoc
-            title="Contacto"
-            expanded={accordionState.contact}
-            onChange={() => expandAccordion('contact')}
-          >
-            <ContactForm content={content} onChange={onChange} />
-          </AccordionHoc>
-
-          <AccordionHoc
-            title="Analisis"
-            expanded={accordionState.analisis}
-            onChange={() => expandAccordion('analisis')}
-          >
-            <ListHoc
-              items={content.analisis.map((e) => {
-                const { CodigoAnalisis, Descripcion } = e;
-                return { id: CodigoAnalisis, Descripcion };
-              })}
-            />
-          </AccordionHoc>
-        </Box>
-
-        <Box width="100%" mt={3}>
-          <Grid container spacing={2}>
-            <Grid item xs={buttonResetState.columns}>
-              <Button
-                type="button"
-                fullWidth
-                variant="contained"
-                color="secondary"
-                onClick={newOrden}
+      <SwitchTransition>
+        <CSSTransition appear key={scannerState.open} timeout={duration}>
+          {(state) => (
+            <Box style={transitionStyles[state]}>
+              <Box clone _display={scannerState.open ? 'block' : 'none'} mt={1}>
+                <Paper elevation={24}>
+                  <QrReader {...scannerState} handleClose={closeScanner} />
+                </Paper>
+              </Box>
+              <Box
+                display="flex"
+                _display={scannerState.open ? 'none' : 'flex'}
+                flexDirection="column"
+                alignItems="center"
+                mt={1}
               >
-                {buttonResetState.label}
-              </Button>
-            </Grid>
-            <Box clone display={displayOnError.hide}>
-              <Grid item xs={6}>
-                <Button
-                  type="button"
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  onClick={sendOrden}
+                <HeaderHoc title="Información del paciente" />
+
+                <Box
+                  width="100%"
+                  mt={3}
+                  py={3}
+                  clone
+                  display={displayOnError.show}
+                  flexDirection="column"
+                  alignItems="center"
                 >
-                  Enviar
-                </Button>
-              </Grid>
+                  <Paper>
+                    <HeaderHoc
+                      title={errorState.message}
+                      icon={<Alert fontSize="large" />}
+                    />
+                  </Paper>
+                </Box>
+
+                <Box mt={1} display={displayOnError.hide}>
+                  <AccordionHoc
+                    title="Documento"
+                    expanded={accordionState.document}
+                    onChange={() => expandAccordion('document')}
+                  >
+                    <DocumentForm
+                      content={content}
+                      onChange={onChange}
+                      openScanner={openDocumentScanner}
+                      handleSubmit={handlePatientSubmit}
+                    />
+                  </AccordionHoc>
+
+                  <AccordionHoc
+                    title="Paciente"
+                    expanded={accordionState.patient}
+                    onChange={() => expandAccordion('patient')}
+                  >
+                    <PatientForm content={content} onChange={onChange} />
+                  </AccordionHoc>
+
+                  <AccordionHoc
+                    title="Contacto"
+                    expanded={accordionState.contact}
+                    onChange={() => expandAccordion('contact')}
+                  >
+                    <ContactForm content={content} onChange={onChange} />
+                  </AccordionHoc>
+
+                  <AccordionHoc
+                    title="Analisis"
+                    expanded={accordionState.analisis}
+                    onChange={() => expandAccordion('analisis')}
+                  >
+                    <ListHoc
+                      items={content.analisis.map((e) => {
+                        const { CodigoAnalisis, Descripcion } = e;
+                        return { id: CodigoAnalisis, Descripcion };
+                      })}
+                    />
+                  </AccordionHoc>
+                </Box>
+
+                <Box width="100%" mt={3}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={buttonResetState.columns}>
+                      <Button
+                        type="button"
+                        fullWidth
+                        variant="contained"
+                        color="secondary"
+                        onClick={newOrden}
+                      >
+                        {buttonResetState.label}
+                      </Button>
+                    </Grid>
+                    <Box clone display={displayOnError.hide}>
+                      <Grid item xs={6}>
+                        <Button
+                          type="button"
+                          fullWidth
+                          variant="contained"
+                          color="primary"
+                          onClick={sendOrden}
+                        >
+                          Enviar
+                        </Button>
+                      </Grid>
+                    </Box>
+                  </Grid>
+                </Box>
+              </Box>
             </Box>
-          </Grid>
-        </Box>
-      </Box>
+          )}
+        </CSSTransition>
+      </SwitchTransition>
     </Container>
   );
 }
