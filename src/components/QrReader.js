@@ -4,19 +4,20 @@
 // https://webrtc.github.io/samples/
 import {
   Box,
+  CircularProgress,
   IconButton,
   MenuItem,
   TextField,
   Typography,
 } from '@material-ui/core';
-import { AlertOutline, CloseCircle } from 'mdi-material-ui';
+import { CloseCircle } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef } from 'react';
 import { useFormContent } from '../hooks/useForm';
-import HeaderHoc from './HeaderHoc';
 
 export default function QrReader(props) {
   // formats ['qr_code', 'code_128', 'pdf417']
+
   if (window['BarcodeDetector']) {
     const { open, title, formats, handleScan, handleClose, showClose } = props;
     const barcodeDetector = new window.BarcodeDetector({ formats });
@@ -62,7 +63,7 @@ export default function QrReader(props) {
 
           if (data.length) {
             handled = true;
-            handleScan(data[0]);
+            handleScan(data[0].rawValue);
           }
         } catch (error) {
           console.log(error, 'QR error');
@@ -104,7 +105,7 @@ export default function QrReader(props) {
       <>
         <Box display="flex" p={2}>
           <Box clone flexGrow={1}>
-            <Typography variant="subtitle1">{title}</Typography>
+            <Typography variant="h6">{title}</Typography>
           </Box>
 
           {showClose && (
@@ -141,13 +142,40 @@ export default function QrReader(props) {
         </Box>
       </>
     );
-  } else
+  } else {
+    const { title, showClose, handleClose, handleScan, open } = props;
+    let value = '';
+
+    const keyDown = ({ key }) => {
+      if (key.length == 1) value += key;
+      else if (key == 'Enter') handleScan(value);
+    };
+
+    useEffect(() => {
+      if (open) window.addEventListener('keydown', keyDown);
+
+      return () => window.removeEventListener('keydown', keyDown);
+    }, [open]);
+
     return (
-      <HeaderHoc
-        title="No se pudo cargar la camara del dispositivo"
-        icon={<AlertOutline fontSize="large" />}
-      />
+      <>
+        <Box display="flex" p={2}>
+          <Box clone flexGrow={1}>
+            <Typography variant="h6">{title}</Typography>
+          </Box>
+
+          {showClose && (
+            <IconButton color="secondary" onClick={handleClose}>
+              <CloseCircle variant="contained" />
+            </IconButton>
+          )}
+        </Box>
+        <Box display="flex" justifyContent="center" p={'10%'}>
+          <CircularProgress size="50%" />
+        </Box>
+      </>
     );
+  }
 }
 
 QrReader.defaultProps = {

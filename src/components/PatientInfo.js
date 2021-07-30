@@ -8,6 +8,7 @@ import {
   MenuItem,
   Paper,
   TextField,
+  Typography,
 } from '@material-ui/core';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
@@ -18,6 +19,7 @@ import React, { useEffect, useState } from 'react';
 import { CSSTransition, SwitchTransition } from 'react-transition-group';
 import xml2js from 'xml2js';
 import { useFormContent } from '../hooks/useForm';
+import '../styles/transitions.css';
 import AccordionHoc from './AccordionHoc';
 import HeaderHoc from './HeaderHoc';
 import ListHoc from './ListHoc';
@@ -27,6 +29,7 @@ const initialState = {
   // qr
   branch: '',
   origen: '',
+  protocolName: '',
   sampleNumber: '',
   analisis: [],
   // manual
@@ -83,6 +86,13 @@ const initialDisplayOnErrorState = {
   show: 'none',
 };
 
+const initialViewState = 'scanner';
+
+const viewClassMap = {
+  scanner: 'slide-left',
+  form: 'slide-right',
+};
+
 const {
   REACT_APP_PATIENT_SERVICE,
   REACT_APP_NEXTLAB_SERVICE,
@@ -102,28 +112,17 @@ const xmlBuilder = new xml2js.Builder({
   xmldec: { version: '1.0', encoding: 'utf-8' },
 });
 
-const duration = 3000;
-
-const transitionStyles = {
-  entering: { opacity: 1, transition: `opacity ${duration}ms` },
-  entered: { opacity: 1 },
-  exiting: { opacity: 0, transition: `opacity ${duration}ms` },
-  exited: { opacity: 0 },
-};
-
 export default function PatientInfo() {
   const { content, setContent, onChange } = useFormContent(initialState);
   const [accordionState, setAccordionState] = useState(initialAccordionState);
   const [errorState, setErrorState] = useState(initialErrorState);
+  const [viewState, setViewState] = useState(initialViewState);
 
-  const onBloodScan = async ({ rawValue }) => {
+  const onBloodScan = async (rawValue) => {
     closeScanner();
-
     try {
-      const { Sucursal, Origen, NroMuestra, Analisis, error } = await getQrInfo(
-        rawValue,
-        content.origen,
-      );
+      const { Sucursal, Origen, NombreProtocolo, NroMuestra, Analisis, error } =
+        await getQrInfo(rawValue, content.origen);
 
       if (error) {
         setErrorState({
@@ -140,7 +139,9 @@ export default function PatientInfo() {
         origen: Origen,
         sampleNumber: NroMuestra,
         analisis: Analisis,
+        protocolName: NombreProtocolo,
       }));
+      setViewState('form');
     } catch (error) {
       console.log(error);
     }
@@ -157,9 +158,10 @@ export default function PatientInfo() {
       formats: ['pdf417'],
       handleScan: onDocumentScan,
     });
+    setViewState('scanner');
   };
 
-  const onDocumentScan = async ({ rawValue }) => {
+  const onDocumentScan = async (rawValue) => {
     const { documentType } = content;
     closeScanner();
 
@@ -201,7 +203,6 @@ export default function PatientInfo() {
   };
 
   const onGetPatientInfo = (Paciente) => {
-    console.log(Paciente);
     const {
       Codigo: patientCode,
       Documento: documentId,
@@ -237,6 +238,8 @@ export default function PatientInfo() {
       phone: phone ? phone.replace('-', '') : '',
       address,
     }));
+
+    setViewState('form');
   };
 
   const handlePatientSubmit = async () => {
@@ -264,6 +267,7 @@ export default function PatientInfo() {
     setContent(initialState);
     setErrorState(initialErrorState);
     setButtonResetState(initialButtonResetState);
+    setViewState(initialViewState);
   };
 
   const sendOrden = async () => {
@@ -411,115 +415,132 @@ export default function PatientInfo() {
   return (
     <Container>
       <SwitchTransition>
-        <CSSTransition appear key={scannerState.open} timeout={duration}>
-          {(state) => (
-            <Box style={transitionStyles[state]}>
-              <Box clone _display={scannerState.open ? 'block' : 'none'} mt={1}>
-                <Paper elevation={24}>
-                  <QrReader {...scannerState} handleClose={closeScanner} />
-                </Paper>
-              </Box>
+        <CSSTransition
+          appear
+          key={viewState}
+          classNames={viewClassMap[viewState]}
+          addEndListener={(node, done) => {
+            node.addEventListener('transitionend', done, false);
+          }}
+        >
+          <Box>
+            <Box
+              clone
+              display={viewState == 'scanner' ? 'block' : 'none'}
+              mt={1}
+            >
+              <Paper elevation={24}>
+                <QrReader
+                  {...scannerState}
+                  handleClose={() => {
+                    closeScanner();
+                    setViewState('form');
+                  }}
+                />
+              </Paper>
+            </Box>
+            <Box
+              display={viewState == 'form' ? 'flex' : 'none'}
+              flexDirection="column"
+              alignItems="center"
+              mt={1}
+            >
+              <HeaderHoc title="Información del paciente" />
+
               <Box
-                display="flex"
-                _display={scannerState.open ? 'none' : 'flex'}
+                width="100%"
+                mt={1}
+                clone
+                display={displayOnError.show}
                 flexDirection="column"
                 alignItems="center"
-                mt={1}
               >
-                <HeaderHoc title="Información del paciente" />
+                <Paper>
+                  <HeaderHoc
+                    title={errorState.message}
+                    icon={<Alert fontSize="large" />}
+                  />
+                </Paper>
+              </Box>
 
-                <Box
-                  width="100%"
-                  mt={3}
-                  py={3}
-                  clone
-                  display={displayOnError.show}
-                  flexDirection="column"
-                  alignItems="center"
+              <Box mt={1} display={displayOnError.hide}>
+                <AccordionHoc
+                  title="Documento"
+                  expanded={accordionState.document}
+                  onChange={() => expandAccordion('document')}
                 >
-                  <Paper>
-                    <HeaderHoc
-                      title={errorState.message}
-                      icon={<Alert fontSize="large" />}
-                    />
-                  </Paper>
-                </Box>
+                  <DocumentForm
+                    content={content}
+                    onChange={onChange}
+                    openScanner={openDocumentScanner}
+                    handleSubmit={handlePatientSubmit}
+                  />
+                </AccordionHoc>
 
-                <Box mt={1} display={displayOnError.hide}>
-                  <AccordionHoc
-                    title="Documento"
-                    expanded={accordionState.document}
-                    onChange={() => expandAccordion('document')}
-                  >
-                    <DocumentForm
-                      content={content}
-                      onChange={onChange}
-                      openScanner={openDocumentScanner}
-                      handleSubmit={handlePatientSubmit}
-                    />
-                  </AccordionHoc>
+                <AccordionHoc
+                  title="Paciente"
+                  expanded={accordionState.patient}
+                  onChange={() => expandAccordion('patient')}
+                >
+                  <PatientForm content={content} onChange={onChange} />
+                </AccordionHoc>
 
-                  <AccordionHoc
-                    title="Paciente"
-                    expanded={accordionState.patient}
-                    onChange={() => expandAccordion('patient')}
-                  >
-                    <PatientForm content={content} onChange={onChange} />
-                  </AccordionHoc>
+                <AccordionHoc
+                  title="Contacto"
+                  expanded={accordionState.contact}
+                  onChange={() => expandAccordion('contact')}
+                >
+                  <ContactForm content={content} onChange={onChange} />
+                </AccordionHoc>
 
-                  <AccordionHoc
-                    title="Contacto"
-                    expanded={accordionState.contact}
-                    onChange={() => expandAccordion('contact')}
-                  >
-                    <ContactForm content={content} onChange={onChange} />
-                  </AccordionHoc>
-
-                  <AccordionHoc
-                    title="Analisis"
-                    expanded={accordionState.analisis}
-                    onChange={() => expandAccordion('analisis')}
-                  >
+                <AccordionHoc
+                  title="Analisis"
+                  expanded={accordionState.analisis}
+                  onChange={() => expandAccordion('analisis')}
+                >
+                  <Box width="100%" display="flex" flexDirection="column">
+                    <Typography>{content.protocolName}</Typography>
+                    <Typography>{content.sampleNumber}</Typography>
                     <ListHoc
                       items={content.analisis.map((e) => {
                         const { CodigoAnalisis, Descripcion } = e;
                         return { id: CodigoAnalisis, Descripcion };
                       })}
                     />
-                  </AccordionHoc>
-                </Box>
+                  </Box>
+                </AccordionHoc>
+              </Box>
 
-                <Box width="100%" mt={3}>
-                  <Grid container spacing={2}>
-                    <Grid item xs={buttonResetState.columns}>
+              <Box width="100%" mt={3}>
+                <Grid container spacing={2}>
+                  <Grid item xs={buttonResetState.columns}>
+                    <Button
+                      type="button"
+                      fullWidth
+                      variant="contained"
+                      color="secondary"
+                      onClick={newOrden}
+                    >
+                      {buttonResetState.label}
+                    </Button>
+                  </Grid>
+                  <Box clone display={displayOnError.hide}>
+                    <Grid item xs={6}>
                       <Button
                         type="button"
                         fullWidth
                         variant="contained"
-                        color="secondary"
-                        onClick={newOrden}
+                        color="primary"
+                        onClick={sendOrden}
                       >
-                        {buttonResetState.label}
+                        Enviar
                       </Button>
                     </Grid>
-                    <Box clone display={displayOnError.hide}>
-                      <Grid item xs={6}>
-                        <Button
-                          type="button"
-                          fullWidth
-                          variant="contained"
-                          color="primary"
-                          onClick={sendOrden}
-                        >
-                          Enviar
-                        </Button>
-                      </Grid>
-                    </Box>
-                  </Grid>
-                </Box>
+                  </Box>
+                </Grid>
               </Box>
             </Box>
-          )}
+          </Box>
         </CSSTransition>
       </SwitchTransition>
     </Container>
@@ -537,8 +558,6 @@ async function getPatientInfo(content) {
     firstSurname,
     secondSurname,
   } = content;
-
-  console.log(birthDate.toISOString());
 
   return await axiosRequest({
     method: 'post',

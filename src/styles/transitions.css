@@ -1,22 +1,49 @@
-.slide-appear,
-.slide-enter {
+/* SLIDE LEFT */
+.slide-left-appear,
+.slide-left-enter {
   opacity: 0;
   transform: translateX(-100%);
 }
-.slide-exit {
+.slide-left-exit {
   opacity: 1;
   transform: translateX(0%);
 }
-.slide-enter-active {
+.slide-left-appear-active,
+.slide-left-enter-active {
   opacity: 1;
   transform: translateX(0%);
 }
-.slide-exit-active {
+.slide-left-exit-active {
   opacity: 0;
   transform: translateX(-100%);
 }
-.slide-appear-active,
-.slide-enter-active,
-.slide-exit-active {
+.slide-left-appear-active,
+.slide-left-enter-active,
+.slide-left-exit-active {
+  transition: all 500ms;
+}
+
+/* SLIDE RIGHT */
+.slide-right-appear,
+.slide-right-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+.slide-right-exit {
+  opacity: 1;
+  transform: translateX(0%);
+}
+.slide-right-appear-active,
+.slide-right-enter-active {
+  opacity: 1;
+  transform: translateX(0%);
+}
+.slide-right-exit-active {
+  opacity: 0;
+  transform: translateX(100%);
+}
+.slide-right-appear-active,
+.slide-right-enter-active,
+.slide-right-exit-active {
   transition: all 500ms;
 }

@@ -8,8 +8,6 @@ import ChevronDown from 'mdi-material-ui/ChevronDown';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-const { REACT_APP_PAPER_ELEVATION } = process.env;
-
 export default function AccordionHoc(props) {
   const { children, title, expanded, onChange } = props;
   return (
