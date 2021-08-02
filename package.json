@@ -12,7 +12,6 @@
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
     "axios": "^0.21.1",
-    "barcode-detector-polyfill": "^0.1.2",
     "date-fns": "^2.22.1",
     "mdi-material-ui": "^6.22.1",
     "npm": "^7.20.3",
