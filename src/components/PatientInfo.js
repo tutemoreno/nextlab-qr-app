@@ -77,10 +77,15 @@ const initialButtonResetState = {
 
 const initialViewState = 'scanner';
 
+const initialNotificationState = {
+  title: '',
+  description: '',
+};
+
 const viewClassMap = {
   scanner: 'slide-left',
   form: 'slide-right',
-  error: 'fade',
+  notification: 'fade',
 };
 
 const {
@@ -108,7 +113,9 @@ const removeDWS = (str) => str.replace(/\s+/g, ' ');
 export default function PatientInfo() {
   const { content, setContent, onChange } = useFormContent(initialState);
   const [accordionState, setAccordionState] = useState(initialAccordionState);
-  const [errMsgState, setErrMsgState] = useState('');
+  const [notificationState, setNotificationState] = useState(
+    initialNotificationState,
+  );
   const [viewState, setViewState] = useState(initialViewState);
 
   const onBloodScan = async (rawValue) => {
@@ -118,8 +125,11 @@ export default function PatientInfo() {
         await getQrInfo(rawValue, content.origen);
 
       if (error) {
-        setErrMsgState(error.Descripcion);
-        setViewState('error');
+        setNotificationState({
+          title: 'No se pudo escanear la muestra',
+          description: error.Descripcion,
+        });
+        setViewState('notification');
 
         throw new Error(error.Descripcion);
       }
@@ -376,7 +386,11 @@ export default function PatientInfo() {
         },
       } = parsedInfo;
 
-      console.log(NumeroOrden, Respuesta);
+      setNotificationState({
+        title: Respuesta.Descripcion,
+        description: NumeroOrden,
+      });
+      setViewState('notification');
     } catch (error) {
       console.log(error);
     }
@@ -410,12 +424,21 @@ export default function PatientInfo() {
               </Paper>
             </Box>
 
-            <Box clone display={viewState == 'error' ? 'block' : 'none'} mt={1}>
-              <Paper>
+            <Box
+              clone
+              display={viewState == 'notification' ? 'block' : 'none'}
+              mt={1}
+            >
+              <Paper elevation={24}>
                 <HeaderHoc
-                  title={errMsgState}
+                  title={notificationState.title}
                   icon={<Alert fontSize="large" />}
                 />
+                <Box clone display="flex" justifyContent="center" p={2}>
+                  <Typography variant="h3">
+                    {notificationState.description}
+                  </Typography>
+                </Box>
               </Paper>
             </Box>
 
@@ -480,7 +503,7 @@ export default function PatientInfo() {
               show={viewState != 'scanner'}
               handleSubmit={sendOrden}
               handleReset={newOrden}
-              error={viewState == 'error'}
+              notification={viewState == 'notification'}
             />
           </Box>
         </CSSTransition>
@@ -819,15 +842,15 @@ PatientForm.propTypes = {
 };
 
 function ButtonsFooter(props) {
-  const { show, error, handleReset, handleSubmit } = props;
+  const { show, notification, handleReset, handleSubmit } = props;
   const [buttonResetState, setButtonResetState] = useState(
     initialButtonResetState,
   );
 
   useEffect(() => {
-    if (error) setButtonResetState({ label: 'Reintentar', cols: 12 });
+    if (notification) setButtonResetState({ label: 'Nueva orden', cols: 12 });
     else setButtonResetState(initialButtonResetState);
-  }, [error]);
+  }, [notification]);
 
   return (
     <Box display={show ? '' : 'none'} width="100%" mt={3}>
@@ -843,7 +866,7 @@ function ButtonsFooter(props) {
             {buttonResetState.label}
           </Button>
         </Grid>
-        <Box clone display={error ? 'none' : ''}>
+        <Box clone display={notification ? 'none' : ''}>
           <Grid item xs={6}>
             <Button
               type="button"
@@ -863,6 +886,6 @@ function ButtonsFooter(props) {
 ButtonsFooter.propTypes = {
   handleReset: PropTypes.func.isRequired,
   handleSubmit: PropTypes.func.isRequired,
-  error: PropTypes.bool.isRequired,
+  notification: PropTypes.bool.isRequired,
   show: PropTypes.bool.isRequired,
 };
