@@ -61,7 +61,6 @@ const initialScannerState = {
   open: true,
   formats: ['code_128'],
   title: 'Escanee la muestra',
-  showClose: false,
 };
 
 const initialAccordionState = {
@@ -71,19 +70,9 @@ const initialAccordionState = {
   contact: false,
 };
 
-const initialErrorState = {
-  error: false,
-  message: '',
-};
-
 const initialButtonResetState = {
   label: 'Cancelar',
-  columns: 6,
-};
-
-const initialDisplayOnErrorState = {
-  hide: '',
-  show: 'none',
+  cols: 6,
 };
 
 const initialViewState = 'scanner';
@@ -91,6 +80,7 @@ const initialViewState = 'scanner';
 const viewClassMap = {
   scanner: 'slide-left',
   form: 'slide-right',
+  error: 'fade',
 };
 
 const {
@@ -112,10 +102,13 @@ const xmlBuilder = new xml2js.Builder({
   xmldec: { version: '1.0', encoding: 'utf-8' },
 });
 
+// remueve espacios en blanco duplicados
+const removeDWS = (str) => str.replace(/\s+/g, ' ');
+
 export default function PatientInfo() {
   const { content, setContent, onChange } = useFormContent(initialState);
   const [accordionState, setAccordionState] = useState(initialAccordionState);
-  const [errorState, setErrorState] = useState(initialErrorState);
+  const [errMsgState, setErrMsgState] = useState('');
   const [viewState, setViewState] = useState(initialViewState);
 
   const onBloodScan = async (rawValue) => {
@@ -125,10 +118,8 @@ export default function PatientInfo() {
         await getQrInfo(rawValue, content.origen);
 
       if (error) {
-        setErrorState({
-          error: true,
-          message: error.Descripcion,
-        });
+        setErrMsgState(error.Descripcion);
+        setViewState('error');
 
         throw new Error(error.Descripcion);
       }
@@ -157,6 +148,7 @@ export default function PatientInfo() {
       title: 'Escanee el código de barras del documento',
       formats: ['pdf417'],
       handleScan: onDocumentScan,
+      showClose: true,
     });
     setViewState('scanner');
   };
@@ -169,19 +161,17 @@ export default function PatientInfo() {
     let parsedInfo;
 
     if (split[0].length) {
-      const tmpSurname = split[1].replace(/\s+/g, ' ').split(' '),
-        tmpName = split[2].replace(/\s+/g, ' ').split(' '),
-        tmpDate = split[6].split('/');
+      const splittedDate = split[6].split('/');
 
       parsedInfo = {
         documentId: split[4],
         documentType,
         gender: split[3],
-        birthDate: new Date(Date.UTC(tmpDate[2], tmpDate[1] - 1, tmpDate[0])),
-        firstName: tmpName[0],
-        secondName: tmpName[1],
-        firstSurname: tmpSurname[0],
-        secondSurname: tmpSurname[1],
+        birthDate: new Date(
+          Date.UTC(splittedDate[2], splittedDate[1] - 1, splittedDate[0]),
+        ),
+        name: removeDWS(split[2]),
+        surname: removeDWS(split[1]),
       };
     } else {
       parsedInfo = { documentId: split[1] };
@@ -264,9 +254,6 @@ export default function PatientInfo() {
       handleScan: onBloodScan,
     });
     setAccordionState(initialAccordionState);
-    setContent(initialState);
-    setErrorState(initialErrorState);
-    setButtonResetState(initialButtonResetState);
     setViewState(initialViewState);
   };
 
@@ -395,23 +382,6 @@ export default function PatientInfo() {
     }
   };
 
-  const [displayOnError, setDisplayOnError] = useState(
-    initialDisplayOnErrorState,
-  );
-  const [buttonResetState, setButtonResetState] = useState(
-    initialButtonResetState,
-  );
-
-  useEffect(() => {
-    if (errorState.error) {
-      setDisplayOnError({ hide: 'none', show: '' });
-      setButtonResetState({ label: 'Reintentar', columns: 12 });
-    } else {
-      setDisplayOnError({ hide: '', show: 'none' });
-      setButtonResetState({ label: 'Cancelar', columns: 6 });
-    }
-  }, [errorState.error]);
-
   return (
     <Container>
       <SwitchTransition>
@@ -439,6 +409,16 @@ export default function PatientInfo() {
                 />
               </Paper>
             </Box>
+
+            <Box clone display={viewState == 'error' ? 'block' : 'none'} mt={1}>
+              <Paper>
+                <HeaderHoc
+                  title={errMsgState}
+                  icon={<Alert fontSize="large" />}
+                />
+              </Paper>
+            </Box>
+
             <Box
               display={viewState == 'form' ? 'flex' : 'none'}
               flexDirection="column"
@@ -447,23 +427,7 @@ export default function PatientInfo() {
             >
               <HeaderHoc title="Información del paciente" />
 
-              <Box
-                width="100%"
-                mt={1}
-                clone
-                display={displayOnError.show}
-                flexDirection="column"
-                alignItems="center"
-              >
-                <Paper>
-                  <HeaderHoc
-                    title={errorState.message}
-                    icon={<Alert fontSize="large" />}
-                  />
-                </Paper>
-              </Box>
-
-              <Box mt={1} display={displayOnError.hide}>
+              <Box mt={1}>
                 <AccordionHoc
                   title="Documento"
                   expanded={accordionState.document}
@@ -510,36 +474,14 @@ export default function PatientInfo() {
                   </Box>
                 </AccordionHoc>
               </Box>
-
-              <Box width="100%" mt={3}>
-                <Grid container spacing={2}>
-                  <Grid item xs={buttonResetState.columns}>
-                    <Button
-                      type="button"
-                      fullWidth
-                      variant="contained"
-                      color="secondary"
-                      onClick={newOrden}
-                    >
-                      {buttonResetState.label}
-                    </Button>
-                  </Grid>
-                  <Box clone display={displayOnError.hide}>
-                    <Grid item xs={6}>
-                      <Button
-                        type="button"
-                        fullWidth
-                        variant="contained"
-                        color="primary"
-                        onClick={sendOrden}
-                      >
-                        Enviar
-                      </Button>
-                    </Grid>
-                  </Box>
-                </Grid>
-              </Box>
             </Box>
+
+            <ButtonsFooter
+              show={viewState != 'scanner'}
+              handleSubmit={sendOrden}
+              handleReset={newOrden}
+              error={viewState == 'error'}
+            />
           </Box>
         </CSSTransition>
       </SwitchTransition>
@@ -548,16 +490,8 @@ export default function PatientInfo() {
 }
 
 async function getPatientInfo(content) {
-  const {
-    documentId,
-    documentType,
-    gender,
-    birthDate,
-    firstName,
-    secondName,
-    firstSurname,
-    secondSurname,
-  } = content;
+  const { documentId, documentType, gender, birthDate, name, surname } =
+    content;
 
   return await axiosRequest({
     method: 'post',
@@ -567,8 +501,8 @@ async function getPatientInfo(content) {
       tipoDoc: documentType,
       sexo: gender,
       fecha_nacimiento: birthDate.toISOString(),
-      nombre: [firstName, secondName].join(' '),
-      apellido: [firstSurname, secondSurname].join(' '),
+      nombre: name,
+      apellido: surname,
       codigo: 0,
       token: REACT_APP_NEXTLAB_TOKEN,
     }),
@@ -882,4 +816,53 @@ function PatientForm(props) {
 PatientForm.propTypes = {
   onChange: PropTypes.func.isRequired,
   content: PropTypes.object.isRequired,
+};
+
+function ButtonsFooter(props) {
+  const { show, error, handleReset, handleSubmit } = props;
+  const [buttonResetState, setButtonResetState] = useState(
+    initialButtonResetState,
+  );
+
+  useEffect(() => {
+    if (error) setButtonResetState({ label: 'Reintentar', cols: 12 });
+    else setButtonResetState(initialButtonResetState);
+  }, [error]);
+
+  return (
+    <Box display={show ? '' : 'none'} width="100%" mt={3}>
+      <Grid container spacing={2}>
+        <Grid item xs={buttonResetState.cols}>
+          <Button
+            type="button"
+            fullWidth
+            variant="contained"
+            color="secondary"
+            onClick={handleReset}
+          >
+            {buttonResetState.label}
+          </Button>
+        </Grid>
+        <Box clone display={error ? 'none' : ''}>
+          <Grid item xs={6}>
+            <Button
+              type="button"
+              fullWidth
+              variant="contained"
+              color="primary"
+              onClick={handleSubmit}
+            >
+              Enviar
+            </Button>
+          </Grid>
+        </Box>
+      </Grid>
+    </Box>
+  );
+}
+ButtonsFooter.propTypes = {
+  handleReset: PropTypes.func.isRequired,
+  handleSubmit: PropTypes.func.isRequired,
+  error: PropTypes.bool.isRequired,
+  show: PropTypes.bool.isRequired,
 };

@@ -47,3 +47,25 @@
 .slide-right-exit-active {
   transition: all 500ms;
 }
+
+/* FADE */
+.fade-enter {
+  opacity: 0;
+  transform: scale(0.1);
+}
+.fade-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+.fade-enter-active {
+  opacity: 1;
+  transform: scale(1);
+}
+.fade-exit-active {
+  opacity: 0;
+  transform: scale(0.1);
+}
+.fade-enter-active,
+.fade-exit-active {
+  transition: all 500ms;
+}

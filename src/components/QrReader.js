@@ -179,7 +179,7 @@ export default function QrReader(props) {
 }
 
 QrReader.defaultProps = {
-  showClose: true,
+  showClose: false,
 };
 
 QrReader.propTypes = {
