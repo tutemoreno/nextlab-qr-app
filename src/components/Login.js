@@ -8,7 +8,7 @@ import {
   Link,
   Paper,
   Snackbar,
-  TextField,
+  TextField
 } from '@material-ui/core';
 import MuiAlert from '@material-ui/lab/Alert';
 import LockOutline from 'mdi-material-ui/LockOutline';
@@ -49,15 +49,16 @@ export default function Login() {
     try {
       const loggedIn = await auth.signIn(content);
 
-      if (!loggedIn) {
-        setErrorMessage('Usuario/Contraseña incorrectos');
-        setOpenError(true);
-      }
+      if (!loggedIn) displayError('Usuario/Contraseña incorrectos');
     } catch (error) {
       console.log(error);
-      setErrorMessage('Error de comunicación');
-      setOpenError(true);
+      displayError('Error de comunicación');
     }
+  };
+
+  const displayError = (err) => {
+    setErrorMessage(err);
+    setOpenError(true);
   };
 
   return (
@@ -129,7 +130,7 @@ export default function Login() {
                     variant="contained"
                     color="primary"
                   >
-                    Iniciar Sesion
+                    Iniciar sesion
                   </Button>
                 </Grid>
                 <Grid item xs={12}>

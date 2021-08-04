@@ -15,19 +15,19 @@ const {
     REACT_APP_STORE_PATH,
     REACT_APP_USER_SERVICE,
   } = process.env,
-  authContext = createContext();
+  AuthContext = createContext();
 
 export function ProvideAuth({ children }) {
   const auth = useProvideAuth();
 
-  return <authContext.Provider value={auth}>{children}</authContext.Provider>;
+  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }
 ProvideAuth.propTypes = {
   children: PropTypes.element.isRequired,
 };
 
 export const useAuth = () => {
-  return useContext(authContext);
+  return useContext(AuthContext);
 };
 
 function useProvideAuth() {
@@ -50,6 +50,8 @@ function useProvideAuth() {
         token: REACT_APP_NEXTLAB_TOKEN,
       }),
     });
+
+    console.log('[LOGIN]', response);
 
     if (response.status == 200) {
       const parsedInfo = await xml2jsParser.parseStringPromise(response.data);
