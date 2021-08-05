@@ -8,11 +8,11 @@ import {
   Link,
   Paper,
   Snackbar,
-  TextField
+  TextField,
 } from '@material-ui/core';
-import MuiAlert from '@material-ui/lab/Alert';
+import Alert from '@material-ui/lab/Alert';
 import LockOutline from 'mdi-material-ui/LockOutline';
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/auth';
 import { useFormContent } from '../hooks/useForm';
 import HeaderHoc from './HeaderHoc';
@@ -24,8 +24,8 @@ const initialState = {
 };
 
 export default function Login() {
-  const [openError, setOpenError] = React.useState(false);
-  const [errorMessage, setErrorMessage] = React.useState('');
+  const [openError, setOpenError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleCloseError = (event, reason) => {
     if (reason === 'clickaway') {
@@ -34,10 +34,6 @@ export default function Login() {
 
     setOpenError(false);
   };
-
-  function Alert(props) {
-    return <MuiAlert elevation={24} variant="filled" {...props} />;
-  }
 
   const { content, onChange } = useFormContent(initialState),
     { username, password, remember } = content,
@@ -69,7 +65,12 @@ export default function Login() {
           autoHideDuration={2000}
           onClose={handleCloseError}
         >
-          <Alert onClose={handleCloseError} severity="error">
+          <Alert
+            onClose={handleCloseError}
+            elevation={24}
+            variant="filled"
+            severity="error"
+          >
             {errorMessage ? errorMessage : 'Error'}
           </Alert>
         </Snackbar>

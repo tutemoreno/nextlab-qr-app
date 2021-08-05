@@ -518,16 +518,16 @@ async function getPatientInfo(content) {
 
   return await axiosRequest({
     method: 'post',
-    url: `${REACT_APP_PATIENT_SERVICE}/paciente_datos`,
+    url: `${REACT_APP_PATIENT_SERVICE}/paciente_datos_update`,
     data: qs.stringify({
-      documento: documentId,
+      token: REACT_APP_NEXTLAB_TOKEN,
+      codigo: 0,
       tipoDoc: documentType,
+      documento: documentId,
+      apellido: surname,
+      nombre: name,
       sexo: gender,
       fecha_nacimiento: birthDate.toISOString(),
-      nombre: name,
-      apellido: surname,
-      codigo: 0,
-      token: REACT_APP_NEXTLAB_TOKEN,
     }),
   });
 }

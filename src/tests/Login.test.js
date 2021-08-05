@@ -7,10 +7,6 @@ import { ProvideAuth } from '../context/auth';
 
 jest.mock('axios');
 
-beforeEach(() => {
-  jest.clearAllMocks();
-});
-
 it('focus', async () => {
   render(<Login />);
 
@@ -42,9 +38,15 @@ it('required fields', async () => {
 });
 
 it('signIn [FAIL]', async () => {
-  jest.spyOn(axios, 'default').mockResolvedValue({
-    name: 'abc',
+  jest.spyOn(axios, 'default').mockImplementation(() => {
+    return new Promise((resolve) => {
+      resolve({
+        status: 200,
+        data: '<?xml version="1.0" encoding="utf-8"?><Usuario xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://192.168.10.54:4110/Usuario_WS/"><EsValido>false</EsValido><Error><Codigo>0</Codigo><Descripcion /></Error></Usuario>',
+      });
+    });
   });
+
   render(
     <ProvideAuth>
       <Login />
@@ -54,22 +56,22 @@ it('signIn [FAIL]', async () => {
   const usernameField = screen.getByLabelText('Nombre de usuario *');
   const passwordField = screen.getByLabelText('Contraseña *');
   const signInButton = screen.getByRole('button', { name: 'Iniciar sesion' });
+  const alert = () => screen.queryByRole('alert');
+
+  expect(alert()).toBeNull();
 
   userEvent.type(usernameField, 'wrongUser');
   userEvent.type(passwordField, 'wrongPass');
 
   userEvent.click(signInButton);
 
-  console.log(await waitFor(() => {}));
-  // screen.debug();
-});
+  await waitFor(() =>
+    expect(axios).toHaveBeenCalledWith({
+      data: 'tipo=OR&aplicacion=WEB&usuario=wrongUser&clave=wrongPass&token=nlsvctok',
+      method: 'post',
+      url: 'Usuario_WS.asmx/usuario_valido',
+    }),
+  );
 
-/* import { render, screen } from '@testing-library/react';
-import App from './App';
-
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  expect(alert()).toBeVisible();
 });
- */
