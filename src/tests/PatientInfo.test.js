@@ -1,80 +1,96 @@
-import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import axios from 'axios';
 import React from 'react';
-import Login from '../components/Login';
-import { ProvideAuth } from '../context/auth';
+import PatientInfo from '../components/PatientInfo';
+import { fireEvent, render, screen, waitFor } from './test-utils';
 
-describe.skip('PatientInfo', () => {
-  it('focus', async () => {
-    render(<Login />);
+const getDocumentTypesXML =
+  '<?xml version="1.0" encoding="utf-8"?><ListaTipoDocumento xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://192.168.10.54:4110/Paciente_WS/"><Lista><TipoDocumento><TipoDoc>BOL</TipoDoc><Descripcion>Boliviano</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>BRA</TipoDoc><Descripcion>Brasilero</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>CHI</TipoDoc><Descripcion>Chileno</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>CI </TipoDoc><Descripcion>Cédula</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>COL</TipoDoc><Descripcion>Colombiano</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>DNI</TipoDoc><Descripcion>Doc. Nac. Identidad</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>DNU</TipoDoc><Descripcion>Doc. Nac. Único</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>LC </TipoDoc><Descripcion>Lib. Cívica</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>LE </TipoDoc><Descripcion>Lib. Enrolamiento</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>NN </TipoDoc><Descripcion>No identificado</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>PAR</TipoDoc><Descripcion>Paraguayo</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>PAS</TipoDoc><Descripcion>Pasaporte</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>PER</TipoDoc><Descripcion>Peruano</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>RN </TipoDoc><Descripcion>Recien Nacido</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>URU</TipoDoc><Descripcion>Uruguayo</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>VEN</TipoDoc><Descripcion>Venezolano</Descripcion></TipoDocumento><TipoDocumento><TipoDoc>VET</TipoDoc><Descripcion>Veterinario</Descripcion></TipoDocumento></Lista><Error><Codigo>0</Codigo><Descripcion /></Error></ListaTipoDocumento>';
 
-    const usernameField = screen.getByLabelText('Nombre de usuario *');
+jest.mock('axios');
 
-    expect(usernameField).toHaveFocus();
-  });
-
-  it('default values', async () => {
-    render(<Login />);
-
-    const usernameField = screen.getByLabelText('Nombre de usuario *');
-    const passwordField = screen.getByLabelText('Contraseña *');
-    const rememberCheck = screen.getByLabelText('Recordarme');
-
-    expect(usernameField).toHaveValue('');
-    expect(passwordField).toHaveValue('');
-    expect(rememberCheck).not.toBeChecked();
-  });
-
-  it('required fields', async () => {
-    render(<Login />);
-
-    const usernameField = screen.getByLabelText('Nombre de usuario *');
-    const passwordField = screen.getByLabelText('Contraseña *');
-
-    expect(usernameField).toBeRequired();
-    expect(passwordField).toBeRequired();
-  });
-
-  it('signIn [FAIL]', async () => {
+describe('PatientInfo', () => {
+  beforeEach(() => {
     jest.spyOn(axios, 'default').mockImplementation((call) => {
-      new Promise((resolve, reject) => {
-        console.log(call);
-        resolve();
-        // {
-        //   method: 'post',
-        //   url: 'Usuario_WS.asmx/usuario_valido',
-        //   data: 'tipo=OR&aplicacion=WEB&usuario=wrongUser&clave=wrongPass&token=nlsvctok'
-        // }
+      const { method, url } = call;
+      const split = url.split('/');
+
+      return new Promise((resolve) => {
+        switch (method) {
+          case 'post':
+            switch (split[1]) {
+              case 'GetTiposDeDocumento':
+                resolve({
+                  status: 200,
+                  data: getDocumentTypesXML,
+                });
+                break;
+
+              case 'GetQr':
+                resolve({
+                  status: 200,
+                  data: '<?xml version="1.0" encoding="utf-8"?><Usuario xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://192.168.10.54:4110/Usuario_WS/"><EsValido>false</EsValido><Error><Codigo>0</Codigo><Descripcion /></Error></Usuario>',
+                });
+                break;
+            }
+            break;
+          case 'get':
+            break;
+        }
+
+        resolve({ status: 400 });
       });
     });
+  });
 
-    render(
-      <ProvideAuth>
-        <Login />
-      </ProvideAuth>,
+  it('view', async () => {
+    render(<PatientInfo />);
+
+    const scanner = screen.getByTestId('scanner');
+    const notification = screen.getByTestId('notification');
+    const form = screen.getByTestId('form');
+
+    expect(scanner).toBeVisible();
+    expect(notification).not.toBeVisible();
+    expect(form).not.toBeVisible();
+
+    await waitFor(() =>
+      expect(axios).toHaveBeenCalledWith({
+        method: 'post',
+        url: 'Paciente_WS.asmx/GetTiposDeDocumento',
+        data: 'token=nlsvctok',
+      }),
+    );
+  });
+
+  it('bloodScan', async () => {
+    jest.spyOn(localStorage, 'getItem').mockImplementation((call) => {
+      console.log(call);
+    });
+    const { container } = render(<PatientInfo />);
+
+    await waitFor(() =>
+      expect(axios).toHaveBeenCalledWith({
+        method: 'post',
+        url: 'Paciente_WS.asmx/GetTiposDeDocumento',
+        data: 'token=nlsvctok',
+      }),
     );
 
-    const usernameField = screen.getByLabelText('Nombre de usuario *');
-    const passwordField = screen.getByLabelText('Contraseña *');
-    const signInButton = screen.getByRole('button', { name: 'Iniciar sesion' });
+    const scanner = screen.getByTestId('scanner');
+    const form = screen.getByTestId('form');
+    const transition = screen.getByTestId('transition');
 
-    userEvent.type(usernameField, 'wrongUser');
-    userEvent.type(passwordField, 'wrongPass');
+    userEvent.type(container, '123456789012345');
 
-    userEvent.click(signInButton);
+    fireEvent.keyDown(container, { key: 'Enter', code: 'Enter' });
 
-    console.log(await waitFor(() => {}));
-    // screen.debug();
+    await waitFor(() =>
+      expect(axios).toHaveBeenCalledWith({
+        data: 'tipo=OR&aplicacion=WEB&usuario=wrongUser&clave=wrongPass&token=nlsvctok',
+        method: 'post',
+        url: 'Usuario_WS.asmx/usuario_valido',
+      }),
+    );
   });
-
-  /* import { render, screen } from '@testing-library/react';
-  import App from './App';
-  
-  test('renders learn react link', () => {
-    render(<App />);
-    const linkElement = screen.getByText(/learn react/i);
-    expect(linkElement).toBeInTheDocument();
-  });
-   */
 });

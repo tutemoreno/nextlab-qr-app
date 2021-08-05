@@ -8,7 +8,7 @@ import {
   MenuItem,
   Paper,
   TextField,
-  Typography,
+  Typography
 } from '@material-ui/core';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
@@ -18,6 +18,7 @@ import qs from 'qs';
 import React, { useEffect, useState } from 'react';
 import { CSSTransition, SwitchTransition } from 'react-transition-group';
 import xml2js from 'xml2js';
+import { useAuth } from '../context/auth';
 import { useFormContent } from '../hooks/useForm';
 import '../styles/transitions.css';
 import AccordionHoc from './AccordionHoc';
@@ -28,7 +29,6 @@ import QrReader from './QrReader';
 const initialState = {
   // qr
   branch: '',
-  origen: '',
   protocolName: '',
   sampleNumber: '',
   analisis: [],
@@ -111,6 +111,7 @@ const xmlBuilder = new xml2js.Builder({
 const removeDWS = (str) => str.replace(/\s+/g, ' ');
 
 export default function PatientInfo() {
+  const { user } = useAuth();
   const { content, setContent, onChange } = useFormContent(initialState);
   const [accordionState, setAccordionState] = useState(initialAccordionState);
   const [notificationState, setNotificationState] = useState(
@@ -121,8 +122,8 @@ export default function PatientInfo() {
   const onBloodScan = async (rawValue) => {
     closeScanner();
     try {
-      const { Sucursal, Origen, NombreProtocolo, NroMuestra, Analisis, error } =
-        await getQrInfo(rawValue, content.origen);
+      const { Sucursal, NombreProtocolo, NroMuestra, Analisis, error } =
+        await getQrInfo(rawValue, user.username);
 
       if (error) {
         setNotificationState({
@@ -137,7 +138,6 @@ export default function PatientInfo() {
       setContent((prevState) => ({
         ...prevState,
         branch: Sucursal,
-        origen: Origen,
         sampleNumber: NroMuestra,
         analisis: Analisis,
         protocolName: NombreProtocolo,
@@ -263,6 +263,7 @@ export default function PatientInfo() {
       ...initialScannerState,
       handleScan: onBloodScan,
     });
+    setContent(initialState);
     setAccordionState(initialAccordionState);
     setViewState(initialViewState);
   };
@@ -271,7 +272,6 @@ export default function PatientInfo() {
     const {
       // barcode
       branch,
-      origen,
       analisis,
       // manual
       documentId,
@@ -306,7 +306,7 @@ export default function PatientInfo() {
               Numero: '',
               FechaPedido: new Date().toISOString(),
               FechaEntrega: new Date().toISOString(),
-              Origen: { Codigo: origen, Descripcion: '' },
+              Origen: { Codigo: user.username, Descripcion: '' },
               Urgente: 'N',
               Observacion: observation,
               Paciente: {
@@ -407,8 +407,9 @@ export default function PatientInfo() {
             node.addEventListener('transitionend', done, false);
           }}
         >
-          <Box>
+          <Box data-testid="transition">
             <Box
+              data-testid="scanner"
               clone
               display={viewState == 'scanner' ? 'block' : 'none'}
               mt={1}
@@ -425,6 +426,7 @@ export default function PatientInfo() {
             </Box>
 
             <Box
+              data-testid="notification"
               clone
               display={viewState == 'notification' ? 'block' : 'none'}
               mt={1}
@@ -443,6 +445,7 @@ export default function PatientInfo() {
             </Box>
 
             <Box
+              data-testid="form"
               display={viewState == 'form' ? 'flex' : 'none'}
               flexDirection="column"
               alignItems="center"
@@ -556,7 +559,10 @@ async function getDocumentTypes() {
 
 async function axiosRequest(cfg) {
   // return parsed
+  console.log('[axiosCfg]', cfg)
   const response = await axios(cfg);
+
+  console.log('[AXIOS]', response);
 
   return await xmlParser.parseStringPromise(response.data);
 }
