@@ -3,10 +3,12 @@ import {
   Button,
   Container,
   Grid,
+  Grow,
   IconButton,
   InputAdornment,
   MenuItem,
   Paper,
+  Slide,
   TextField,
   Typography,
 } from '@material-ui/core';
@@ -16,11 +18,9 @@ import { Alert, BarcodeScan, Magnify } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
-import { CSSTransition, SwitchTransition } from 'react-transition-group';
 import xml2js from 'xml2js';
 import { useAuth } from '../context/auth';
 import { useFormContent } from '../hooks/useForm';
-import '../styles/transitions.css';
 import AccordionHoc from './AccordionHoc';
 import HeaderHoc from './HeaderHoc';
 import ListHoc from './ListHoc';
@@ -76,17 +76,13 @@ const initialButtonResetState = {
   cols: 6,
 };
 
-const initialViewState = 'scanner';
+const initialViewState = { old: 'scanner', current: 'scanner', new: null };
+
+const transitionTimer = 500;
 
 const initialNotificationState = {
   title: '',
   description: '',
-};
-
-const viewClassMap = {
-  scanner: 'slide-left',
-  form: 'slide-right',
-  notification: 'fade',
 };
 
 const {
@@ -119,7 +115,8 @@ export default function PatientInfo() {
   const [notificationState, setNotificationState] = useState(
     initialNotificationState,
   );
-  const [viewState, setViewState] = useState(initialViewState);
+  const [{ old: oldView, current: currentView }, setViewState] =
+    useState(initialViewState);
 
   const onBloodScan = async (rawValue) => {
     closeScanner();
@@ -132,7 +129,7 @@ export default function PatientInfo() {
           title: 'No se pudo escanear la muestra',
           description: error.Descripcion,
         });
-        setViewState('notification');
+        toggleView('notification');
 
         throw new Error(error.Descripcion);
       }
@@ -146,7 +143,7 @@ export default function PatientInfo() {
         }),
         protocolName: NombreProtocolo,
       }));
-      setViewState('form');
+      toggleView('form');
     } catch (error) {
       console.log(error);
     }
@@ -164,7 +161,7 @@ export default function PatientInfo() {
       handleScan: onDocumentScan,
       showClose: true,
     });
-    setViewState('scanner');
+    toggleView('scanner');
   };
 
   const onDocumentScan = async (rawValue) => {
@@ -244,7 +241,7 @@ export default function PatientInfo() {
       address,
     }));
 
-    setViewState('form');
+    toggleView('form');
   };
 
   const handlePatientSubmit = async () => {
@@ -270,7 +267,7 @@ export default function PatientInfo() {
     });
     setContent(initialState);
     setAccordionState(initialAccordionState);
-    setViewState(initialViewState);
+    toggleView('scanner');
   };
 
   const sendOrden = async () => {
@@ -397,125 +394,156 @@ export default function PatientInfo() {
         title: Respuesta.Descripcion,
         description: NumeroOrden,
       });
-      setViewState('notification');
+      toggleView('notification');
     } catch (error) {
       console.log(error);
     }
   };
 
+  const openNextView = () => {
+    setViewState((prevState) => ({
+      old: prevState.new,
+      current: prevState.new,
+      new: null,
+    }));
+  };
+
+  const toggleView = (view) => {
+    setViewState((prevState) => ({
+      ...prevState,
+      new: view,
+      current: null,
+    }));
+  };
+
   return (
     <Container>
-      <SwitchTransition>
-        <CSSTransition
-          appear
-          key={viewState}
-          classNames={viewClassMap[viewState]}
-          addEndListener={(node, done) => {
-            node.addEventListener('transitionend', done, false);
-          }}
-        >
-          <Box data-testid="transition">
-            <Box
-              data-testid="scanner"
-              clone
-              display={viewState == 'scanner' ? 'block' : 'none'}
-              mt={1}
-            >
-              <Paper elevation={24}>
-                <QrReader
-                  {...scannerState}
-                  handleClose={() => {
-                    closeScanner();
-                    setViewState('form');
-                  }}
-                />
-              </Paper>
-            </Box>
-
-            <Box
-              data-testid="notification"
-              clone
-              display={viewState == 'notification' ? 'block' : 'none'}
-              mt={1}
-            >
-              <Paper elevation={24}>
-                <HeaderHoc
-                  title={notificationState.title}
-                  icon={<Alert fontSize="large" />}
-                />
-                <Box clone display="flex" justifyContent="center" p={2}>
-                  <Typography variant="h3">
-                    {notificationState.description}
-                  </Typography>
-                </Box>
-              </Paper>
-            </Box>
-
-            <Box
-              data-testid="form"
-              display={viewState == 'form' ? 'flex' : 'none'}
-              flexDirection="column"
-              alignItems="center"
-              mt={1}
-            >
-              <HeaderHoc title="Información del paciente" />
-
-              <Box mt={1}>
-                <AccordionHoc
-                  title="Documento"
-                  expanded={accordionState.document}
-                  onChange={() => expandAccordion('document')}
-                >
-                  <DocumentForm
-                    content={content}
-                    onChange={onChange}
-                    openScanner={openDocumentScanner}
-                    handleSubmit={handlePatientSubmit}
-                  />
-                </AccordionHoc>
-
-                <AccordionHoc
-                  title="Paciente"
-                  expanded={accordionState.patient}
-                  onChange={() => expandAccordion('patient')}
-                >
-                  <PatientForm content={content} onChange={onChange} />
-                </AccordionHoc>
-
-                <AccordionHoc
-                  title="Contacto"
-                  expanded={accordionState.contact}
-                  onChange={() => expandAccordion('contact')}
-                >
-                  <ContactForm content={content} onChange={onChange} />
-                </AccordionHoc>
-
-                <AccordionHoc
-                  title="Analisis"
-                  expanded={accordionState.analisis}
-                  onChange={() => expandAccordion('analisis')}
-                >
-                  <Box width="100%" display="flex" flexDirection="column">
-                    <Typography>{content.protocolName}</Typography>
-                    <Typography>{content.sampleNumber}</Typography>
-                    <ListHoc
-                      items={content.analisis}
-                      setItems={(arr) => setValue('analisis', arr)}
-                    />
-                  </Box>
-                </AccordionHoc>
-              </Box>
-            </Box>
-
-            <ButtonsFooter
-              show={viewState != 'scanner'}
-              handleSubmit={sendOrden}
-              handleReset={newOrden}
-              notification={viewState == 'notification'}
-            />
+      <Slide
+        appear
+        direction="right"
+        in={currentView == 'scanner'}
+        timeout={transitionTimer}
+        onExited={openNextView}
+      >
+        <Box>
+          <Box
+            data-testid="scanner"
+            clone
+            display={oldView == 'scanner' ? 'block' : 'none'}
+            mt={1}
+          >
+            <Paper elevation={24}>
+              <QrReader
+                {...scannerState}
+                handleClose={() => {
+                  closeScanner();
+                  toggleView('form');
+                }}
+              />
+            </Paper>
           </Box>
-        </CSSTransition>
-      </SwitchTransition>
+        </Box>
+      </Slide>
+
+      <Grow
+        appear
+        in={currentView == 'notification'}
+        timeout={transitionTimer}
+        onExited={openNextView}
+      >
+        <Box>
+          <Box
+            data-testid="notification"
+            mt={1}
+            display={oldView == 'notification' ? '' : 'none'}
+          >
+            <Paper elevation={24}>
+              <HeaderHoc
+                title={notificationState.title}
+                icon={<Alert fontSize="large" />}
+              />
+              <Box clone display="flex" justifyContent="center" p={2}>
+                <Typography variant="h3">
+                  {notificationState.description}
+                </Typography>
+              </Box>
+            </Paper>
+          </Box>
+        </Box>
+      </Grow>
+
+      <Slide
+        appear
+        direction="left"
+        in={currentView == 'form'}
+        timeout={transitionTimer}
+        onExited={openNextView}
+      >
+        <Box>
+          <Box
+            data-testid="form"
+            display={oldView == 'form' ? 'flex' : 'none'}
+            flexDirection="column"
+            alignItems="center"
+            mt={1}
+          >
+            <HeaderHoc title="Información del paciente" />
+
+            <Box mt={1}>
+              <AccordionHoc
+                title="Documento"
+                expanded={accordionState.document}
+                onChange={() => expandAccordion('document')}
+              >
+                <DocumentForm
+                  content={content}
+                  onChange={onChange}
+                  openScanner={openDocumentScanner}
+                  handleSubmit={handlePatientSubmit}
+                />
+              </AccordionHoc>
+
+              <AccordionHoc
+                title="Paciente"
+                expanded={accordionState.patient}
+                onChange={() => expandAccordion('patient')}
+              >
+                <PatientForm content={content} onChange={onChange} />
+              </AccordionHoc>
+
+              <AccordionHoc
+                title="Contacto"
+                expanded={accordionState.contact}
+                onChange={() => expandAccordion('contact')}
+              >
+                <ContactForm content={content} onChange={onChange} />
+              </AccordionHoc>
+
+              <AccordionHoc
+                title="Analisis"
+                expanded={accordionState.analisis}
+                onChange={() => expandAccordion('analisis')}
+              >
+                <Box width="100%" display="flex" flexDirection="column">
+                  <Typography>{content.protocolName}</Typography>
+                  <Typography>{content.sampleNumber}</Typography>
+                  <ListHoc
+                    items={content.analisis}
+                    setItems={(arr) => setValue('analisis', arr)}
+                  />
+                </Box>
+              </AccordionHoc>
+            </Box>
+          </Box>
+        </Box>
+      </Slide>
+
+      <ButtonsFooter
+        show={currentView != 'scanner'}
+        handleSubmit={sendOrden}
+        handleReset={newOrden}
+        notification={currentView == 'notification'}
+      />
     </Container>
   );
 }
@@ -585,8 +613,6 @@ function DocumentForm(props) {
   const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
 
   useEffect(() => {
-    console.log(documentTypes);
-
     (async () => {
       setDocumentTypes(await getDocumentTypes());
     })();
