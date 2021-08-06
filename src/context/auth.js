@@ -51,8 +51,6 @@ function useProvideAuth() {
       }),
     });
 
-    console.log('[LOGIN]', response);
-
     if (response.status == 200) {
       const parsedInfo = await xml2jsParser.parseStringPromise(response.data);
 

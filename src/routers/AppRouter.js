@@ -17,18 +17,14 @@ export const AppRouter = () => {
             exact
             path="/login"
             component={Login}
-            isAuthenticated={
-              auth && auth.user && auth.user.isValid ? true : false
-            }
+            isAuthenticated={auth.user && auth.user.isValid ? true : false}
           />
 
           <PrivateRoute
             exact
             path="/"
             component={PatientInfo}
-            isAuthenticated={
-              auth && auth.user && auth.user.isValid ? true : false
-            }
+            isAuthenticated={auth.user && auth.user.isValid ? true : false}
           />
 
           <Redirect to="/" />

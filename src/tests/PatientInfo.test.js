@@ -11,6 +11,14 @@ jest.mock('axios');
 
 describe('PatientInfo', () => {
   beforeEach(() => {
+    jest
+      .spyOn(window.localStorage.__proto__, 'getItem')
+      .mockImplementation((key) => {
+        return key == process.env.REACT_APP_STORE_PATH
+          ? '{"username":"AMB","isValid":true}'
+          : null;
+      });
+
     jest.spyOn(axios, 'default').mockImplementation((call) => {
       const { method, url } = call;
       const split = url.split('/');
@@ -64,9 +72,6 @@ describe('PatientInfo', () => {
   });
 
   it('bloodScan', async () => {
-    jest.spyOn(localStorage, 'getItem').mockImplementation((call) => {
-      console.log(call);
-    });
     const { container } = render(<PatientInfo />);
 
     await waitFor(() =>
@@ -77,20 +82,26 @@ describe('PatientInfo', () => {
       }),
     );
 
-    const scanner = screen.getByTestId('scanner');
-    const form = screen.getByTestId('form');
-    const transition = screen.getByTestId('transition');
-
     userEvent.type(container, '123456789012345');
 
     fireEvent.keyDown(container, { key: 'Enter', code: 'Enter' });
 
     await waitFor(() =>
       expect(axios).toHaveBeenCalledWith({
-        data: 'tipo=OR&aplicacion=WEB&usuario=wrongUser&clave=wrongPass&token=nlsvctok',
+        data: 'token=nlsvctok&idQr=123456789012345&codOri=AMB',
         method: 'post',
-        url: 'Usuario_WS.asmx/usuario_valido',
+        url: 'Paciente_WS.asmx/GetQr',
       }),
     );
+
+    // const scanner = screen.getByTestId('scanner');
+    // const notification = screen.getByTestId('notification');
+    // const form = screen.getByTestId('form');
+
+    // await waitFor(() => expect(form).toBeVisible());
+
+    // expect(scanner).not.toBeVisible();
+    // expect(notification).not.toBeVisible();
+    // expect(form).toBeVisible();
   });
 });

@@ -8,7 +8,7 @@ import {
   MenuItem,
   Paper,
   TextField,
-  Typography
+  Typography,
 } from '@material-ui/core';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
@@ -43,6 +43,7 @@ const initialState = {
   firstSurname: '',
   secondSurname: '',
   gender: '',
+  passport: '',
   benefit: '',
   populationGroup: '',
   exportationDate: '',
@@ -112,7 +113,8 @@ const removeDWS = (str) => str.replace(/\s+/g, ' ');
 
 export default function PatientInfo() {
   const { user } = useAuth();
-  const { content, setContent, onChange } = useFormContent(initialState);
+  const { content, setContent, setValue, onChange } =
+    useFormContent(initialState);
   const [accordionState, setAccordionState] = useState(initialAccordionState);
   const [notificationState, setNotificationState] = useState(
     initialNotificationState,
@@ -139,7 +141,9 @@ export default function PatientInfo() {
         ...prevState,
         branch: Sucursal,
         sampleNumber: NroMuestra,
-        analisis: Analisis,
+        analisis: Analisis.map((e) => {
+          return { ...e, checked: true };
+        }),
         protocolName: NombreProtocolo,
       }));
       setViewState('form');
@@ -182,6 +186,7 @@ export default function PatientInfo() {
         ),
         name: removeDWS(split[2]),
         surname: removeDWS(split[1]),
+        passport: '',
       };
     } else {
       parsedInfo = { documentId: split[1] };
@@ -354,12 +359,14 @@ export default function PatientInfo() {
                 ReqDiagnostico: [],
               },
               Peticiones: [
-                analisis.map((a) => ({
-                  ReqPeticion: {
-                    Codigo: a.CodigoAnalisis,
-                    Urgente: 'N',
-                  },
-                })),
+                analisis
+                  .filter((e) => Boolean(e.checked))
+                  .map((e) => ({
+                    ReqPeticion: {
+                      Codigo: e.CodigoAnalisis,
+                      Urgente: 'N',
+                    },
+                  })),
               ],
             },
           },
@@ -492,10 +499,8 @@ export default function PatientInfo() {
                     <Typography>{content.protocolName}</Typography>
                     <Typography>{content.sampleNumber}</Typography>
                     <ListHoc
-                      items={content.analisis.map((e) => {
-                        const { CodigoAnalisis, Descripcion } = e;
-                        return { id: CodigoAnalisis, Descripcion };
-                      })}
+                      items={content.analisis}
+                      setItems={(arr) => setValue('analisis', arr)}
                     />
                   </Box>
                 </AccordionHoc>
@@ -516,8 +521,15 @@ export default function PatientInfo() {
 }
 
 async function getPatientInfo(content) {
-  const { documentId, documentType, gender, birthDate, name, surname } =
-    content;
+  const {
+    documentId,
+    documentType,
+    gender,
+    birthDate,
+    name,
+    surname,
+    passport,
+  } = content;
 
   return await axiosRequest({
     method: 'post',
@@ -531,6 +543,7 @@ async function getPatientInfo(content) {
       nombre: name,
       sexo: gender,
       fecha_nacimiento: birthDate.toISOString(),
+      pasaporte: passport,
     }),
   });
 }
@@ -559,10 +572,7 @@ async function getDocumentTypes() {
 
 async function axiosRequest(cfg) {
   // return parsed
-  console.log('[axiosCfg]', cfg)
   const response = await axios(cfg);
-
-  console.log('[AXIOS]', response);
 
   return await xmlParser.parseStringPromise(response.data);
 }
@@ -575,6 +585,8 @@ function DocumentForm(props) {
   const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
 
   useEffect(() => {
+    console.log(documentTypes);
+
     (async () => {
       setDocumentTypes(await getDocumentTypes());
     })();

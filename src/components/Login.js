@@ -5,7 +5,6 @@ import {
   Container,
   FormControlLabel,
   Grid,
-  Link,
   Paper,
   Snackbar,
   TextField,
@@ -134,11 +133,11 @@ export default function Login() {
                     Iniciar sesion
                   </Button>
                 </Grid>
-                <Grid item xs={12}>
+                {/* <Grid item xs={12}>
                   <Link href="#" variant="body2">
                     Olvidé mi contraseña
                   </Link>
-                </Grid>
+                </Grid> */}
               </Grid>
             </form>
           </Paper>
