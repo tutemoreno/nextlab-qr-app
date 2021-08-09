@@ -35,11 +35,11 @@ const initialState = {
   // manual
   documentId: '',
   documentType: 'DNI',
+  isFromDocument: false,
   // fetch
   patientCode: '',
   firstName: '',
   secondName: '',
-  lastName: '',
   firstSurname: '',
   secondSurname: '',
   gender: '',
@@ -71,12 +71,7 @@ const initialAccordionState = {
   contact: false,
 };
 
-const initialButtonResetState = {
-  label: 'Cancelar',
-  cols: 6,
-};
-
-const initialViewState = { old: 'scanner', current: 'scanner', new: null };
+const initialViewState = { onMove: 'scanner', current: 'scanner', new: null };
 
 const transitionTimer = 500;
 
@@ -115,7 +110,7 @@ export default function PatientInfo() {
   const [notificationState, setNotificationState] = useState(
     initialNotificationState,
   );
-  const [{ old: oldView, current: currentView }, setViewState] =
+  const [{ onMove: movingView, current: currentView }, setViewState] =
     useState(initialViewState);
 
   const onBloodScan = async (rawValue) => {
@@ -165,6 +160,7 @@ export default function PatientInfo() {
   };
 
   const onDocumentScan = async (rawValue) => {
+    console.log(rawValue);
     const { documentType } = content;
     closeScanner();
 
@@ -172,7 +168,9 @@ export default function PatientInfo() {
     let parsedInfo;
 
     if (split[0].length) {
-      const splittedDate = split[6].split('/');
+      const splittedDate = split[6].split('/'),
+        splittedName = removeDWS(split[2].trim()).split(' '),
+        splittedSurname = removeDWS(split[1].trim()).split(' ');
 
       parsedInfo = {
         documentId: split[4],
@@ -181,8 +179,10 @@ export default function PatientInfo() {
         birthDate: new Date(
           Date.UTC(splittedDate[2], splittedDate[1] - 1, splittedDate[0]),
         ),
-        name: removeDWS(split[2]),
-        surname: removeDWS(split[1]),
+        firstName: splittedName.shift(),
+        secondName: splittedName.join(' '),
+        firstSurname: splittedSurname.shift(),
+        secondSurname: splittedSurname.join(' '),
         passport: '',
       };
     } else {
@@ -191,7 +191,7 @@ export default function PatientInfo() {
 
     try {
       const { Paciente } = await getPatientInfo(parsedInfo);
-      onGetPatientInfo(Paciente);
+      onGetPatientInfo(Paciente, true);
     } catch (error) {
       console.log(error);
     }
@@ -204,7 +204,7 @@ export default function PatientInfo() {
     }));
   };
 
-  const onGetPatientInfo = (Paciente) => {
+  const onGetPatientInfo = (Paciente, isFromDocument = false) => {
     const {
       Codigo: patientCode,
       Documento: documentId,
@@ -235,7 +235,7 @@ export default function PatientInfo() {
       firstSurname,
       secondSurname,
       gender,
-      birthDate: new Date(birthDate),
+      birthDate: birthDate ? new Date(birthDate) : null,
       cellPhone: cellPhone ? cellPhone.replace('-', '') : '',
       phone: phone ? phone.replace('-', '') : '',
       address,
@@ -265,10 +265,12 @@ export default function PatientInfo() {
       ...initialScannerState,
       handleScan: onBloodScan,
     });
-    setContent(initialState);
+    resetForm();
     setAccordionState(initialAccordionState);
     toggleView('scanner');
   };
+
+  const resetForm = () => setContent(initialState);
 
   const sendOrden = async () => {
     const {
@@ -402,7 +404,7 @@ export default function PatientInfo() {
 
   const openNextView = () => {
     setViewState((prevState) => ({
-      old: prevState.new,
+      onMove: prevState.new,
       current: prevState.new,
       new: null,
     }));
@@ -429,7 +431,7 @@ export default function PatientInfo() {
           <Box
             data-testid="scanner"
             clone
-            display={oldView == 'scanner' ? 'block' : 'none'}
+            display={movingView == 'scanner' ? 'block' : 'none'}
             mt={1}
           >
             <Paper elevation={24}>
@@ -455,7 +457,7 @@ export default function PatientInfo() {
           <Box
             data-testid="notification"
             mt={1}
-            display={oldView == 'notification' ? '' : 'none'}
+            display={movingView == 'notification' ? '' : 'none'}
           >
             <Paper elevation={24}>
               <HeaderHoc
@@ -468,6 +470,17 @@ export default function PatientInfo() {
                 </Typography>
               </Box>
             </Paper>
+            <Box clone mt={3}>
+              <Button
+                type="button"
+                fullWidth
+                variant="contained"
+                color="secondary"
+                onClick={newOrden}
+              >
+                Nueva orden
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Grow>
@@ -482,7 +495,7 @@ export default function PatientInfo() {
         <Box>
           <Box
             data-testid="form"
-            display={oldView == 'form' ? 'flex' : 'none'}
+            display={movingView == 'form' ? 'flex' : 'none'}
             flexDirection="column"
             alignItems="center"
             mt={1}
@@ -500,6 +513,7 @@ export default function PatientInfo() {
                   onChange={onChange}
                   openScanner={openDocumentScanner}
                   handleSubmit={handlePatientSubmit}
+                  resetForm={resetForm}
                 />
               </AccordionHoc>
 
@@ -534,16 +548,35 @@ export default function PatientInfo() {
                 </Box>
               </AccordionHoc>
             </Box>
+            <Box width="100%" mt={3}>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Button
+                    type="button"
+                    fullWidth
+                    variant="contained"
+                    color="secondary"
+                    onClick={newOrden}
+                  >
+                    Cancelar
+                  </Button>
+                </Grid>
+                <Grid item xs={6}>
+                  <Button
+                    type="button"
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                    onClick={sendOrden}
+                  >
+                    Enviar
+                  </Button>
+                </Grid>
+              </Grid>
+            </Box>
           </Box>
         </Box>
       </Slide>
-
-      <ButtonsFooter
-        show={currentView != 'scanner'}
-        handleSubmit={sendOrden}
-        handleReset={newOrden}
-        notification={currentView == 'notification'}
-      />
     </Container>
   );
 }
@@ -554,8 +587,10 @@ async function getPatientInfo(content) {
     documentType,
     gender,
     birthDate,
-    name,
-    surname,
+    firstName,
+    secondName,
+    firstSurname,
+    secondSurname,
     passport,
   } = content;
 
@@ -567,10 +602,12 @@ async function getPatientInfo(content) {
       codigo: 0,
       tipoDoc: documentType,
       documento: documentId,
-      apellido: surname,
-      nombre: name,
+      apellido: firstSurname,
+      apellido2: secondSurname,
+      nombre: firstName,
+      nombre2: secondName,
       sexo: gender,
-      fecha_nacimiento: birthDate.toISOString(),
+      fecha_nacimiento: birthDate ? birthDate.toISOString() : '',
       pasaporte: passport,
     }),
   });
@@ -607,8 +644,13 @@ async function axiosRequest(cfg) {
 
 const initialDocumentTypesState = [{ id: 'DNI', name: 'Doc. Nac. Identidad' }];
 
-function DocumentForm(props) {
-  const { handleSubmit, onChange, content, openScanner } = props;
+function DocumentForm({
+  handleSubmit,
+  onChange,
+  content,
+  openScanner,
+  resetForm,
+}) {
   const { documentType, documentId } = content;
   const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
 
@@ -635,7 +677,10 @@ function DocumentForm(props) {
               variant="outlined"
               fullWidth
               value={documentType}
-              onChange={onChange}
+              onChange={(e) => {
+                resetForm();
+                onChange(e);
+              }}
               select
               xs="6"
             >
@@ -660,7 +705,11 @@ function DocumentForm(props) {
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton onClick={openScanner}>
+                    <IconButton
+                      color="primary"
+                      disabled={!['DNI'].includes(documentType)}
+                      onClick={openScanner}
+                    >
                       <BarcodeScan fontSize="large" />
                     </IconButton>
                   </InputAdornment>
@@ -669,7 +718,12 @@ function DocumentForm(props) {
             />
           </Grid>
           <Grid item container xs={2} direction="row" alignItems="center">
-            <IconButton type="submit" style={{ padding: '0px' }}>
+            <IconButton
+              disabled={!documentId}
+              color="primary"
+              type="submit"
+              style={{ padding: '0px' }}
+            >
               <Magnify fontSize="large" />
             </IconButton>
           </Grid>
@@ -683,6 +737,7 @@ DocumentForm.propTypes = {
   openScanner: PropTypes.func.isRequired,
   handleSubmit: PropTypes.func.isRequired,
   content: PropTypes.object.isRequired,
+  resetForm: PropTypes.func.isRequired,
 };
 
 function ContactForm(props) {
@@ -697,7 +752,6 @@ function ContactForm(props) {
             <TextField
               type="email"
               variant="outlined"
-              required
               fullWidth
               name="email"
               label="Email"
@@ -710,7 +764,6 @@ function ContactForm(props) {
             <TextField
               type="number"
               variant="outlined"
-              required
               fullWidth
               name="cellPhone"
               label="Celular"
@@ -723,7 +776,6 @@ function ContactForm(props) {
             <TextField
               type="number"
               variant="outlined"
-              required
               fullWidth
               name="phone"
               label="Teléfono fijo"
@@ -736,7 +788,6 @@ function ContactForm(props) {
             <TextField
               type="text"
               variant="outlined"
-              required
               fullWidth
               name="address"
               label="Dirección"
@@ -778,6 +829,7 @@ function PatientForm(props) {
     secondSurname,
     birthDate,
     gender,
+    passport,
   } = content;
 
   return (
@@ -802,7 +854,6 @@ function PatientForm(props) {
             <TextField
               type="text"
               variant="outlined"
-              required
               fullWidth
               name="secondName"
               label="Segundo nombre"
@@ -829,7 +880,6 @@ function PatientForm(props) {
             <TextField
               type="text"
               variant="outlined"
-              required
               fullWidth
               name="secondSurname"
               label="Segundo apellido"
@@ -844,10 +894,12 @@ function PatientForm(props) {
               autoOk
               inputVariant="outlined"
               fullWidth
+              required
               disableFuture
               format="dd/MM/yyyy"
               id="birthDate"
               label="Fecha de nacimiento"
+              KeyboardButtonProps={{ color: 'primary' }}
               value={birthDate}
               onChange={(date) =>
                 onChange({
@@ -867,6 +919,7 @@ function PatientForm(props) {
               name="gender"
               variant="outlined"
               fullWidth
+              required
               value={gender}
               onChange={onChange}
               select
@@ -874,6 +927,18 @@ function PatientForm(props) {
               <MenuItem value={'M'}>Masculino</MenuItem>
               <MenuItem value={'F'}>Femenino</MenuItem>
             </TextField>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="text"
+              variant="outlined"
+              fullWidth
+              name="passport"
+              label="Pasaporte"
+              id="passport"
+              value={passport}
+              onChange={onChange}
+            />
           </Grid>
         </Grid>
       </form>
@@ -883,53 +948,4 @@ function PatientForm(props) {
 PatientForm.propTypes = {
   onChange: PropTypes.func.isRequired,
   content: PropTypes.object.isRequired,
-};
-
-function ButtonsFooter(props) {
-  const { show, notification, handleReset, handleSubmit } = props;
-  const [buttonResetState, setButtonResetState] = useState(
-    initialButtonResetState,
-  );
-
-  useEffect(() => {
-    if (notification) setButtonResetState({ label: 'Nueva orden', cols: 12 });
-    else setButtonResetState(initialButtonResetState);
-  }, [notification]);
-
-  return (
-    <Box display={show ? '' : 'none'} width="100%" mt={3}>
-      <Grid container spacing={2}>
-        <Grid item xs={buttonResetState.cols}>
-          <Button
-            type="button"
-            fullWidth
-            variant="contained"
-            color="secondary"
-            onClick={handleReset}
-          >
-            {buttonResetState.label}
-          </Button>
-        </Grid>
-        <Box clone display={notification ? 'none' : ''}>
-          <Grid item xs={6}>
-            <Button
-              type="button"
-              fullWidth
-              variant="contained"
-              color="primary"
-              onClick={handleSubmit}
-            >
-              Enviar
-            </Button>
-          </Grid>
-        </Box>
-      </Grid>
-    </Box>
-  );
-}
-ButtonsFooter.propTypes = {
-  handleReset: PropTypes.func.isRequired,
-  handleSubmit: PropTypes.func.isRequired,
-  notification: PropTypes.bool.isRequired,
-  show: PropTypes.bool.isRequired,
 };
