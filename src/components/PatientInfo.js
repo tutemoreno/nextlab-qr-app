@@ -19,7 +19,8 @@ import PropTypes from 'prop-types';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
 import xml2js from 'xml2js';
-import { useAuth } from '../context/auth';
+import { useAuth } from '../context/Auth';
+import { useAlert } from '../context/Snackbar';
 import { useFormContent } from '../hooks/useForm';
 import AccordionHoc from './AccordionHoc';
 import HeaderHoc from './HeaderHoc';
@@ -104,6 +105,7 @@ const removeDWS = (str) => str.replace(/\s+/g, ' ');
 
 export default function PatientInfo() {
   const { user } = useAuth();
+  const { openAlert } = useAlert();
   const { content, setContent, setValue, onChange } =
     useFormContent(initialState);
   const [accordionState, setAccordionState] = useState(initialAccordionState);
@@ -160,7 +162,6 @@ export default function PatientInfo() {
   };
 
   const onDocumentScan = async (rawValue) => {
-    console.log(rawValue);
     const { documentType } = content;
     closeScanner();
 
@@ -191,7 +192,9 @@ export default function PatientInfo() {
 
     try {
       const { Paciente } = await getPatientInfo(parsedInfo);
-      onGetPatientInfo(Paciente, true);
+
+      toggleView('form');
+      setPatientInfo(Paciente, true);
     } catch (error) {
       console.log(error);
     }
@@ -204,7 +207,7 @@ export default function PatientInfo() {
     }));
   };
 
-  const onGetPatientInfo = (Paciente, isFromDocument = false) => {
+  const setPatientInfo = (Paciente, isFromDocument = false) => {
     const {
       Codigo: patientCode,
       Documento: documentId,
@@ -239,15 +242,17 @@ export default function PatientInfo() {
       cellPhone: cellPhone ? cellPhone.replace('-', '') : '',
       phone: phone ? phone.replace('-', '') : '',
       address,
+      isFromDocument,
     }));
-
-    toggleView('form');
   };
 
   const handlePatientSubmit = async () => {
     try {
       const { Paciente } = await getPatientInfo(content);
-      onGetPatientInfo(Paciente);
+      const { Codigo, Descripcion } = Paciente.Error;
+
+      if (Codigo != '0') openAlert(Descripcion, 'warning');
+      setPatientInfo(Paciente);
     } catch (error) {
       console.log(error);
     }

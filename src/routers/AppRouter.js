@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Redirect, Switch } from 'react-router-dom';
 import Login from '../components/Login';
 import PatientInfo from '../components/PatientInfo';
-import { useAuth } from '../context/auth';
+import { useAuth } from '../context/Auth';
 import { PrivateRoute } from './PrivateRoute.js';
 import { PublicRoute } from './PublicRoute.js';
 

@@ -11,7 +11,7 @@ import {
 import Menu from 'mdi-material-ui/Menu';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
-import { useAuth } from '../context/auth';
+import { useAuth } from '../context/Auth';
 
 export default function Navbar() {
   const { user, signOut } = useAuth();

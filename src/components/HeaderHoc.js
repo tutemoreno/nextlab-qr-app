@@ -1,19 +1,12 @@
-import { Avatar, Box, Typography } from '@material-ui/core';
+import { Avatar, Typography } from '@material-ui/core';
+import Box from '@material-ui/core/Box';
 import PropTypes from 'prop-types';
 import React from 'react';
-
-const avatarSize = 64;
 
 export default function HeaderHoc(props) {
   return (
     <Box display="flex" flexDirection="column" alignItems="center" py={2}>
-      <Box
-        clone
-        width={avatarSize}
-        height={avatarSize}
-        mb={2}
-        bgcolor="secondary.main"
-      >
+      <Box clone width={64} height={64} mb={2} bgcolor="secondary.main">
         <Avatar>{props.icon}</Avatar>
       </Box>
       <Typography component="h1" variant="h5">

@@ -144,11 +144,17 @@ export default function QrReader(props) {
     );
   } else {
     const { title, showClose, handleClose, handleScan, open } = props;
-    let value = '';
+    let value = '',
+      handled = false;
 
     const keyDown = ({ key }) => {
-      if (key.length == 1) value += key;
-      else if (key == 'Enter') handleScan(value);
+      if (!handled) {
+        if (key.length == 1) value += key;
+        else if (key == 'Enter') {
+          handled = true;
+          handleScan(value);
+        }
+      }
     };
 
     useEffect(() => {
