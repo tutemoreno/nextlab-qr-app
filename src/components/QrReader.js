@@ -10,16 +10,36 @@ import {
   TextField,
   Typography,
 } from '@material-ui/core';
-import { CloseCircle } from 'mdi-material-ui';
+import { makeStyles } from '@material-ui/core/styles';
+import { BarcodeScan, CloseCircle } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef } from 'react';
 import { useFormContent } from '../hooks/useForm';
 
-export default function QrReader(props) {
+const useStyles = makeStyles(() => ({
+  codeIcon: {
+    fontSize: '100%',
+  },
+  progress: {
+    position: 'absolute',
+    top: -6,
+    left: -6,
+  },
+}));
+
+export default function QrReader({
+  open,
+  title,
+  formats,
+  handleScan,
+  handleClose,
+  showClose,
+}) {
+  const classes = useStyles();
+
   // formats ['qr_code', 'code_128', 'pdf417']
 
   if (window['BarcodeDetector']) {
-    const { open, title, formats, handleScan, handleClose, showClose } = props;
     const barcodeDetector = new window.BarcodeDetector({ formats });
 
     const { content, onChange, setContent } = useFormContent({
@@ -143,21 +163,20 @@ export default function QrReader(props) {
       </>
     );
   } else {
-    const { title, showClose, handleClose, handleScan, open } = props;
-    let value = '',
-      handled = false;
-
-    const keyDown = ({ key }) => {
-      if (!handled) {
-        if (key.length == 1) value += key;
-        else if (key == 'Enter') {
-          handled = true;
-          handleScan(value);
-        }
-      }
-    };
-
     useEffect(() => {
+      let value = '',
+        handled = false;
+
+      const keyDown = ({ key }) => {
+        if (!handled) {
+          if (key.length == 1) value += key;
+          else if (key == 'Enter') {
+            handled = true;
+            handleScan(value);
+          }
+        }
+      };
+
       if (open) window.addEventListener('keydown', keyDown);
 
       return () => window.removeEventListener('keydown', keyDown);
@@ -176,8 +195,21 @@ export default function QrReader(props) {
             </IconButton>
           )}
         </Box>
-        <Box display="flex" justifyContent="center" p={'10%'}>
-          <CircularProgress size="50%" />
+        <Box width="100%" display="flex" justifyContent="center" p={'10%'}>
+          <Box position="relative">
+            <BarcodeScan style={{ fontSize: '100px' }} />
+
+            <CircularProgress
+              style={{
+                width: '200px',
+                height: '200px',
+                position: 'absolute',
+                top: '-50px',
+                left: '-50px',
+              }}
+              _className={classes.progress}
+            />
+          </Box>
         </Box>
       </>
     );

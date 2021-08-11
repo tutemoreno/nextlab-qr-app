@@ -193,7 +193,6 @@ export default function PatientInfo() {
     try {
       const { Paciente } = await getPatientInfo(parsedInfo);
 
-      toggleView('form');
       setPatientInfo(Paciente, true);
     } catch (error) {
       console.log(error);
@@ -208,6 +207,8 @@ export default function PatientInfo() {
   };
 
   const setPatientInfo = (Paciente, isFromDocument = false) => {
+    if (currentView != 'form') toggleView('form');
+
     const {
       Codigo: patientCode,
       Documento: documentId,
@@ -220,38 +221,38 @@ export default function PatientInfo() {
       Celular: cellPhone,
       Telefono: phone,
       Direccion: address,
+      Error,
     } = Paciente;
 
-    setAccordionState({
-      analisis: false,
-      document: false,
-      patient: true,
-      contact: true,
-    });
+    if (Error.Codigo == '0') {
+      setAccordionState({
+        analisis: false,
+        document: false,
+        patient: true,
+        contact: true,
+      });
 
-    setContent((prevState) => ({
-      ...prevState,
-      documentId,
-      patientCode,
-      firstName,
-      secondName,
-      firstSurname,
-      secondSurname,
-      gender,
-      birthDate: birthDate ? new Date(birthDate) : null,
-      cellPhone: cellPhone ? cellPhone.replace('-', '') : '',
-      phone: phone ? phone.replace('-', '') : '',
-      address,
-      isFromDocument,
-    }));
+      setContent((prevState) => ({
+        ...prevState,
+        documentId,
+        patientCode,
+        firstName,
+        secondName,
+        firstSurname,
+        secondSurname,
+        gender,
+        birthDate: birthDate ? new Date(birthDate) : null,
+        cellPhone: cellPhone ? cellPhone.replace('-', '') : '',
+        phone: phone ? phone.replace('-', '') : '',
+        address,
+        isFromDocument,
+      }));
+    } else openAlert(Error.Descripcion, 'warning');
   };
 
   const handlePatientSubmit = async () => {
     try {
       const { Paciente } = await getPatientInfo(content);
-      const { Codigo, Descripcion } = Paciente.Error;
-
-      if (Codigo != '0') openAlert(Descripcion, 'warning');
       setPatientInfo(Paciente);
     } catch (error) {
       console.log(error);

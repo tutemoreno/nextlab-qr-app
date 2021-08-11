@@ -26,7 +26,7 @@ export function ProvideSnackbar({ children }) {
 
   return (
     <SnackbarContext.Provider value={{ openAlert }}>
-      <Snackbar open={open} autoHideDuration={2000} onClose={closeAlert}>
+      <Snackbar open={open} autoHideDuration={3000} onClose={closeAlert}>
         <Alert
           onClose={closeAlert}
           elevation={24}
