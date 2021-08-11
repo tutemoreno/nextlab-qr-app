@@ -3,14 +3,14 @@ import {
   Button,
   Checkbox,
   Container,
-  IconButton,
   FormControlLabel,
   Grid,
-  Paper,
+  IconButton,
   InputAdornment,
+  Paper,
   TextField,
 } from '@material-ui/core';
-import { LockOutline, EyeOff, Eye } from 'mdi-material-ui';
+import { Eye, EyeOff, LockOutline } from 'mdi-material-ui';
 import React, { useState } from 'react';
 import { useAuth } from '../context/Auth';
 import { useAlert } from '../context/Snackbar';
@@ -84,6 +84,7 @@ export default function Login() {
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
+                            color="primary"
                             onClick={() => setShowPassword((value) => !value)}
                           >
                             {showPassword ? <Eye /> : <EyeOff />}
