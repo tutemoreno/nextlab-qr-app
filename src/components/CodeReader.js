@@ -5,29 +5,37 @@
 import {
   Box,
   CircularProgress,
+  Container,
   IconButton,
   MenuItem,
+  Paper,
   TextField,
   Typography,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { BarcodeScan, CloseCircle } from 'mdi-material-ui';
+import {
+  BarcodeScan,
+  CloseCircle,
+  CreditCardScan,
+  MagnifyScan,
+  QrcodeScan,
+} from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef } from 'react';
 import { useFormContent } from '../hooks/useForm';
 
 const useStyles = makeStyles(() => ({
   codeIcon: {
-    fontSize: '100%',
+    fontSize: '100px',
   },
   progress: {
     position: 'absolute',
-    top: -6,
-    left: -6,
+    top: '-50px',
+    left: '-50px',
   },
 }));
 
-export default function QrReader({
+export default function CodeReader({
   open,
   title,
   formats,
@@ -41,7 +49,6 @@ export default function QrReader({
 
   if (window['BarcodeDetector']) {
     const barcodeDetector = new window.BarcodeDetector({ formats });
-
     const { content, onChange, setContent } = useFormContent({
       device: '',
       devices: [],
@@ -122,7 +129,7 @@ export default function QrReader({
     }, [open, device]);
 
     return (
-      <>
+      <Paper elevation={24}>
         <Box display="flex" p={2}>
           <Box clone flexGrow={1}>
             <Typography variant="h6">{title}</Typography>
@@ -160,67 +167,98 @@ export default function QrReader({
             ))}
           </TextField>
         </Box>
-      </>
+      </Paper>
     );
   } else {
+    const { content, onChange, setValue } = useFormContent({ scanValue: '' }),
+      { scanner } = content;
+    const ref = useRef(null);
+
+    const CodeIcon = (props) => {
+      let icon;
+
+      switch (formats[0]) {
+        case 'qr_code':
+          icon = <QrcodeScan {...props} />;
+          break;
+        case 'code_128':
+          icon = <BarcodeScan {...props} />;
+          break;
+        case 'pdf417':
+          icon = <CreditCardScan {...props} />;
+          break;
+        default:
+          icon = <MagnifyScan {...props} />;
+          break;
+      }
+
+      return icon;
+    };
+
     useEffect(() => {
-      let value = '',
-        handled = false;
-
-      const keyDown = ({ key }) => {
-        if (!handled) {
-          if (key.length == 1) value += key;
-          else if (key == 'Enter') {
-            handled = true;
-            handleScan(value);
-          }
-        }
-      };
-
-      if (open) window.addEventListener('keydown', keyDown);
-
-      return () => window.removeEventListener('keydown', keyDown);
+      if (open) ref.current.focus();
     }, [open]);
 
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      handleScan(scanner);
+      setValue('scanner', '');
+    };
+
     return (
-      <>
-        <Box display="flex" p={2}>
-          <Box clone flexGrow={1}>
-            <Typography variant="h6">{title}</Typography>
-          </Box>
+      <Container disableGutters maxWidth="xs">
+        <Paper elevation={24}>
+          <Box display="flex" p={2}>
+            <Box clone flexGrow={1}>
+              <Typography variant="h6">{title}</Typography>
+            </Box>
 
-          {showClose && (
-            <IconButton color="secondary" onClick={handleClose}>
-              <CloseCircle variant="contained" />
-            </IconButton>
-          )}
-        </Box>
-        <Box width="100%" display="flex" justifyContent="center" p={'10%'}>
-          <Box position="relative">
-            <BarcodeScan style={{ fontSize: '100px' }} />
-
-            <CircularProgress
-              style={{
-                width: '200px',
-                height: '200px',
-                position: 'absolute',
-                top: '-50px',
-                left: '-50px',
-              }}
-              _className={classes.progress}
-            />
+            {showClose && (
+              <IconButton color="secondary" onClick={handleClose}>
+                <CloseCircle variant="contained" />
+              </IconButton>
+            )}
           </Box>
-        </Box>
-      </>
+          <Box
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <Box my={10} position="relative">
+              <CodeIcon className={classes.codeIcon} />
+
+              <CircularProgress size="200px" className={classes.progress} />
+            </Box>
+            <Box clone p={2} width="100%">
+              <form onSubmit={handleSubmit}>
+                <TextField
+                  variant="outlined"
+                  required
+                  fullWidth
+                  id="scanner"
+                  label="Scanner"
+                  name="scanner"
+                  _autoFocus
+                  value={scanner}
+                  onChange={onChange}
+                  onBlur={() => ref.current.focus()}
+                  inputRef={ref}
+                />
+              </form>
+            </Box>
+          </Box>
+        </Paper>
+      </Container>
     );
   }
 }
 
-QrReader.defaultProps = {
+CodeReader.defaultProps = {
   showClose: false,
 };
 
-QrReader.propTypes = {
+CodeReader.propTypes = {
   open: PropTypes.bool.isRequired,
   handleScan: PropTypes.func.isRequired,
   formats: PropTypes.array.isRequired,

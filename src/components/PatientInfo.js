@@ -14,7 +14,7 @@ import {
 } from '@material-ui/core';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
-import { Alert, BarcodeScan, Magnify } from 'mdi-material-ui';
+import { Alert, CreditCardScan, Magnify } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import qs from 'qs';
 import React, { useEffect, useState } from 'react';
@@ -23,9 +23,9 @@ import { useAuth } from '../context/Auth';
 import { useAlert } from '../context/Snackbar';
 import { useFormContent } from '../hooks/useForm';
 import AccordionHoc from './AccordionHoc';
+import CodeReader from './CodeReader';
 import HeaderHoc from './HeaderHoc';
 import ListHoc from './ListHoc';
-import QrReader from './QrReader';
 
 const initialState = {
   // qr
@@ -117,6 +117,7 @@ export default function PatientInfo() {
 
   const onBloodScan = async (rawValue) => {
     closeScanner();
+
     try {
       const { Sucursal, NombreProtocolo, NroMuestra, Analisis, error } =
         await getQrInfo(rawValue, user.username);
@@ -135,8 +136,8 @@ export default function PatientInfo() {
         ...prevState,
         branch: Sucursal,
         sampleNumber: NroMuestra,
-        analisis: Analisis.map((e) => {
-          return { ...e, checked: true };
+        analisis: Analisis.map((o) => {
+          return { ...o, checked: true };
         }),
         protocolName: NombreProtocolo,
       }));
@@ -436,19 +437,16 @@ export default function PatientInfo() {
         <Box>
           <Box
             data-testid="scanner"
-            clone
             display={movingView == 'scanner' ? 'block' : 'none'}
             mt={1}
           >
-            <Paper elevation={24}>
-              <QrReader
-                {...scannerState}
-                handleClose={() => {
-                  closeScanner();
-                  toggleView('form');
-                }}
-              />
-            </Paper>
+            <CodeReader
+              {...scannerState}
+              handleClose={() => {
+                closeScanner();
+                toggleView('form');
+              }}
+            />
           </Box>
         </Box>
       </Slide>
@@ -716,7 +714,7 @@ function DocumentForm({
                       disabled={!['DNI'].includes(documentType)}
                       onClick={openScanner}
                     >
-                      <BarcodeScan fontSize="large" />
+                      <CreditCardScan fontSize="large" />
                     </IconButton>
                   </InputAdornment>
                 ),
