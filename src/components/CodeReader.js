@@ -21,7 +21,7 @@ import {
   QrcodeScan,
 } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
-import React, { useEffect, useRef } from 'react';
+import React, { forwardRef, useEffect, useRef } from 'react';
 import { useFormContent } from '../hooks/useForm';
 
 const useStyles = makeStyles(() => ({
@@ -35,18 +35,10 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-export default function CodeReader({
-  open,
-  title,
-  formats,
-  handleScan,
-  handleClose,
-  showClose,
-}) {
-  const classes = useStyles();
-
-  // formats ['qr_code', 'code_128', 'pdf417']
-
+function CodeReader(
+  { open, title, formats, handleScan, handleClose, showClose },
+  ref,
+) {
   if (window['BarcodeDetector']) {
     const barcodeDetector = new window.BarcodeDetector({ formats });
     const { content, onChange, setContent } = useFormContent({
@@ -170,9 +162,10 @@ export default function CodeReader({
       </Paper>
     );
   } else {
-    const { content, onChange, setValue } = useFormContent({ scanValue: '' }),
+    const classes = useStyles();
+    const { content, onChange, setValue } = useFormContent({ scanner: '' }),
       { scanner } = content;
-    const ref = useRef(null);
+    // const ref = useRef(null);
 
     const CodeIcon = (props) => {
       let icon;
@@ -194,10 +187,6 @@ export default function CodeReader({
 
       return icon;
     };
-
-    useEffect(() => {
-      if (open) ref.current.focus();
-    }, [open]);
 
     const handleSubmit = (e) => {
       e.preventDefault();
@@ -239,7 +228,6 @@ export default function CodeReader({
                   id="scanner"
                   label="Scanner"
                   name="scanner"
-                  _autoFocus
                   value={scanner}
                   onChange={onChange}
                   onBlur={() => ref.current.focus()}
@@ -266,3 +254,5 @@ CodeReader.propTypes = {
   handleClose: PropTypes.func,
   showClose: PropTypes.bool,
 };
+
+export default forwardRef(CodeReader);

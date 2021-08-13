@@ -17,7 +17,7 @@ import axios from 'axios';
 import { Alert, CreditCardScan, Magnify } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import qs from 'qs';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import xml2js from 'xml2js';
 import { useAuth } from '../context/Auth';
 import { useAlert } from '../context/Snackbar';
@@ -112,8 +112,10 @@ export default function PatientInfo() {
   const [notificationState, setNotificationState] = useState(
     initialNotificationState,
   );
-  const [{ onMove: movingView, current: currentView }, setViewState] =
-    useState(initialViewState);
+  const scannerInputRef = useRef(null);
+
+  const [viewState, setViewState] = useState(initialViewState),
+    { onMove: movingView, current: currentView } = viewState;
 
   const onBloodScan = async (rawValue) => {
     closeScanner();
@@ -208,7 +210,9 @@ export default function PatientInfo() {
   };
 
   const setPatientInfo = (Paciente, isFromDocument = false) => {
-    if (currentView != 'form') toggleView('form');
+    console.log('before call', viewState);
+
+    toggleView('form');
 
     const {
       Codigo: patientCode,
@@ -418,11 +422,17 @@ export default function PatientInfo() {
   };
 
   const toggleView = (view) => {
-    setViewState((prevState) => ({
-      ...prevState,
-      new: view,
-      current: null,
-    }));
+    console.log('before toggle', viewState);
+    setViewState((prevState) => {
+      console.log('la posta', prevState);
+      if (prevState.current == view) return prevState;
+
+      return {
+        ...prevState,
+        new: view,
+        current: null,
+      };
+    });
   };
 
   return (
@@ -433,6 +443,7 @@ export default function PatientInfo() {
         in={currentView == 'scanner'}
         timeout={transitionTimer}
         onExited={openNextView}
+        onEntered={() => scannerInputRef.current.focus()}
       >
         <Box>
           <Box
@@ -441,6 +452,7 @@ export default function PatientInfo() {
             mt={1}
           >
             <CodeReader
+              ref={scannerInputRef}
               {...scannerState}
               handleClose={() => {
                 closeScanner();
