@@ -153,19 +153,9 @@ export default function PatientInfo() {
     handleScan: onBloodScan,
   });
 
-  const openDocumentScanner = () => {
-    setScannerState({
-      open: true,
-      title: 'Escanee el código de barras del documento',
-      formats: ['pdf417'],
-      handleScan: onDocumentScan,
-      showClose: true,
-    });
-    toggleView('scanner');
-  };
-
   const onDocumentScan = async (rawValue) => {
     const { documentType } = content;
+
     closeScanner();
 
     const split = rawValue.split('@');
@@ -202,6 +192,17 @@ export default function PatientInfo() {
     }
   };
 
+  const openDocumentScanner = () => {
+    setScannerState({
+      open: true,
+      title: 'Escanee el código de barras del documento',
+      formats: ['pdf417'],
+      handleScan: onDocumentScan,
+      showClose: true,
+    });
+    toggleView('scanner');
+  };
+
   const closeScanner = () => {
     setScannerState((prevState) => ({
       ...prevState,
@@ -210,8 +211,6 @@ export default function PatientInfo() {
   };
 
   const setPatientInfo = (Paciente, isFromDocument = false) => {
-    console.log('before call', viewState);
-
     toggleView('form');
 
     const {
@@ -422,9 +421,7 @@ export default function PatientInfo() {
   };
 
   const toggleView = (view) => {
-    console.log('before toggle', viewState);
     setViewState((prevState) => {
-      console.log('la posta', prevState);
       if (prevState.current == view) return prevState;
 
       return {
