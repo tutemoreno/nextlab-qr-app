@@ -440,7 +440,9 @@ export default function PatientInfo() {
         in={currentView == 'scanner'}
         timeout={transitionTimer}
         onExited={openNextView}
-        onEntered={() => scannerInputRef.current.focus()}
+        onEntered={() => {
+          if (scannerInputRef.current) scannerInputRef.current.focus();
+        }}
       >
         <Box>
           <Box
