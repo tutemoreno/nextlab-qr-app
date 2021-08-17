@@ -36,7 +36,7 @@ const initialState = {
   // manual
   documentId: '',
   documentType: 'DNI',
-  isFromDocument: false,
+  isReadOnly: false,
   // fetch
   patientCode: '',
   firstName: '',
@@ -103,6 +103,8 @@ const xmlBuilder = new xml2js.Builder({
 // remueve espacios en blanco duplicados
 const removeDWS = (str) => str.replace(/\s+/g, ' ');
 
+const retrieveNumber = (str) => str.replace(/\D/g, '');
+
 export default function PatientInfo() {
   const { user } = useAuth();
   const { openAlert } = useAlert();
@@ -153,22 +155,33 @@ export default function PatientInfo() {
     handleScan: onBloodScan,
   });
 
-  const onDocumentScan = async (rawValue) => {
-    const { documentType } = content;
+  const focusPatientAccordion = () => {
+    setAccordionState({
+      analisis: false,
+      document: false,
+      patient: true,
+      contact: true,
+    });
+  };
 
+  const onDocumentScan = async (rawValue) => {
     closeScanner();
 
+    toggleView('form');
+
+    focusPatientAccordion();
+
     const split = rawValue.split('@');
-    let parsedInfo;
+
+    let newContent;
 
     if (split[0].length) {
       const splittedDate = split[6].split('/'),
         splittedName = removeDWS(split[2].trim()).split(' '),
         splittedSurname = removeDWS(split[1].trim()).split(' ');
 
-      parsedInfo = {
+      newContent = {
         documentId: split[4],
-        documentType,
         gender: split[3],
         birthDate: new Date(
           Date.UTC(splittedDate[2], splittedDate[1] - 1, splittedDate[0]),
@@ -177,19 +190,52 @@ export default function PatientInfo() {
         secondName: splittedName.join(' '),
         firstSurname: splittedSurname.shift(),
         secondSurname: splittedSurname.join(' '),
-        passport: '',
       };
     } else {
-      parsedInfo = { documentId: split[1] };
+      const splittedDate = split[7].split('/'),
+        splittedName = removeDWS(split[5].trim()).split(' '),
+        splittedSurname = removeDWS(split[4].trim()).split(' ');
+
+      newContent = {
+        documentId: split[1].trim(),
+        gender: split[8],
+        birthDate: new Date(
+          Date.UTC(splittedDate[2], splittedDate[1] - 1, splittedDate[0]),
+        ),
+        firstName: splittedName.shift(),
+        secondName: splittedName.join(' '),
+        firstSurname: splittedSurname.shift(),
+        secondSurname: splittedSurname.join(' '),
+      };
     }
 
     try {
-      const { Paciente } = await getPatientInfo(parsedInfo);
+      const {
+        parsedInfo: { patientCode, cellPhone, phone, address },
+        error,
+      } = await getPatientInfo({
+        documentId: newContent.documentId,
+        documentType: content.documentType,
+      });
 
-      setPatientInfo(Paciente, true);
+      if (error.Codigo == '0') {
+        newContent = {
+          ...newContent.replace,
+          patientCode,
+          cellPhone,
+          phone,
+          address,
+        };
+      }
     } catch (error) {
       console.log(error);
     }
+
+    setContent((prevState) => ({
+      ...prevState,
+      ...newContent,
+      isReadOnly: true,
+    }));
   };
 
   const openDocumentScanner = () => {
@@ -210,54 +256,19 @@ export default function PatientInfo() {
     }));
   };
 
-  const setPatientInfo = (Paciente, isFromDocument = false) => {
-    toggleView('form');
-
-    const {
-      Codigo: patientCode,
-      Documento: documentId,
-      Nombre: firstName,
-      Nombre2: secondName,
-      Apellido: firstSurname,
-      Apellido2: secondSurname,
-      Sexo: gender,
-      FechaNac: birthDate,
-      Celular: cellPhone,
-      Telefono: phone,
-      Direccion: address,
-      Error,
-    } = Paciente;
-
-    if (Error.Codigo == '0') {
-      setAccordionState({
-        analisis: false,
-        document: false,
-        patient: true,
-        contact: true,
-      });
-
-      setContent((prevState) => ({
-        ...prevState,
-        documentId,
-        patientCode,
-        firstName,
-        secondName,
-        firstSurname,
-        secondSurname,
-        gender,
-        birthDate: birthDate ? new Date(birthDate) : null,
-        cellPhone: cellPhone ? cellPhone.replace('-', '') : '',
-        phone: phone ? phone.replace('-', '') : '',
-        address,
-        isFromDocument,
-      }));
-    } else openAlert(Error.Descripcion, 'warning');
-  };
-
-  const handlePatientSubmit = async () => {
+  const handleDocumentSubmit = async () => {
     try {
-      const { Paciente } = await getPatientInfo(content);
-      setPatientInfo(Paciente);
+      const { parsedInfo, error } = await getPatientInfo(content);
+
+      if (error.Codigo == '0') {
+        focusPatientAccordion();
+
+        setContent((prevState) => ({
+          ...prevState,
+          ...parsedInfo,
+          isReadOnly: true,
+        }));
+      } else openAlert(error.Descripcion, 'warning');
     } catch (error) {
       console.log(error);
     }
@@ -282,125 +293,12 @@ export default function PatientInfo() {
 
   const resetForm = () => setContent(initialState);
 
-  const sendOrden = async () => {
-    const {
-      // barcode
-      branch,
-      analisis,
-      // manual
-      documentId,
-      documentType,
-      // fetch patient
-      firstName,
-      secondName,
-      firstSurname,
-      secondSurname,
-      birthDate,
-      gender,
-      email,
-      phone,
-      address,
-      observation,
-    } = content;
-    const data = xmlBuilder.buildObject({
-      'soap12:Envelope': {
-        $: {
-          'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-          'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
-          'xmlns:soap12': 'http://www.w3.org/2003/05/soap-envelope',
-        },
-        'soap12:Body': {
-          RealizarPedido: {
-            $: {
-              xmlns: 'http://tempuri.org/',
-            },
-            token: REACT_APP_NEXTLAB_TOKEN,
-            pedido: {
-              Sucursal: branch,
-              Numero: '',
-              FechaPedido: new Date().toISOString(),
-              FechaEntrega: new Date().toISOString(),
-              Origen: { Codigo: user.username, Descripcion: '' },
-              Urgente: 'N',
-              Observacion: observation,
-              Paciente: {
-                Historia: '',
-                TipoDocumento: documentType,
-                NumeroDocumento: documentId,
-                Apellido: firstSurname,
-                Apellido2: secondSurname,
-                Apellido3: '',
-                Nombre: firstName,
-                Nombre2: secondName,
-                Sexo: gender,
-                FechaNacimiento: birthDate.toISOString(),
-                Observacion: observation,
-                Telefono: phone,
-                Email: email,
-              },
-              Direccion: address,
-              CodigoPostal: '',
-              Provincia: { Codigo: '', Descripcion: '' },
-              Ciudad: { Codigo: '', Descripcion: '' },
-              Distrito: { Codigo: '', Descripcion: '' },
-              Barrio: { Codigo: '', Descripcion: '' },
-              Medico: {
-                Codigo: REACT_APP_MEDICO,
-                Matricula: '',
-                NombreCompleto: '',
-                Especialidad: '',
-                Email: '',
-              },
-              Servicio: {},
-              Unidad: { Codigo: '', Descripcion: '' },
-              Sala: '',
-              Piso: '',
-              Cama: '',
-              Seguro: {
-                Codigo: 'C0163', // TODO: traer del origen
-                Descripcion: '',
-                CodigoPlan: 'LAB', // TODO: traer del origen
-                DescripcionPlan: '',
-              },
-              FechaReceta: new Date().toISOString(),
-              NumeroCarnet: '',
-              Diagnosticos: {
-                ReqDiagnostico: [],
-              },
-              Peticiones: [
-                analisis
-                  .filter((e) => Boolean(e.checked))
-                  .map((e) => ({
-                    ReqPeticion: {
-                      Codigo: e.CodigoAnalisis,
-                      Urgente: 'N',
-                    },
-                  })),
-              ],
-            },
-          },
-        },
-      },
-    });
-
+  const handleSubmitOrder = async () => {
     try {
-      const parsedInfo = await axiosRequest({
-        method: 'post',
-        url: REACT_APP_NEXTLAB_SERVICE,
-        params: { op: 'RealizarPedido' },
-        data,
-        headers: { 'content-type': 'application/soap+xml; charset=utf-8' },
-      });
-
-      const {
-        'soap:Envelope': {
-          'soap:Body': {
-            RealizarPedidoResponse: {
-              RealizarPedidoResult: { NumeroOrden, Respuesta },
-            },
-          },
-        },
-      } = parsedInfo;
+      const { Respuesta, NumeroOrden } = await sendOrder(
+        content,
+        user.username,
+      );
 
       setNotificationState({
         title: Respuesta.Descripcion,
@@ -527,7 +425,7 @@ export default function PatientInfo() {
                   content={content}
                   onChange={onChange}
                   openScanner={openDocumentScanner}
-                  handleSubmit={handlePatientSubmit}
+                  handleSubmit={handleDocumentSubmit}
                   resetForm={resetForm}
                 />
               </AccordionHoc>
@@ -582,7 +480,7 @@ export default function PatientInfo() {
                     fullWidth
                     variant="contained"
                     color="primary"
-                    onClick={sendOrden}
+                    onClick={handleSubmitOrder}
                   >
                     Enviar
                   </Button>
@@ -597,19 +495,75 @@ export default function PatientInfo() {
 }
 
 async function getPatientInfo(content) {
+  const { documentId, documentType } = content;
+
+  const { Paciente } = await axiosRequest({
+    method: 'post',
+    url: `${REACT_APP_PATIENT_SERVICE}/paciente_datos`,
+    data: qs.stringify({
+      token: REACT_APP_NEXTLAB_TOKEN,
+      codigo: 0,
+      tipoDoc: documentType,
+      documento: documentId,
+    }),
+  });
+
   const {
+    Codigo: patientCode,
+    Nombre: firstName,
+    Nombre2: secondName,
+    Apellido: firstSurname,
+    Apellido2: secondSurname,
+    Sexo: gender,
+    FechaNac: birthDate,
+    Celular: cellPhone,
+    Telefono: phone,
+    Direccion: address,
+    Error: error,
+  } = Paciente;
+
+  return {
+    parsedInfo: {
+      patientCode,
+      firstName,
+      secondName,
+      firstSurname,
+      secondSurname,
+      gender,
+      birthDate: new Date(birthDate),
+      cellPhone: cellPhone ? retrieveNumber(cellPhone) : '',
+      phone: phone ? retrieveNumber(phone) : '',
+      address,
+      error,
+    },
+    error,
+  };
+}
+
+async function sendOrder(content, ogirinCode) {
+  const {
+    // barcode
+    branch,
+    analisis,
+    // manual
     documentId,
     documentType,
-    gender,
-    birthDate,
+    // patient
     firstName,
     secondName,
     firstSurname,
     secondSurname,
+    birthDate,
+    gender,
+    // contact
+    email,
+    phone,
+    address,
+    observation,
     passport,
   } = content;
 
-  return await axiosRequest({
+  const { Patient } = await axiosRequest({
     method: 'post',
     url: `${REACT_APP_PATIENT_SERVICE}/paciente_datos_update`,
     data: qs.stringify({
@@ -622,10 +576,111 @@ async function getPatientInfo(content) {
       nombre: firstName,
       nombre2: secondName,
       sexo: gender,
-      fecha_nacimiento: birthDate ? birthDate.toISOString() : '',
+      fecha_nacimiento: birthDate.toISOString(),
       pasaporte: passport,
     }),
   });
+
+  if (Patient.Error.Codigo != '0') throw new Error(Patient.Error.Descripcion);
+
+  const data = xmlBuilder.buildObject({
+    'soap12:Envelope': {
+      $: {
+        'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+        'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
+        'xmlns:soap12': 'http://www.w3.org/2003/05/soap-envelope',
+      },
+      'soap12:Body': {
+        RealizarPedido: {
+          $: {
+            xmlns: 'http://tempuri.org/',
+          },
+          token: REACT_APP_NEXTLAB_TOKEN,
+          pedido: {
+            Sucursal: branch,
+            Numero: '',
+            FechaPedido: new Date().toISOString(),
+            FechaEntrega: new Date().toISOString(),
+            Origen: { Codigo: ogirinCode, Descripcion: '' },
+            Urgente: 'N',
+            Observacion: observation,
+            Paciente: {
+              Historia: '',
+              TipoDocumento: documentType,
+              NumeroDocumento: documentId,
+              Apellido: firstSurname,
+              Apellido2: secondSurname,
+              Apellido3: '',
+              Nombre: firstName,
+              Nombre2: secondName,
+              Sexo: gender,
+              FechaNacimiento: birthDate.toISOString(),
+              Observacion: observation,
+              Telefono: phone,
+              Email: email,
+            },
+            Direccion: address,
+            CodigoPostal: '',
+            Provincia: { Codigo: '', Descripcion: '' },
+            Ciudad: { Codigo: '', Descripcion: '' },
+            Distrito: { Codigo: '', Descripcion: '' },
+            Barrio: { Codigo: '', Descripcion: '' },
+            Medico: {
+              Codigo: REACT_APP_MEDICO,
+              Matricula: '',
+              NombreCompleto: '',
+              Especialidad: '',
+              Email: '',
+            },
+            Servicio: {},
+            Unidad: { Codigo: '', Descripcion: '' },
+            Sala: '',
+            Piso: '',
+            Cama: '',
+            Seguro: {
+              Codigo: 'C0163', // TODO: traer del origen
+              Descripcion: '',
+              CodigoPlan: 'LAB', // TODO: traer del origen
+              DescripcionPlan: '',
+            },
+            FechaReceta: new Date().toISOString(),
+            NumeroCarnet: '',
+            Diagnosticos: {
+              ReqDiagnostico: [],
+            },
+            Peticiones: [
+              analisis
+                .filter((e) => Boolean(e.checked))
+                .map((e) => ({
+                  ReqPeticion: {
+                    Codigo: e.CodigoAnalisis,
+                    Urgente: 'N',
+                  },
+                })),
+            ],
+          },
+        },
+      },
+    },
+  });
+
+  const {
+    'soap:Envelope': {
+      'soap:Body': {
+        RealizarPedidoResponse: {
+          RealizarPedidoResult: { NumeroOrden, Respuesta },
+        },
+      },
+    },
+  } = await axiosRequest({
+    method: 'post',
+    url: REACT_APP_NEXTLAB_SERVICE,
+    params: { op: 'RealizarPedido' },
+    data,
+    headers: { 'content-type': 'application/soap+xml; charset=utf-8' },
+  });
+
+  return { Respuesta, NumeroOrden };
 }
 
 async function getQrInfo(idQr, codOri) {
@@ -666,7 +721,7 @@ function DocumentForm({
   openScanner,
   resetForm,
 }) {
-  const { documentType, documentId } = content;
+  const { documentType, documentId, isReadOnly: readOnly } = content;
   const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
 
   useEffect(() => {
@@ -718,6 +773,7 @@ function DocumentForm({
               value={documentId}
               onChange={onChange}
               InputProps={{
+                readOnly,
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
@@ -845,6 +901,7 @@ function PatientForm(props) {
     birthDate,
     gender,
     passport,
+    isReadOnly: readOnly,
   } = content;
 
   return (
@@ -863,6 +920,7 @@ function PatientForm(props) {
               id="firstName"
               value={firstName}
               onChange={onChange}
+              InputProps={{ readOnly }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -875,6 +933,7 @@ function PatientForm(props) {
               id="secondName"
               value={secondName}
               onChange={onChange}
+              InputProps={{ readOnly }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -889,6 +948,7 @@ function PatientForm(props) {
               id="firstSurname"
               value={firstSurname}
               onChange={onChange}
+              InputProps={{ readOnly }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -901,6 +961,7 @@ function PatientForm(props) {
               id="secondSurname"
               value={secondSurname}
               onChange={onChange}
+              InputProps={{ readOnly }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -916,6 +977,7 @@ function PatientForm(props) {
               label="Fecha de nacimiento"
               KeyboardButtonProps={{ color: 'primary' }}
               value={birthDate}
+              InputProps={{ readOnly }}
               onChange={(date) =>
                 onChange({
                   target: {
@@ -938,6 +1000,7 @@ function PatientForm(props) {
               value={gender}
               onChange={onChange}
               select
+              InputProps={{ readOnly }}
             >
               <MenuItem value={'M'}>Masculino</MenuItem>
               <MenuItem value={'F'}>Femenino</MenuItem>
