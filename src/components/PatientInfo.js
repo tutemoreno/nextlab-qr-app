@@ -735,7 +735,7 @@ function DocumentForm({
               disabled={!documentId}
               color="primary"
               type="submit"
-              style={{ padding: '0px' }}
+              edge="start"
             >
               <Magnify fontSize="large" />
             </IconButton>
