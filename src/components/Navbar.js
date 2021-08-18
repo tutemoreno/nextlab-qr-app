@@ -8,12 +8,20 @@ import {
   Typography,
   useScrollTrigger,
 } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
 import Menu from 'mdi-material-ui/Menu';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/Auth';
 
+const useStyles = makeStyles(({ palette }) => ({
+  toolbar: {
+    backgroundColor: palette.deepPurple[500],
+  },
+}));
+
 export default function Navbar() {
+  const classes = useStyles();
   const { user, signOut } = useAuth();
   const [backgroundHeight, setBackgroundHeight] = useState(0);
   const ref = useRef(null);
@@ -26,7 +34,7 @@ export default function Navbar() {
     <>
       <HideOnScroll>
         <AppBar ref={ref}>
-          <Toolbar>
+          <Toolbar className={classes.toolbar}>
             <IconButton color="inherit">
               <Menu />
             </IconButton>
