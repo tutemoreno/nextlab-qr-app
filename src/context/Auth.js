@@ -33,7 +33,6 @@ export const useAuth = () => {
 function useProvideAuth() {
   const store = getStore(REACT_APP_STORE_PATH);
   const [user, setUser] = useState(store ? store : null);
-  // setStore(REACT_APP_STORE_PATH, { username: 'amb', isValid: true }, true);
 
   const signIn = async (content) => {
     const { username, password, remember } = content;

@@ -165,28 +165,6 @@ function CodeReader(
     const classes = useStyles();
     const { content, onChange, setValue } = useFormContent({ scanner: '' }),
       { scanner } = content;
-    // const ref = useRef(null);
-
-    const CodeIcon = (props) => {
-      let icon;
-
-      switch (formats[0]) {
-        case 'qr_code':
-          icon = <QrcodeScan {...props} />;
-          break;
-        case 'code_128':
-          icon = <BarcodeScan {...props} />;
-          break;
-        case 'pdf417':
-          icon = <CreditCardScan {...props} />;
-          break;
-        default:
-          icon = <MagnifyScan {...props} />;
-          break;
-      }
-
-      return icon;
-    };
 
     const handleSubmit = (e) => {
       e.preventDefault();
@@ -215,7 +193,7 @@ function CodeReader(
             alignItems="center"
           >
             <Box my={10} position="relative">
-              <CodeIcon className={classes.codeIcon} />
+              <CodeIcon format={formats[0]} className={classes.codeIcon} />
 
               <CircularProgress size="200px" className={classes.progress} />
             </Box>
@@ -256,3 +234,24 @@ CodeReader.propTypes = {
 };
 
 export default forwardRef(CodeReader);
+
+function CodeIcon({ format, ...rest }) {
+  let icon;
+
+  switch (format) {
+    case 'qr_code':
+      icon = <QrcodeScan {...rest} />;
+      break;
+    case 'code_128':
+      icon = <BarcodeScan {...rest} />;
+      break;
+    case 'pdf417':
+      icon = <CreditCardScan {...rest} />;
+      break;
+    default:
+      icon = <MagnifyScan {...rest} />;
+      break;
+  }
+
+  return icon;
+}
