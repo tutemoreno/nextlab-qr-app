@@ -1,69 +1,72 @@
-import { Box, Button, Grid, makeStyles, Typography } from '@material-ui/core';
-import { grey } from '@material-ui/core/colors';
-import { createTheme, ThemeProvider } from '@material-ui/core/styles';
+import {
+  Box,
+  Button,
+  Grid,
+  makeStyles,
+  Typography,
+  Zoom,
+} from '@material-ui/core';
 import React, { useRef } from 'react';
 
 const transitionTimer = 500;
 
+const useStyles = makeStyles(({ palette }) => ({
+  root: {
+    flexGrow: 1,
+    height: '100vh',
+  },
+  gridHeader: {
+    textAlign: 'center',
+    color: palette.text.secondary,
+    height: '50%',
+  },
+  headerBgColor: {
+    backgroundColor: palette.deepPurple[500],
+  },
+  gridBody: {
+    backgroundColor: palette.grey[50],
+    height: '50%',
+  },
+  img: {
+    maxWidth: 90,
+    maxHeight: 90,
+  },
+  imgLogo: {
+    maxWidth: 70,
+    maxHeight: 70,
+    marginRight: 10,
+  },
+  title: {
+    fontWeight: 600,
+    color: palette.grey[50],
+  },
+  subtitle: {
+    color: palette.grey[50],
+  },
+  stepTitle: {
+    fontWeight: 600,
+    marginTop: 15,
+    marginBottom: 15,
+  },
+  gridStep: {
+    padding: 40,
+  },
+  gridStepItems: {
+    marginTop: 10,
+  },
+  button: {
+    fontWeight: 600,
+  },
+}));
+
 export default function Home() {
   const scannerInputRef = useRef(null);
-
-  const useStyles = makeStyles((theme) => ({
-    root: {
-      flexGrow: 1,
-      height: '100vh',
-      backgroundColor: 'rgb(0, 0, 255)',
-    },
-    gridHeader: {
-      textAlign: 'center',
-      color: theme.palette.text.secondary,
-      height: '50%',
-    },
-    headerBgColor: {
-      backgroundColor: 'rgb(118, 74, 188)',
-    },
-    gridBody: {
-      backgroundColor: 'rgb(255, 255, 255)',
-      height: '50%',
-    },
-    img: {
-      maxWidth: 90,
-      maxHeight: 90,
-    },
-    imgLogo: {
-      maxWidth: 70,
-      maxHeight: 70,
-      marginRight: 10,
-    },
-    title: {
-      fontWeight: 600,
-    },
-    subtitle: {
-      fontWeight: 600,
-      marginTop: 15,
-      marginBottom: 15,
-    },
-    gridStep: {
-      padding: 40,
-    },
-    gridStepItems: {
-      marginTop: 10,
-    },
-  }));
-
-  const theme = createTheme({
-    palette: {
-      secondary: {
-        main: grey[50],
-      },
-    },
-  });
 
   const classes = useStyles();
 
   return (
-    <div div className={classes.root}>
-      <ThemeProvider theme={theme}>
+    <Zoom appear in={true} timeout={transitionTimer}>
+      <div div className={classes.root}>
         <Grid container className={classes.gridHeader}>
           <Grid
             item
@@ -89,7 +92,6 @@ export default function Home() {
                 <Typography
                   component="h1"
                   variant="h3"
-                  color="secondary"
                   className={classes.title}
                 >
                   Nextlab Handheld
@@ -97,7 +99,11 @@ export default function Home() {
               </Grid>
             </Box>
             <Box mt={1}>
-              <Typography component="h1" variant="h5" color="secondary">
+              <Typography
+                component="h1"
+                variant="h5"
+                className={classes.subtitle}
+              >
                 Ingrese muestras escaneando tubos
               </Typography>
             </Box>
@@ -105,9 +111,9 @@ export default function Home() {
               <form onSubmit={() => {}}>
                 <Button
                   type="submit"
-                  fullWidth
                   variant="contained"
-                  color="primary"
+                  className={classes.button}
+                  size="large"
                 >
                   Comenzar a escanear
                 </Button>
@@ -145,7 +151,7 @@ export default function Home() {
               <Typography
                 component="h1"
                 variant="h5"
-                className={classes.subtitle}
+                className={classes.stepTitle}
               >
                 Escaneo
               </Typography>
@@ -171,7 +177,7 @@ export default function Home() {
               <Typography
                 component="h1"
                 variant="h5"
-                className={classes.subtitle}
+                className={classes.stepTitle}
               >
                 Paciente
               </Typography>
@@ -195,7 +201,7 @@ export default function Home() {
               <Typography
                 component="h1"
                 variant="h5"
-                className={classes.subtitle}
+                className={classes.stepTitle}
               >
                 Envio
               </Typography>
@@ -206,24 +212,24 @@ export default function Home() {
             </Typography>
           </Grid>
         </Grid>
-      </ThemeProvider>
 
-      {/* <Zoom appear in={true} timeout={transitionTimer}>
-          <Box>
-            <Box clone mt={1}>
-              <form onSubmit={() => {}}>
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                >
-                  Escanear muestra
-                </Button>
-              </form>
-            </Box>
-          </Box>
-        </Zoom> */}
-    </div>
+        {/* <Zoom appear in={true} timeout={transitionTimer}>
+              <Box>
+                <Box clone mt={1}>
+                  <form onSubmit={() => {}}>
+                    <Button
+                      type="submit"
+                      fullWidth
+                      variant="contained"
+                      color="primary"
+                    >
+                      Escanear muestra
+                    </Button>
+                  </form>
+                </Box>
+              </Box>
+            </Zoom> */}
+      </div>
+    </Zoom>
   );
 }
