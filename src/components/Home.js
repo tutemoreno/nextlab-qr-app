@@ -6,13 +6,13 @@ import {
   Typography,
   Zoom,
 } from '@material-ui/core';
-import React, { useRef } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 const transitionTimer = 500;
 
 const useStyles = makeStyles(({ palette }) => ({
   root: {
-    flexGrow: 1,
     height: '100vh',
   },
   gridHeader: {
@@ -59,9 +59,7 @@ const useStyles = makeStyles(({ palette }) => ({
   },
 }));
 
-export default function Home() {
-  const scannerInputRef = useRef(null);
-
+export default function Home({ isAuthenticated }) {
   const classes = useStyles();
 
   return (
@@ -212,24 +210,11 @@ export default function Home() {
             </Typography>
           </Grid>
         </Grid>
-
-        {/* <Zoom appear in={true} timeout={transitionTimer}>
-              <Box>
-                <Box clone mt={1}>
-                  <form onSubmit={() => {}}>
-                    <Button
-                      type="submit"
-                      fullWidth
-                      variant="contained"
-                      color="primary"
-                    >
-                      Escanear muestra
-                    </Button>
-                  </form>
-                </Box>
-              </Box>
-            </Zoom> */}
       </div>
     </Zoom>
   );
 }
+
+Home.propTypes = {
+  isAuthenticated: PropTypes.bool.isRequired,
+};

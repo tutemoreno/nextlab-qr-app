@@ -1,13 +1,18 @@
 import React from 'react';
-import { BrowserRouter as Router, Redirect, Switch } from 'react-router-dom';
-import Login from '../components/Login';
+import {
+  BrowserRouter as Router,
+  Redirect,
+  Route as PublicRoute,
+  Switch,
+} from 'react-router-dom';
+import Home from '../components/Home';
 import PatientInfo from '../components/PatientInfo';
 import { useAuth } from '../context/Auth';
 import { PrivateRoute } from './PrivateRoute.js';
-import { PublicRoute } from './PublicRoute.js';
 
 export const AppRouter = () => {
   const auth = useAuth();
+  const isAuthenticated = auth.user && auth.user.isValid ? true : false;
 
   return (
     <Router>
@@ -15,18 +20,15 @@ export const AppRouter = () => {
         <Switch>
           <PublicRoute
             exact
-            path="/login"
-            component={Login}
-            isAuthenticated={auth.user && auth.user.isValid ? true : false}
+            path="/"
+            component={(props) => Home({ ...props, isAuthenticated })}
           />
-
           <PrivateRoute
             exact
-            path="/"
+            path="/paciente"
             component={PatientInfo}
-            isAuthenticated={auth.user && auth.user.isValid ? true : false}
+            isAuthenticated={isAuthenticated}
           />
-
           <Redirect to="/" />
         </Switch>
       </div>

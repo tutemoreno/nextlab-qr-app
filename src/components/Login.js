@@ -10,12 +10,11 @@ import {
   Paper,
   TextField,
 } from '@material-ui/core';
-import { Eye, EyeOff, LockOutline } from 'mdi-material-ui';
+import { Eye, EyeOff } from 'mdi-material-ui';
 import React, { useState } from 'react';
 import { useAuth } from '../context/Auth';
 import { useAlert } from '../context/Snackbar';
 import { useFormContent } from '../hooks/useForm';
-import HeaderHoc from './HeaderHoc';
 
 const initialState = {
   username: '',
@@ -47,10 +46,6 @@ export default function Login() {
     <Container maxWidth="xs">
       <Box clone mt={1} p={2}>
         <Paper elevation={24}>
-          <HeaderHoc
-            title="Iniciar Sesion"
-            icon={<LockOutline fontSize="large" />}
-          />
           <form onSubmit={signIn}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
