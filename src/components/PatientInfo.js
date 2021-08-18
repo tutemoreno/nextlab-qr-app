@@ -184,7 +184,9 @@ export default function PatientInfo() {
         documentId: split[4],
         gender: split[3],
         birthDate: new Date(
-          Date.UTC(splittedDate[2], splittedDate[1] - 1, splittedDate[0]),
+          splittedDate[2],
+          splittedDate[1] - 1,
+          splittedDate[0],
         ),
         firstName: splittedName.shift(),
         secondName: splittedName.join(' '),
@@ -200,7 +202,9 @@ export default function PatientInfo() {
         documentId: split[1].trim(),
         gender: split[8],
         birthDate: new Date(
-          Date.UTC(splittedDate[2], splittedDate[1] - 1, splittedDate[0]),
+          splittedDate[2],
+          splittedDate[1] - 1,
+          splittedDate[0],
         ),
         firstName: splittedName.shift(),
         secondName: splittedName.join(' '),
@@ -211,7 +215,7 @@ export default function PatientInfo() {
 
     try {
       const {
-        parsedInfo: { patientCode, cellPhone, phone, address },
+        parsedInfo: { patientCode, email, cellPhone, phone, address },
         error,
       } = await getPatientInfo({
         documentId: newContent.documentId,
@@ -220,8 +224,9 @@ export default function PatientInfo() {
 
       if (error.Codigo == '0') {
         newContent = {
-          ...newContent.replace,
+          ...newContent,
           patientCode,
+          email,
           cellPhone,
           phone,
           address,
@@ -505,6 +510,10 @@ async function getPatientInfo(content) {
       codigo: 0,
       tipoDoc: documentType,
       documento: documentId,
+      nombre: '',
+      apellido: '',
+      sexo: '',
+      fecha_nacimiento: '',
     }),
   });
 
@@ -516,6 +525,7 @@ async function getPatientInfo(content) {
     Apellido2: secondSurname,
     Sexo: gender,
     FechaNac: birthDate,
+    Email: email,
     Celular: cellPhone,
     Telefono: phone,
     Direccion: address,
@@ -531,6 +541,7 @@ async function getPatientInfo(content) {
       secondSurname,
       gender,
       birthDate: new Date(birthDate),
+      email,
       cellPhone: cellPhone ? retrieveNumber(cellPhone) : '',
       phone: phone ? retrieveNumber(phone) : '',
       address,
@@ -557,13 +568,14 @@ async function sendOrder(content, ogirinCode) {
     gender,
     // contact
     email,
+    cellPhone,
     phone,
     address,
     observation,
     passport,
   } = content;
 
-  const { Patient } = await axiosRequest({
+  const { Paciente } = await axiosRequest({
     method: 'post',
     url: `${REACT_APP_PATIENT_SERVICE}/paciente_datos_update`,
     data: qs.stringify({
@@ -578,10 +590,14 @@ async function sendOrder(content, ogirinCode) {
       sexo: gender,
       fecha_nacimiento: birthDate.toISOString(),
       pasaporte: passport,
+      email,
+      celular: cellPhone,
+      telefono: phone,
+      direccion: address,
     }),
   });
 
-  if (Patient.Error.Codigo != '0') throw new Error(Patient.Error.Descripcion);
+  if (Paciente.Error.Codigo != '0') throw new Error(Paciente.Error.Descripcion);
 
   const data = xmlBuilder.buildObject({
     'soap12:Envelope': {
@@ -833,7 +849,7 @@ function ContactForm(props) {
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
-              type="number"
+              type="tel"
               variant="outlined"
               fullWidth
               name="cellPhone"
@@ -845,7 +861,7 @@ function ContactForm(props) {
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
-              type="number"
+              type="tel"
               variant="outlined"
               fullWidth
               name="phone"
