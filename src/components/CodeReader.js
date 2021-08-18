@@ -10,7 +10,7 @@ import {
   MenuItem,
   Paper,
   TextField,
-  Typography
+  Typography,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import {
@@ -18,7 +18,7 @@ import {
   CloseCircle,
   CreditCardScan,
   MagnifyScan,
-  QrcodeScan
+  QrcodeScan,
 } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import React, { forwardRef, useEffect, useRef } from 'react';
@@ -166,8 +166,6 @@ function CodeReader(
     const { content, onChange, setValue } = useFormContent({ scanner: '' }),
       { scanner } = content;
 
-    
-
     const handleSubmit = (e) => {
       e.preventDefault();
       handleScan(scanner);
@@ -237,8 +235,7 @@ CodeReader.propTypes = {
 
 export default forwardRef(CodeReader);
 
-
-function CodeIcon ({format, ...rest}) {
+function CodeIcon({ format, ...rest }) {
   let icon;
 
   switch (format) {
@@ -257,4 +254,4 @@ function CodeIcon ({format, ...rest}) {
   }
 
   return icon;
-};
+}
