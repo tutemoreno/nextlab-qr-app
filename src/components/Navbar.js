@@ -11,7 +11,7 @@ import {
 import { makeStyles } from '@material-ui/core/styles';
 import Menu from 'mdi-material-ui/Menu';
 import PropTypes from 'prop-types';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/Auth';
 
 const useStyles = makeStyles(({ palette }) => ({
@@ -26,7 +26,7 @@ export default function Navbar() {
   const [backgroundHeight, setBackgroundHeight] = useState(0);
   const ref = useRef(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setBackgroundHeight(ref.current.offsetHeight);
   }, []);
 

@@ -35,10 +35,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function CodeReader(
-  { open, title, formats, handleScan, handleClose, showClose },
-  ref,
-) {
+function CodeReader({ open, title, formats, handleScan, handleClose }, ref) {
   if (window['BarcodeDetector']) {
     const barcodeDetector = new window.BarcodeDetector({ formats });
     const { content, onChange, setContent } = useFormContent({
@@ -127,11 +124,9 @@ function CodeReader(
             <Typography variant="h6">{title}</Typography>
           </Box>
 
-          {showClose && (
-            <IconButton color="secondary" onClick={handleClose}>
-              <CloseCircle variant="contained" />
-            </IconButton>
-          )}
+          <IconButton color="secondary" onClick={handleClose}>
+            <CloseCircle variant="contained" />
+          </IconButton>
         </Box>
         <Box width="100%">
           <video
@@ -180,11 +175,9 @@ function CodeReader(
               <Typography variant="h6">{title}</Typography>
             </Box>
 
-            {showClose && (
-              <IconButton color="secondary" onClick={handleClose}>
-                <CloseCircle variant="contained" />
-              </IconButton>
-            )}
+            <IconButton color="secondary" onClick={handleClose}>
+              <CloseCircle variant="contained" />
+            </IconButton>
           </Box>
           <Box
             display="flex"
@@ -220,17 +213,12 @@ function CodeReader(
   }
 }
 
-CodeReader.defaultProps = {
-  showClose: false,
-};
-
 CodeReader.propTypes = {
   open: PropTypes.bool.isRequired,
   handleScan: PropTypes.func.isRequired,
   formats: PropTypes.array.isRequired,
   title: PropTypes.string.isRequired,
   handleClose: PropTypes.func,
-  showClose: PropTypes.bool,
 };
 
 export default forwardRef(CodeReader);

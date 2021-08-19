@@ -1,6 +1,14 @@
-import { Box, Button, Grid, makeStyles, Typography } from '@material-ui/core';
+import {
+  Box,
+  Button,
+  Grid,
+  Grow,
+  makeStyles,
+  Typography,
+} from '@material-ui/core';
 import PropTypes from 'prop-types';
 import React from 'react';
+import { useHistory } from 'react-router-dom';
 import Login from './Login';
 
 const useStyles = makeStyles(({ palette }) => ({
@@ -83,15 +91,11 @@ export default function Home({ isAuthenticated }) {
             Ingrese muestras escaneando tubos
           </Typography>
         </Box>
-        <Box mt={3}>{isAuthenticated ? <FormStart /> : <Login />}</Box>
+        <Grow in={true} timeout={1000}>
+          <Box mt={3}>{isAuthenticated ? <FormStart /> : <Login />}</Box>
+        </Grow>
       </Box>
-      <Grid
-        className={classes.gridBody}
-        container
-        direction="row"
-        justifyContent="center"
-        alignItems="flex-start"
-      >
+      <Grid className={classes.gridBody} container justifyContent="center">
         <GridItemStep
           srcImg="./assets/icon-scan.png"
           title="Escaneo"
@@ -114,16 +118,21 @@ export default function Home({ isAuthenticated }) {
     </>
   );
 }
-
 Home.propTypes = {
   isAuthenticated: PropTypes.bool.isRequired,
 };
 
 function FormStart() {
   const classes = useStyles();
+  const history = useHistory();
 
   return (
-    <form onSubmit={() => {}}>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        history.push('/paciente');
+      }}
+    >
       <Button
         type="submit"
         variant="contained"
@@ -141,7 +150,7 @@ function GridItemStep({ srcImg, title, description }) {
 
   return (
     <Grid item xs={12} lg={3} className={classes.gridStep}>
-      <Box alignItems="center" flexDirection="column" display="flex">
+      <Box display="flex" flexDirection="column" alignItems="center">
         <img className={classes.img} alt="icon-scan" src={srcImg} />
         <Typography component="h1" variant="h5" className={classes.stepTitle}>
           {title}

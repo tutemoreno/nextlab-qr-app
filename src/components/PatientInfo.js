@@ -18,6 +18,7 @@ import { Alert, CreditCardScan, Magnify } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import qs from 'qs';
 import React, { useEffect, useRef, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import xml2js from 'xml2js';
 import { useAuth } from '../context/Auth';
 import { useAlert } from '../context/Snackbar';
@@ -106,6 +107,7 @@ const removeDWS = (str) => str.replace(/\s+/g, ' ');
 const retrieveNumber = (str) => str.replace(/\D/g, '');
 
 export default function PatientInfo() {
+  const history = useHistory();
   const { user } = useAuth();
   const { openAlert } = useAlert();
   const { content, setContent, setValue, onChange } =
@@ -153,6 +155,7 @@ export default function PatientInfo() {
   const [scannerState, setScannerState] = useState({
     ...initialScannerState,
     handleScan: onBloodScan,
+    handleClose: () => history.push('/'),
   });
 
   const focusPatientAccordion = () => {
@@ -249,7 +252,10 @@ export default function PatientInfo() {
       title: 'Escanee el código de barras del documento',
       formats: ['pdf417'],
       handleScan: onDocumentScan,
-      showClose: true,
+      handleClose: () => {
+        closeScanner();
+        toggleView('form');
+      },
     });
     toggleView('scanner');
   };
@@ -353,14 +359,7 @@ export default function PatientInfo() {
             display={movingView == 'scanner' ? 'block' : 'none'}
             mt={1}
           >
-            <CodeReader
-              ref={scannerInputRef}
-              {...scannerState}
-              handleClose={() => {
-                closeScanner();
-                toggleView('form');
-              }}
-            />
+            <CodeReader ref={scannerInputRef} {...scannerState} />
           </Box>
         </Box>
       </Slide>
