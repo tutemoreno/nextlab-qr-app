@@ -44,7 +44,7 @@ export default function Login() {
 
   return (
     <Container maxWidth="xs">
-      <Box clone mt={1} p={2}>
+      <Box clone p={2}>
         <Paper elevation={24}>
           <form onSubmit={signIn}>
             <Grid container spacing={2}>
