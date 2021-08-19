@@ -11,7 +11,7 @@ import React from 'react';
 import { useHistory } from 'react-router-dom';
 import Login from './Login';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette, spacing }) => ({
   gridHeader: {
     textAlign: 'center',
     color: palette.text.secondary,
@@ -25,13 +25,13 @@ const useStyles = makeStyles(({ palette }) => ({
     backgroundColor: palette.grey[50],
   },
   img: {
-    maxWidth: 90,
-    maxHeight: 90,
+    maxWidth: spacing(11),
+    maxHeight: spacing(11),
   },
   imgLogo: {
-    maxWidth: 70,
-    maxHeight: 70,
-    marginRight: 10,
+    maxWidth: spacing(9),
+    maxHeight: spacing(9),
+    marginRight: spacing(1),
   },
   title: {
     fontWeight: 600,
@@ -42,14 +42,10 @@ const useStyles = makeStyles(({ palette }) => ({
   },
   stepTitle: {
     fontWeight: 600,
-    marginTop: 15,
-    marginBottom: 15,
+    margin: spacing(2, 0),
   },
   gridStep: {
-    padding: 40,
-  },
-  gridStepItems: {
-    marginTop: 10,
+    padding: spacing(5),
   },
   button: {
     fontWeight: 600,
