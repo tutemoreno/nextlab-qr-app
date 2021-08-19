@@ -11,7 +11,7 @@ import {
 import { makeStyles } from '@material-ui/core/styles';
 import Menu from 'mdi-material-ui/Menu';
 import PropTypes from 'prop-types';
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React from 'react';
 import { useAuth } from '../context/Auth';
 
 const useStyles = makeStyles(({ palette }) => ({
@@ -23,17 +23,11 @@ const useStyles = makeStyles(({ palette }) => ({
 export default function Navbar() {
   const classes = useStyles();
   const { user, signOut } = useAuth();
-  const [backgroundHeight, setBackgroundHeight] = useState(0);
-  const ref = useRef(null);
-
-  useLayoutEffect(() => {
-    setBackgroundHeight(ref.current.offsetHeight);
-  }, []);
 
   return (
     <>
       <HideOnScroll>
-        <AppBar ref={ref}>
+        <AppBar>
           <Toolbar className={classes.toolbar}>
             <IconButton color="inherit">
               <Menu />
@@ -60,7 +54,7 @@ export default function Navbar() {
           </Toolbar>
         </AppBar>
       </HideOnScroll>
-      <Box height={backgroundHeight} />
+      <Box className={['MuiToolbar-regular', classes.toolbar]} />
     </>
   );
 }
