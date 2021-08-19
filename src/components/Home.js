@@ -8,8 +8,8 @@ const useStyles = makeStyles(({ palette }) => ({
   gridHeader: {
     textAlign: 'center',
     color: palette.text.secondary,
-    height: '50vh',
     backgroundColor: palette.deepPurple[500],
+    height: '50vh',
   },
   headerBgColor: {
     backgroundColor: palette.deepPurple[500],
@@ -54,61 +54,49 @@ export default function Home({ isAuthenticated }) {
 
   return (
     <>
-      <Grid
-        container
+      <Box
+        width="100%"
         className={classes.gridHeader}
-        direction="column"
+        display="flex"
+        flexDirection="column"
         justifyContent="center"
         alignItems="center"
+        px={5}
       >
-        <Grid
-          item
-          direction="column"
-          xs={12}
-          container
+        <Box
+          display="flex"
+          flexDirection="row"
           justifyContent="center"
           alignItems="center"
+          className={classes.headerBgColor}
         >
-          <Box
-            display="flex"
-            flexDirection="row"
-            justifyContent="center"
-            alignItems="center"
-            className={classes.headerBgColor}
-            xs={12}
-          >
-            <img
-              className={classes.imgLogo}
-              alt="icon-scan"
-              src="./assets/logo-app.png"
-            />
-            <Typography component="h1" variant="h3" className={classes.title}>
-              Nextlab Handheld
-            </Typography>
-          </Box>
-          <Box mt={1}>
-            <Typography
-              component="h1"
-              variant="h5"
-              className={classes.subtitle}
+          <img
+            className={classes.imgLogo}
+            alt="icon-scan"
+            src="./assets/logo-app.png"
+          />
+          <Typography component="h1" variant="h3" className={classes.title}>
+            Nextlab Handheld
+          </Typography>
+        </Box>
+        <Box mt={1}>
+          <Typography component="h1" variant="h5" className={classes.subtitle}>
+            Ingrese muestras escaneando tubos
+          </Typography>
+        </Box>
+        <Box clone mt={3}>
+          <form onSubmit={() => {}}>
+            <Button
+              type="submit"
+              variant="contained"
+              className={classes.button}
+              size="large"
             >
-              Ingrese muestras escaneando tubos
-            </Typography>
-          </Box>
-          <Box clone mt={3}>
-            <form onSubmit={() => {}}>
-              <Button
-                type="submit"
-                variant="contained"
-                className={classes.button}
-                size="large"
-              >
-                Comenzar a escanear
-              </Button>
-            </form>
-          </Box>
-        </Grid>
-      </Grid>
+              Comenzar a escanear
+            </Button>
+          </form>
+        </Box>
+      </Box>
       <Grid
         className={classes.gridBody}
         container
@@ -121,10 +109,10 @@ export default function Home({ isAuthenticated }) {
           container
           direction="column"
           xs={12}
-          lg={2}
+          lg={3}
           className={classes.gridStep}
         >
-          <Box alignItems="center" flexDirection="column">
+          <Box alignItems="center" flexDirection="column" display="flex">
             <img
               className={classes.img}
               alt="icon-scan"
@@ -137,15 +125,15 @@ export default function Home({ isAuthenticated }) {
             >
               Escaneo
             </Typography>
+            <Typography component="h1">
+              Escanee mediante codigo de barras para cargar la informacion del
+              tubo
+            </Typography>
           </Box>
-          <Typography component="h1">
-            Escanee mediante codigo de barras para cargar la informacion del
-            tubo
-          </Typography>
         </Grid>
 
-        <Grid item xs={12} lg={2} className={classes.gridStep}>
-          <Box alignItems="center" flexDirection="column">
+        <Grid item xs={12} lg={3} className={classes.gridStep}>
+          <Box alignItems="center" flexDirection="column" display="flex">
             <img
               className={classes.img}
               alt="complex"
@@ -158,13 +146,13 @@ export default function Home({ isAuthenticated }) {
             >
               Paciente
             </Typography>
+            <Typography component="h1">
+              Escanee el DNI o cargue los datos del paciente a mano
+            </Typography>
           </Box>
-          <Typography component="h1">
-            Escanee el DNI o cargue los datos del paciente a mano
-          </Typography>
         </Grid>
-        <Grid item xs={12} lg={2} className={classes.gridStep}>
-          <Box alignItems="center" flexDirection="column">
+        <Grid item xs={12} lg={3} className={classes.gridStep}>
+          <Box alignItems="center" flexDirection="column" display="flex">
             <img
               className={classes.img}
               alt="complex"
@@ -177,11 +165,10 @@ export default function Home({ isAuthenticated }) {
             >
               Envio
             </Typography>
+            <Typography component="h1">
+              Envie toda la informacion que se cargara automaticamente en el LIS
+            </Typography>
           </Box>
-
-          <Typography component="h1">
-            Envie toda la informacion que se cargara automaticamente en el LIS
-          </Typography>
         </Grid>
       </Grid>
     </>
