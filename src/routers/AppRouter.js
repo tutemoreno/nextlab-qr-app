@@ -11,8 +11,8 @@ import { useAuth } from '../context/Auth';
 import { PrivateRoute } from './PrivateRoute.js';
 
 export const AppRouter = () => {
-  const auth = useAuth();
-  const isAuthenticated = auth.user && auth.user.isValid ? true : false;
+  const { user } = useAuth();
+  const isAuthenticated = user && user.isValid ? true : false;
 
   return (
     <Router>
