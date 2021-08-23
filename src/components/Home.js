@@ -74,7 +74,7 @@ export default function Home({ isAuthenticated }) {
           flexDirection="row"
           _justifyContent="center"
           alignItems="center"
-          textAlign="start"
+          textAlign="justify"
         >
           <img
             className={classes.imgLogo}
