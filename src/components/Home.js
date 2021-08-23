@@ -93,22 +93,22 @@ export default function Home({ isAuthenticated }) {
       </Box>
       <Grid className={classes.gridBody} container justifyContent="center">
         <GridItemStep
-          srcImg="./assets/icon-scan.png"
+          srcImg="./assets/barcode-scan24.png"
           title="Escaneo"
-          description="Escanee mediante codigo de barras para cargar la informacion del
+          description="Escanee mediante código de barras para cargar la información del
               tubo"
         />
 
         <GridItemStep
-          srcImg="./assets/icon-scan.png"
+          srcImg="./assets/card-account-details-outline.png"
           title="Paciente"
-          description="Escanee el DNI o cargue los datos del paciente a mano"
+          description="Escanee el DNI o ingrese los datos del paciente de forma manual"
         />
 
         <GridItemStep
-          srcImg="./assets/icon-scan.png"
-          title="Envio"
-          description="Envie toda la informacion que se cargara automaticamente en el LIS"
+          srcImg="./assets/playlist-check.png"
+          title="Envío"
+          description="Envíe toda la información que se cargará automáticamente en el LIS"
         />
       </Grid>
     </>
