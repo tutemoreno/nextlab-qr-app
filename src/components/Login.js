@@ -43,7 +43,7 @@ export default function Login() {
   };
 
   return (
-    <Container maxWidth="xs">
+    <Container disableGutters maxWidth="xs">
       <Box clone p={2}>
         <Paper elevation={24}>
           <form onSubmit={signIn}>

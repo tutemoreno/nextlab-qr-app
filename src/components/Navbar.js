@@ -14,9 +14,12 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { useAuth } from '../context/Auth';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(() => ({
   toolbar: {
-    backgroundColor: palette.deepPurple[500],
+    backgroundColor: '#979733',
+  },
+  title: {
+    flexGrow: 1,
   },
 }));
 
@@ -32,7 +35,7 @@ export default function Navbar() {
             <IconButton color="inherit">
               <Menu />
             </IconButton>
-            <Typography style={{ flexGrow: 1 }} variant="h6">
+            <Typography className={classes.title} variant="h6">
               Nextlab
             </Typography>
 
@@ -54,7 +57,7 @@ export default function Navbar() {
           </Toolbar>
         </AppBar>
       </HideOnScroll>
-      <Box className={['MuiToolbar-regular', classes.toolbar]} />
+      <Box className={`MuiToolbar-regular ${classes.toolbar}`} />
     </>
   );
 }

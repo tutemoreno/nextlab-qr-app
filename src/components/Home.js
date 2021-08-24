@@ -18,9 +18,8 @@ import Login from './Login';
 
 const useStyles = makeStyles(({ palette, spacing }) => ({
   gridHeader: {
-    textAlign: 'center',
     color: palette.text.secondary,
-    backgroundColor: palette.deepPurple[500],
+    backgroundColor: '#979733',
   },
   gridBody: {
     backgroundColor: palette.grey[50],
@@ -32,6 +31,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
   imgLogo: {
     maxWidth: spacing(9),
     maxHeight: spacing(9),
+    marginRight: spacing(2),
   },
   title: {
     fontWeight: 600,
@@ -61,21 +61,13 @@ export default function Home({ isAuthenticated }) {
   return (
     <>
       <Box
-        width="100%"
         className={classes.gridHeader}
         display="flex"
         flexDirection="column"
-        justifyContent="center"
         alignItems="center"
-        py={5}
+        p={2}
       >
-        <Box
-          display="flex"
-          flexDirection="row"
-          _justifyContent="center"
-          alignItems="center"
-          textAlign="justify"
-        >
+        <Box display="flex" p={2} alignItems="center">
           <img
             className={classes.imgLogo}
             alt="icon-scan"
