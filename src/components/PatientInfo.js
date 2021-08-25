@@ -126,7 +126,7 @@ export default function PatientInfo() {
 
     try {
       const { Sucursal, NombreProtocolo, NroMuestra, Analisis, error } =
-        await getQrInfo(rawValue, user.username);
+        await getQrInfo(rawValue, user.codigo);
 
       if (error) {
         setNotificationState({

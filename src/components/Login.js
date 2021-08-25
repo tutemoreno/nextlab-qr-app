@@ -20,6 +20,7 @@ const initialState = {
   username: '',
   password: '',
   remember: false,
+  codigo: '',
 };
 
 export default function Login() {
