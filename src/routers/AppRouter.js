@@ -7,7 +7,7 @@ import {
 } from 'react-router-dom';
 import { Home, PatientInfo } from '../components';
 import { useAuth } from '../context';
-import { PrivateRoute } from './PrivateRoute.js';
+import { PrivateRoute } from './';
 
 export const AppRouter = () => {
   const { user } = useAuth();

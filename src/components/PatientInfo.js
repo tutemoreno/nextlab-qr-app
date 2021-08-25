@@ -21,7 +21,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import xml2js from 'xml2js';
 import { useAlert, useAuth } from '../context';
-import { useFormContent } from '../hooks/useForm';
+import { useFormState } from '../hooks';
 import { AccordionHoc, CodeReader, HeaderHoc, ListHoc } from './';
 
 const initialState = {
@@ -108,7 +108,7 @@ export const PatientInfo = () => {
   const { user } = useAuth();
   const { openAlert } = useAlert();
   const { content, setContent, setValue, onChange } =
-    useFormContent(initialState);
+    useFormState(initialState);
   const [accordionState, setAccordionState] = useState(initialAccordionState);
   const [notificationState, setNotificationState] = useState(
     initialNotificationState,

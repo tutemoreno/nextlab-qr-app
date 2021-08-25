@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export function useFormContent(initialState) {
+export const useFormState = (initialState) => {
   const [content, setContent] = useState(initialState);
 
   const setValue = (key, value) => {
@@ -22,4 +22,4 @@ export function useFormContent(initialState) {
     setValue,
     onChange,
   };
-}
+};

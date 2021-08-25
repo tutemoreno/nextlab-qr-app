@@ -13,7 +13,7 @@ import {
 import { Eye, EyeOff } from 'mdi-material-ui';
 import React, { useState } from 'react';
 import { useAlert, useAuth } from '../context';
-import { useFormContent } from '../hooks/useForm';
+import { useFormState } from '../hooks';
 
 const initialState = {
   username: '',
@@ -23,7 +23,7 @@ const initialState = {
 };
 
 export const Login = () => {
-  const { content, onChange } = useFormContent(initialState),
+  const { content, onChange } = useFormState(initialState),
     { username, password, remember } = content;
   const [showPassword, setShowPassword] = useState(false);
   const auth = useAuth();

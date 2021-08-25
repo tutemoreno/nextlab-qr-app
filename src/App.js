@@ -5,7 +5,7 @@ import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import React from 'react';
 import { Navbar } from './components';
 import { ProvideAuth, ProvideSnackbar } from './context';
-import { AppRouter } from './routers/AppRouter';
+import { AppRouter } from './routers';
 import { theme } from './styles';
 
 export default function App() {

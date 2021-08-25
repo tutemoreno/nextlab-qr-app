@@ -21,8 +21,8 @@ import {
   QrcodeScan,
 } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
-import React, { forwardRef, useEffect, useRef, useState } from 'react';
-import { useFormContent } from '../hooks/useForm';
+import React, { forwardRef, useState } from 'react';
+import { useBarcodeDetector, useCamera, useFormState } from '../hooks';
 
 const useStyles = makeStyles(() => ({
   codeIcon: {
@@ -41,83 +41,8 @@ function CodeReaderComponent(
   const [isManual, setIsManual] = useState(false);
 
   if (!isManual && window['BarcodeDetector']) {
-    const barcodeDetector = new window.BarcodeDetector({ formats });
-    const { content, onChange, setContent } = useFormContent({
-      device: '',
-      devices: [],
-    });
-    const { device, devices } = content;
-    const videoRef = useRef(null);
-
-    useEffect(() => {
-      (async () => {
-        try {
-          const devices = await navigator.mediaDevices.enumerateDevices();
-
-          const videoDevices = devices.filter(
-            (device) => device.kind === 'videoinput',
-          );
-
-          setContent({
-            device: videoDevices[videoDevices.length - 1].deviceId,
-            devices: videoDevices,
-          });
-        } catch (error) {
-          console.log(error, 'QR Error');
-        }
-      })();
-    }, []);
-
-    useEffect(() => {
-      let intervalId,
-        stream,
-        handled = false;
-
-      const startScan = async () => {
-        try {
-          if (handled) return;
-
-          const data = await barcodeDetector.detect(videoRef.current);
-
-          if (data.length) {
-            handled = true;
-            handleScan(data[0].rawValue);
-          }
-        } catch (error) {
-          console.log(error, 'QR error');
-        }
-      };
-
-      const startVideo = async () => {
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              deviceId: device,
-              facingMode: 'environment',
-            },
-          });
-
-          videoRef.current.srcObject = stream;
-
-          intervalId = setInterval(startScan, 200);
-        } catch (error) {
-          console.log(error, 'QR Error');
-        }
-      };
-
-      const cleanUp = () => {
-        clearInterval(intervalId);
-
-        if (stream)
-          stream.getTracks().forEach((track) => {
-            track.stop();
-          });
-      };
-
-      if (open && device) startVideo();
-
-      return cleanUp;
-    }, [open, device]);
+    const { device, devices, onDeviceChange, videoRef } = useCamera(open);
+    useBarcodeDetector({ videoRef, handleScan, formats });
 
     return (
       <Paper elevation={24}>
@@ -146,7 +71,7 @@ function CodeReaderComponent(
             variant="outlined"
             fullWidth
             value={device}
-            onChange={onChange}
+            onChange={onDeviceChange}
             select
           >
             {devices.map((e) => (
@@ -160,7 +85,7 @@ function CodeReaderComponent(
     );
   } else {
     const classes = useStyles();
-    const { content, onChange, setValue } = useFormContent({ scanner: '' }),
+    const { content, onChange, setValue } = useFormState({ scanner: '' }),
       { scanner } = content;
 
     const handleSubmit = (e) => {
