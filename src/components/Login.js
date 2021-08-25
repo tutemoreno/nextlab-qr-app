@@ -12,8 +12,7 @@ import {
 } from '@material-ui/core';
 import { Eye, EyeOff } from 'mdi-material-ui';
 import React, { useState } from 'react';
-import { useAuth } from '../context/Auth';
-import { useAlert } from '../context/Snackbar';
+import { useAlert, useAuth } from '../context';
 import { useFormContent } from '../hooks/useForm';
 
 const initialState = {
@@ -23,7 +22,7 @@ const initialState = {
   codigo: '',
 };
 
-export default function Login() {
+export const Login = () => {
   const { content, onChange } = useFormContent(initialState),
     { username, password, remember } = content;
   const [showPassword, setShowPassword] = useState(false);
@@ -124,4 +123,4 @@ export default function Login() {
       </Box>
     </Container>
   );
-}
+};

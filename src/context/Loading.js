@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState } from 'react';
 
 const LoadingContext = createContext();
 
-export function ProvideLoading({ children }) {
+export const ProvideLoading = ({ children }) => {
   const [isLoading, showLoading] = useState(false);
 
   return (
@@ -13,7 +13,7 @@ export function ProvideLoading({ children }) {
       {children}
     </LoadingContext.Provider>
   );
-}
+};
 ProvideLoading.propTypes = {
   children: PropTypes.element.isRequired,
 };

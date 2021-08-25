@@ -8,7 +8,7 @@ import ChevronDown from 'mdi-material-ui/ChevronDown';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export const AccordionHoc = function (props) {
+export const AccordionHoc = (props) => {
   const { children, title, expanded, onChange } = props;
   return (
     <Accordion elevation={24} expanded={expanded} onChange={onChange}>

@@ -103,7 +103,7 @@ const removeDWS = (str) => str.replace(/\s+/g, ' ');
 
 const retrieveNumber = (str) => str.replace(/\D/g, '');
 
-export const PatientInfo = function () {
+export const PatientInfo = () => {
   const history = useHistory();
   const { user } = useAuth();
   const { openAlert } = useAlert();

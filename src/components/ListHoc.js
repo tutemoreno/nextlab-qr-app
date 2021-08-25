@@ -9,7 +9,7 @@ import {
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export const ListHoc = function (props) {
+export const ListHoc = (props) => {
   const { items, setItems } = props;
 
   const handleToggle = (index) => {

@@ -14,7 +14,7 @@ import {
 import PropTypes from 'prop-types';
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-import Login from './Login';
+import { Login } from './';
 
 const useStyles = makeStyles(({ palette, spacing }) => ({
   gridHeader: {
@@ -55,7 +55,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
   },
 }));
 
-export const Home = function ({ isAuthenticated }) {
+export const Home = ({ isAuthenticated }) => {
   const classes = useStyles();
 
   return (

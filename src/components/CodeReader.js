@@ -21,7 +21,7 @@ import {
   QrcodeScan,
 } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
-import React, { forwardRef, useEffect, useRef } from 'react';
+import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import { useFormContent } from '../hooks/useForm';
 
 const useStyles = makeStyles(() => ({
@@ -38,7 +38,9 @@ function CodeReaderComponent(
   { open, title, formats, handleScan, handleClose },
   ref,
 ) {
-  if (window['BarcodeDetector']) {
+  const [isManual, setIsManual] = useState(false);
+
+  if (!isManual && window['BarcodeDetector']) {
     const barcodeDetector = new window.BarcodeDetector({ formats });
     const { content, onChange, setContent } = useFormContent({
       device: '',
@@ -48,7 +50,7 @@ function CodeReaderComponent(
     const videoRef = useRef(null);
 
     useEffect(() => {
-      const getDevices = async () => {
+      (async () => {
         try {
           const devices = await navigator.mediaDevices.enumerateDevices();
 
@@ -63,9 +65,7 @@ function CodeReaderComponent(
         } catch (error) {
           console.log(error, 'QR Error');
         }
-      };
-
-      getDevices();
+      })();
     }, []);
 
     useEffect(() => {

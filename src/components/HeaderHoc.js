@@ -17,7 +17,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
   },
 }));
 
-export const HeaderHoc = function (props) {
+export const HeaderHoc = (props) => {
   const classes = useStyles();
 
   return (

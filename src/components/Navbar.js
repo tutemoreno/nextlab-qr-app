@@ -12,7 +12,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import Menu from 'mdi-material-ui/Menu';
 import PropTypes from 'prop-types';
 import React from 'react';
-import { useAuth } from '../context/Auth';
+import { useAuth } from '../context';
 
 const useStyles = makeStyles(() => ({
   toolbar: {
@@ -23,7 +23,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-export const Navbar = function () {
+export const Navbar = () => {
   const classes = useStyles();
   const { user, signOut } = useAuth();
 
