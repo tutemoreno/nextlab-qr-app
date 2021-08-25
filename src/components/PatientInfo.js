@@ -306,10 +306,7 @@ export default function PatientInfo() {
 
   const handleSubmitOrder = async () => {
     try {
-      const { Respuesta, NumeroOrden } = await sendOrder(
-        content,
-        user.username,
-      );
+      const { Respuesta, NumeroOrden } = await sendOrder(content, user.codigo);
 
       setNotificationState({
         title: Respuesta.Descripcion,
@@ -317,7 +314,7 @@ export default function PatientInfo() {
       });
       toggleView('notification');
     } catch (error) {
-      console.log(error);
+      openAlert(error.Descripcion, 'error');
     }
   };
 
@@ -596,7 +593,7 @@ async function sendOrder(content, ogirinCode) {
     }),
   });
 
-  if (Paciente.Error.Codigo != '0') throw new Error(Paciente.Error.Descripcion);
+  if (Paciente.Error.Codigo != '0') throw new Error(Paciente.Error);
 
   const data = xmlBuilder.buildObject({
     'soap12:Envelope': {
