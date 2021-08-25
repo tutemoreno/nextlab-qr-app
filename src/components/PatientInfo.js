@@ -33,6 +33,7 @@ const initialState = {
   branch: '',
   protocolName: '',
   sampleNumber: '',
+  sampleType: '',
   analisis: [],
   // manual
   documentId: '',
@@ -125,8 +126,14 @@ export default function PatientInfo() {
     closeScanner();
 
     try {
-      const { Sucursal, NombreProtocolo, NroMuestra, Analisis, error } =
-        await getQrInfo(rawValue, user.codigo);
+      const {
+        Sucursal,
+        NombreProtocolo,
+        TipoMuestra,
+        NroMuestra,
+        Analisis,
+        error,
+      } = await getQrInfo(rawValue, user.codigo);
 
       if (error) {
         setNotificationState({
@@ -142,6 +149,7 @@ export default function PatientInfo() {
         ...prevState,
         branch: Sucursal,
         sampleNumber: NroMuestra,
+        sampleType: TipoMuestra,
         analisis: Analisis.map((o) => {
           return { ...o, checked: true };
         }),
@@ -551,6 +559,8 @@ async function sendOrder(content, ogirinCode) {
   const {
     // barcode
     branch,
+    sampleNumber,
+    sampleType,
     analisis,
     // manual
     documentId,
@@ -669,6 +679,14 @@ async function sendOrder(content, ogirinCode) {
                     Urgente: 'N',
                   },
                 })),
+            ],
+            Muestras: [
+              {
+                ReqMuestra: {
+                  TipoMuestra: sampleType,
+                  NroMuestra: sampleNumber,
+                },
+              },
             ],
           },
         },
