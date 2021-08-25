@@ -55,7 +55,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
   },
 }));
 
-export default function Home({ isAuthenticated }) {
+export const Home = function ({ isAuthenticated }) {
   const classes = useStyles();
 
   return (
@@ -108,7 +108,7 @@ export default function Home({ isAuthenticated }) {
       </Grid>
     </>
   );
-}
+};
 Home.propTypes = {
   isAuthenticated: PropTypes.bool.isRequired,
 };

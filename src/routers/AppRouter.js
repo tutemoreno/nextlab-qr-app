@@ -5,9 +5,8 @@ import {
   Route as PublicRoute,
   Switch,
 } from 'react-router-dom';
-import Home from '../components/Home';
-import PatientInfo from '../components/PatientInfo';
-import { useAuth } from '../context/Auth';
+import { Home, PatientInfo } from '../components';
+import { useAuth } from '../context';
 import { PrivateRoute } from './PrivateRoute.js';
 
 export const AppRouter = () => {

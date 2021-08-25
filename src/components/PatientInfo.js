@@ -20,13 +20,9 @@ import qs from 'qs';
 import React, { useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import xml2js from 'xml2js';
-import { useAuth } from '../context/Auth';
-import { useAlert } from '../context/Snackbar';
+import { useAlert, useAuth } from '../context';
 import { useFormContent } from '../hooks/useForm';
-import AccordionHoc from './AccordionHoc';
-import CodeReader from './CodeReader';
-import HeaderHoc from './HeaderHoc';
-import ListHoc from './ListHoc';
+import { AccordionHoc, CodeReader, HeaderHoc, ListHoc } from './';
 
 const initialState = {
   // qr
@@ -107,7 +103,7 @@ const removeDWS = (str) => str.replace(/\s+/g, ' ');
 
 const retrieveNumber = (str) => str.replace(/\D/g, '');
 
-export default function PatientInfo() {
+export const PatientInfo = function () {
   const history = useHistory();
   const { user } = useAuth();
   const { openAlert } = useAlert();
@@ -305,12 +301,10 @@ export default function PatientInfo() {
       ...initialScannerState,
       handleScan: onBloodScan,
     });
-    resetForm();
+    setContent(initialState);
     setAccordionState(initialAccordionState);
     toggleView('scanner');
   };
-
-  const resetForm = () => setContent(initialState);
 
   const handleSubmitOrder = async () => {
     try {
@@ -435,7 +429,7 @@ export default function PatientInfo() {
                   onChange={onChange}
                   openScanner={openDocumentScanner}
                   handleSubmit={handleDocumentSubmit}
-                  resetForm={resetForm}
+                  setValue={setValue}
                 />
               </AccordionHoc>
 
@@ -501,7 +495,7 @@ export default function PatientInfo() {
       </Slide>
     </Container>
   );
-}
+};
 
 async function getPatientInfo(content) {
   const { documentId, documentType } = content;
@@ -749,7 +743,7 @@ function DocumentForm({
   onChange,
   content,
   openScanner,
-  resetForm,
+  setValue,
 }) {
   const { documentType, documentId, isReadOnly: readOnly } = content;
   const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
@@ -778,7 +772,7 @@ function DocumentForm({
               fullWidth
               value={documentType}
               onChange={(e) => {
-                resetForm();
+                setValue('documentId', '');
                 onChange(e);
               }}
               select
@@ -838,7 +832,7 @@ DocumentForm.propTypes = {
   openScanner: PropTypes.func.isRequired,
   handleSubmit: PropTypes.func.isRequired,
   content: PropTypes.object.isRequired,
-  resetForm: PropTypes.func.isRequired,
+  setValue: PropTypes.func.isRequired,
 };
 
 function ContactForm(props) {

@@ -34,8 +34,10 @@ const useStyles = makeStyles(() => ({
     left: '-50px',
   },
 }));
-
-function CodeReader({ open, title, formats, handleScan, handleClose }, ref) {
+function CodeReaderComponent(
+  { open, title, formats, handleScan, handleClose },
+  ref,
+) {
   if (window['BarcodeDetector']) {
     const barcodeDetector = new window.BarcodeDetector({ formats });
     const { content, onChange, setContent } = useFormContent({
@@ -213,7 +215,7 @@ function CodeReader({ open, title, formats, handleScan, handleClose }, ref) {
   }
 }
 
-CodeReader.propTypes = {
+CodeReaderComponent.propTypes = {
   open: PropTypes.bool.isRequired,
   handleScan: PropTypes.func.isRequired,
   formats: PropTypes.array.isRequired,
@@ -221,7 +223,7 @@ CodeReader.propTypes = {
   handleClose: PropTypes.func,
 };
 
-export default forwardRef(CodeReader);
+export const CodeReader = forwardRef(CodeReaderComponent);
 
 function CodeIcon({ format, ...rest }) {
   let icon;

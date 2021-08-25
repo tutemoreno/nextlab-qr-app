@@ -17,7 +17,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
   },
 }));
 
-export default function HeaderHoc(props) {
+export const HeaderHoc = function (props) {
   const classes = useStyles();
 
   return (
@@ -32,7 +32,7 @@ export default function HeaderHoc(props) {
       </Typography>
     </Box>
   );
-}
+};
 HeaderHoc.propTypes = {
   title: PropTypes.string.isRequired,
   icon: PropTypes.element,

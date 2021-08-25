@@ -23,7 +23,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-export default function Navbar() {
+export const Navbar = function () {
   const classes = useStyles();
   const { user, signOut } = useAuth();
 
@@ -60,7 +60,7 @@ export default function Navbar() {
       <Box className={`MuiToolbar-regular ${classes.toolbar}`} />
     </>
   );
-}
+};
 
 function HideOnScroll(props) {
   const { children } = props;

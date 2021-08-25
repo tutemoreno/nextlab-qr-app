@@ -9,7 +9,7 @@ import {
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function ListHoc(props) {
+export const ListHoc = function (props) {
   const { items, setItems } = props;
 
   const handleToggle = (index) => {
@@ -48,7 +48,7 @@ export default function ListHoc(props) {
       </List>
     </Box>
   );
-}
+};
 ListHoc.propTypes = {
   items: PropTypes.array.isRequired,
   setItems: PropTypes.func,
