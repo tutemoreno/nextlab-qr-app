@@ -33,7 +33,7 @@ const initialState = {
   analisis: [],
   // manual
   documentId: '',
-  documentType: 'DNI',
+  documentType: 'CI',
   isReadOnly: false,
   // fetch
   patientCode: '',
@@ -789,7 +789,7 @@ async function axiosRequest(cfg) {
   return await xmlParser.parseStringPromise(response.data);
 }
 
-const initialDocumentTypesState = [{ id: 'DNI', name: 'Doc. Nac. Identidad' }];
+const initialDocumentTypesState = [{ id: 'CI', name: 'Cédula' }];
 
 function DocumentForm({
   handleSubmit,
