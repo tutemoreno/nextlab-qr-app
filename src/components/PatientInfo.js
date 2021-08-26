@@ -58,7 +58,7 @@ const initialState = {
 };
 
 const initialScannerState = {
-  open: true,
+  isOpen: true,
   formats: ['code_128'],
   title: 'Escanee la muestra',
 };
@@ -252,7 +252,7 @@ export const PatientInfo = () => {
 
   const openDocumentScanner = () => {
     setScannerState({
-      open: true,
+      isOpen: true,
       title: 'Escanee el código de barras del documento',
       formats: ['pdf417'],
       handleScan: onDocumentScan,
@@ -267,7 +267,7 @@ export const PatientInfo = () => {
   const closeScanner = () => {
     setScannerState((prevState) => ({
       ...prevState,
-      open: false,
+      isOpen: false,
     }));
   };
 

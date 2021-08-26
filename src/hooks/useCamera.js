@@ -1,12 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { useFormState } from './';
 
-export const useCamera = (open) => {
-  const { content, onChange, setContent } = useFormState({
+export const useCamera = (isOpen) => {
+  const { content, onChange, setValue, setContent } = useFormState({
     device: '',
     devices: [],
+    stream: null,
   });
-  const { device, devices } = content;
+  const { device, devices, stream } = content;
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -18,10 +19,11 @@ export const useCamera = (open) => {
           (device) => device.kind === 'videoinput',
         );
 
-        setContent({
+        setContent((prevState) => ({
+          ...prevState,
           device: videoDevices[videoDevices.length - 1].deviceId,
           devices: videoDevices,
-        });
+        }));
       } catch (error) {
         console.log('[enumerateDevices]', error);
       }
@@ -29,38 +31,41 @@ export const useCamera = (open) => {
   }, []);
 
   useEffect(() => {
+    let srcStream;
+
     const startVideo = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        srcStream = await navigator.mediaDevices.getUserMedia({
           video: {
             deviceId: device,
             facingMode: 'environment',
           },
         });
 
-        videoRef.current.srcObject = stream;
+        videoRef.current.srcObject = srcStream;
+
+        setValue('stream', srcStream);
       } catch (error) {
-        console.log(error, 'QR Error');
+        console.log('[startVideo]', error);
       }
     };
 
     const cleanUp = () => {
-      const stream = videoRef.current.srcObject;
-
-      if (stream)
-        stream.getTracks().forEach((track) => {
+      if (srcStream)
+        srcStream.getTracks().forEach((track) => {
           track.stop();
         });
     };
 
-    if (open && device) startVideo();
+    if (isOpen && device) startVideo();
 
     return cleanUp;
-  }, [open, device]);
+  }, [isOpen, device]);
 
   return {
     device,
     devices,
+    stream,
     onDeviceChange: onChange,
     videoRef,
   };

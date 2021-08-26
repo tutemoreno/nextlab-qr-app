@@ -4,6 +4,7 @@
 // https://webrtc.github.io/samples/
 import {
   Box,
+  Button,
   CircularProgress,
   Container,
   IconButton,
@@ -35,14 +36,17 @@ const useStyles = makeStyles(() => ({
   },
 }));
 function CodeReaderComponent(
-  { open, title, formats, handleScan, handleClose },
+  { isOpen, title, formats, handleScan, handleClose },
   ref,
 ) {
   const [isManual, setIsManual] = useState(false);
+  const hasBarcodeDetector = window.BarcodeDetector;
 
-  if (!isManual && window['BarcodeDetector']) {
-    const { device, devices, onDeviceChange, videoRef } = useCamera(open);
-    useBarcodeDetector({ videoRef, handleScan, formats });
+  if (!isManual && hasBarcodeDetector) {
+    const { device, devices, onDeviceChange, videoRef, stream } =
+      useCamera(isOpen);
+
+    useBarcodeDetector({ handleScan, formats, stream, videoRef });
 
     return (
       <Paper elevation={24}>
@@ -65,9 +69,9 @@ function CodeReaderComponent(
         </Box>
         <Box p={2}>
           <TextField
-            id="selectedDevice"
+            id="device"
             label="Camara seccionada"
-            name="selectedDevice"
+            name="device"
             variant="outlined"
             fullWidth
             value={device}
@@ -80,6 +84,16 @@ function CodeReaderComponent(
               </MenuItem>
             ))}
           </TextField>
+          <Box clone mt={2}>
+            <Button
+              fullWidth
+              variant="contained"
+              color="primary"
+              onClick={() => setIsManual(true)}
+            >
+              Ingreso manual
+            </Button>
+          </Box>
         </Box>
       </Paper>
     );
@@ -141,7 +155,7 @@ function CodeReaderComponent(
 }
 
 CodeReaderComponent.propTypes = {
-  open: PropTypes.bool.isRequired,
+  isOpen: PropTypes.bool.isRequired,
   handleScan: PropTypes.func.isRequired,
   formats: PropTypes.array.isRequired,
   title: PropTypes.string.isRequired,
