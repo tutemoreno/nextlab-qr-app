@@ -136,9 +136,7 @@ export const PatientInfo = () => {
         error,
       } = await getQrInfo(rawValue, user.codigo);
 
-      console.log(error);
-
-      if (error.Codigo != 0) {
+      if (error) {
         setNotificationState({
           title: 'No se pudo escanear la muestra',
           description: error.Descripcion,
