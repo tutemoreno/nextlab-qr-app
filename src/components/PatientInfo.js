@@ -136,7 +136,9 @@ export const PatientInfo = () => {
         error,
       } = await getQrInfo(rawValue, user.codigo);
 
-      if (error) {
+      console.log(error);
+
+      if (error.Codigo != 0) {
         setNotificationState({
           title: 'No se pudo escanear la muestra',
           description: error.Descripcion,
@@ -153,9 +155,9 @@ export const PatientInfo = () => {
           }),
           protocolName: NombreProtocolo,
         }));
-      }
 
-      toggleView('form');
+        toggleView('form');
+      }
     } catch (error) {
       console.log(error);
     }
