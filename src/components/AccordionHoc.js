@@ -8,10 +8,9 @@ import ChevronDown from 'mdi-material-ui/ChevronDown';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export const AccordionHoc = (props) => {
-  const { children, title, expanded, onChange } = props;
+export const AccordionHoc = ({ children, title, ...rest }) => {
   return (
-    <Accordion elevation={24} expanded={expanded} onChange={onChange}>
+    <Accordion elevation={24} {...rest}>
       <AccordionSummary expandIcon={<ChevronDown />}>
         <Typography>{title}</Typography>
       </AccordionSummary>
