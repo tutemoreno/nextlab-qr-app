@@ -1115,7 +1115,11 @@ function BillingForm({ content, onChange, setContent }) {
   }, []);
 
   const onInsuranceChange = (e) => {
-    setContent((prevState) => ({ ...prevState, insurance: e.id, plan: '' }));
+    setContent((prevState) => ({
+      ...prevState,
+      insurance: e.id,
+      plan: e.plans.length == 1 ? e.plans[0].id : '',
+    }));
     setPlanTypes(e.plans);
   };
 
