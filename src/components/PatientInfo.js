@@ -142,20 +142,19 @@ export const PatientInfo = () => {
           description: error.Descripcion,
         });
         toggleView('notification');
-
-        throw new Error(error.Descripcion);
+      } else {
+        setContent((prevState) => ({
+          ...prevState,
+          branch: Sucursal,
+          sampleNumber: NroMuestra,
+          sampleType: TipoMuestra,
+          analisis: Analisis.map((o) => {
+            return { ...o, checked: true };
+          }),
+          protocolName: NombreProtocolo,
+        }));
       }
 
-      setContent((prevState) => ({
-        ...prevState,
-        branch: Sucursal,
-        sampleNumber: NroMuestra,
-        sampleType: TipoMuestra,
-        analisis: Analisis.map((o) => {
-          return { ...o, checked: true };
-        }),
-        protocolName: NombreProtocolo,
-      }));
       toggleView('form');
     } catch (error) {
       console.log(error);
@@ -314,15 +313,15 @@ export const PatientInfo = () => {
 
   const handleSubmitOrder = async () => {
     try {
-      const { Respuesta, NumeroOrden } = await sendOrder(content, user.codigo);
+      const { orderNumber, response } = await sendOrder(content, user.codigo);
 
       setNotificationState({
-        title: Respuesta.Descripcion,
-        description: NumeroOrden,
+        title: response.Descripcion[0],
+        description: orderNumber,
       });
       toggleView('notification');
     } catch (error) {
-      openAlert(error.Descripcion, 'error');
+      openAlert(error, 'error');
     }
   };
 
@@ -425,6 +424,7 @@ export const PatientInfo = () => {
             <HeaderHoc title="Información del paciente" />
 
             <Box mt={1}>
+              {/* <form> */}
               <AccordionHoc
                 title="Documento"
                 expanded={accordionState.document}
@@ -481,6 +481,7 @@ export const PatientInfo = () => {
                   setContent={setContent}
                 />
               </AccordionHoc>
+              {/* </form> */}
             </Box>
             <Box width="100%" mt={3}>
               <Grid container spacing={2}>
@@ -534,18 +535,18 @@ async function getPatientInfo(content) {
   });
 
   const {
-    Codigo: patientCode,
-    Nombre: firstName,
-    Nombre2: secondName,
-    Apellido: firstSurname,
-    Apellido2: secondSurname,
-    Sexo: gender,
-    FechaNac: birthDate,
-    Email: email,
-    Celular: cellPhone,
-    Telefono: phone,
-    Direccion: address,
-    Error: error,
+    Codigo: [patientCode],
+    Nombre: [firstName],
+    Nombre2: [secondName],
+    Apellido: [firstSurname],
+    Apellido2: [secondSurname],
+    Sexo: [gender],
+    FechaNac: [birthDate],
+    Email: [email],
+    Celular: [cellPhone],
+    Telefono: [phone],
+    Direccion: [address],
+    Error: [error],
   } = Paciente;
 
   return {
@@ -615,7 +616,11 @@ async function sendOrder(content, ogirinCode) {
     }),
   });
 
-  if (Paciente.Error.Codigo != '0') throw new Error(Paciente.Error);
+  const {
+    Error: [error],
+  } = Paciente;
+
+  if (error.Codigo[0] != '0') throw new Error(error.Descripcion[0]);
 
   const data = xmlBuilder.buildObject({
     'soap12:Envelope': {
@@ -708,11 +713,20 @@ async function sendOrder(content, ogirinCode) {
 
   const {
     'soap:Envelope': {
-      'soap:Body': {
-        RealizarPedidoResponse: {
-          RealizarPedidoResult: { NumeroOrden, Respuesta },
+      'soap:Body': [
+        {
+          RealizarPedidoResponse: [
+            {
+              RealizarPedidoResult: [
+                {
+                  NumeroOrden: [orderNumber],
+                  Respuesta: [response],
+                },
+              ],
+            },
+          ],
         },
-      },
+      ],
     },
   } = await axiosRequest({
     method: 'post',
@@ -722,7 +736,7 @@ async function sendOrder(content, ogirinCode) {
     headers: { 'content-type': 'application/soap+xml; charset=utf-8' },
   });
 
-  return { Respuesta, NumeroOrden };
+  return { orderNumber, response };
 }
 
 async function getQrInfo(idQr, codOri) {
