@@ -592,6 +592,9 @@ async function sendOrder(content, ogirinCode) {
     address,
     observation,
     passport,
+    cardNumber,
+    insurance,
+    plan,
   } = content;
 
   const { Paciente } = await axiosRequest({
@@ -621,7 +624,8 @@ async function sendOrder(content, ogirinCode) {
   } = Paciente;
 
   if (error.Codigo[0] != '0') throw new Error(error.Descripcion[0]);
-
+  console.log(insurance, 'insurance');
+  console.log(plan, 'plan');
   const data = xmlBuilder.buildObject({
     'soap12:Envelope': {
       $: {
@@ -677,13 +681,13 @@ async function sendOrder(content, ogirinCode) {
             Piso: '',
             Cama: '',
             Seguro: {
-              Codigo: 'C0163', // TODO: traer del origen
+              Codigo: insurance,
               Descripcion: '',
-              CodigoPlan: 'LAB', // TODO: traer del origen
+              CodigoPlan: plan,
               DescripcionPlan: '',
             },
             FechaReceta: new Date().toISOString(),
-            NumeroCarnet: '',
+            NumeroCarnet: cardNumber,
             Diagnosticos: {
               ReqDiagnostico: [],
             },
