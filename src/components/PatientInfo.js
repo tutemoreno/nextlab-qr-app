@@ -55,6 +55,9 @@ const initialState = {
   auxiliarCode: '',
   active: '',
   observation: '',
+  insurance: '',
+  plan: '',
+  cardNumber: '',
 };
 
 const initialScannerState = {
@@ -68,6 +71,7 @@ const initialAccordionState = {
   document: true,
   patient: false,
   contact: false,
+  billing: false,
 };
 
 const initialViewState = { onMove: 'scanner', current: 'scanner', new: null };
@@ -84,10 +88,11 @@ const {
   REACT_APP_NEXTLAB_SERVICE,
   REACT_APP_NEXTLAB_TOKEN,
   REACT_APP_MEDICO,
+  REACT_APP_INSURANCE_TYPE,
+  REACT_APP_INSURANCE_SERVICE,
 } = process.env;
 
 const xmlParser = new xml2js.Parser({
-  explicitArray: false,
   charkey: 'value',
   trim: true,
   normalize: true,
@@ -168,6 +173,7 @@ export const PatientInfo = () => {
       document: false,
       patient: true,
       contact: true,
+      billing: true,
     });
   };
 
@@ -463,6 +469,18 @@ export const PatientInfo = () => {
                   />
                 </Box>
               </AccordionHoc>
+
+              <AccordionHoc
+                title="Facturación"
+                expanded={accordionState.billing}
+                onChange={() => expandAccordion('billing')}
+              >
+                <BillingForm
+                  content={content}
+                  onChange={onChange}
+                  setContent={setContent}
+                />
+              </AccordionHoc>
             </Box>
             <Box width="100%" mt={3}>
               <Grid container spacing={2}>
@@ -724,9 +742,30 @@ async function getDocumentTypes() {
     data: qs.stringify({ token: REACT_APP_NEXTLAB_TOKEN }),
   });
 
-  return parsedInfo.ListaTipoDocumento.Lista.TipoDocumento.map((e) => {
-    return { id: e.TipoDoc, name: e.Descripcion };
+  return parsedInfo.ListaTipoDocumento.Lista[0].TipoDocumento.map((e) => ({
+    id: e.TipoDoc[0],
+    name: e.Descripcion[0],
+  }));
+}
+
+async function getInsuranceTypes() {
+  const parsedInfo = await axiosRequest({
+    method: 'post',
+    url: `${REACT_APP_INSURANCE_SERVICE}/segurosPorTipoSeguro`,
+    data: qs.stringify({
+      token: REACT_APP_NEXTLAB_TOKEN,
+      tipoSeguros: REACT_APP_INSURANCE_TYPE,
+    }),
   });
+
+  return parsedInfo.ListaSeguros.Lista[0].SeguroPlan.map((e) => ({
+    id: e.Codigo[0],
+    name: e.Descripcion[0],
+    plans: e.Planes[0].Plan.map((p) => ({
+      id: p.Codigo[0],
+      name: p.Descripcion[0],
+    })),
+  }));
 }
 
 async function axiosRequest(cfg) {
@@ -835,8 +874,7 @@ DocumentForm.propTypes = {
   setValue: PropTypes.func.isRequired,
 };
 
-function ContactForm(props) {
-  const { content, onChange } = props;
+function ContactForm({ content, onChange }) {
   const { email, cellPhone, phone, address, observation } = content;
 
   return (
@@ -915,8 +953,7 @@ ContactForm.propTypes = {
   content: PropTypes.object.isRequired,
 };
 
-function PatientForm(props) {
-  const { content, onChange } = props;
+function PatientForm({ content, onChange }) {
   const {
     firstName,
     secondName,
@@ -1049,5 +1086,87 @@ function PatientForm(props) {
 }
 PatientForm.propTypes = {
   onChange: PropTypes.func.isRequired,
+  content: PropTypes.object.isRequired,
+};
+
+function BillingForm({ content, onChange, setContent }) {
+  const { insurance, plan, cardNumber } = content;
+  const [insuranceTypes, setInsuranceTypes] = useState([]);
+  const [planTypes, setPlanTypes] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      setInsuranceTypes(await getInsuranceTypes());
+    })();
+  }, []);
+
+  const onInsuranceChange = (e) => {
+    setContent((prevState) => ({ ...prevState, insurance: e.id, plan: '' }));
+    setPlanTypes(e.plans);
+  };
+
+  return (
+    <Box clone width="100%">
+      <form>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              variant="outlined"
+              fullWidth
+              name="insurance"
+              label="Seguro"
+              id="insurance"
+              select
+              value={insurance}
+            >
+              {insuranceTypes.map((e) => (
+                <MenuItem
+                  key={e.id}
+                  value={e.id}
+                  onClick={() => onInsuranceChange(e)}
+                >
+                  {e.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              variant="outlined"
+              fullWidth
+              name="plan"
+              label="Plan"
+              id="plan"
+              select
+              value={plan}
+              onChange={onChange}
+            >
+              {planTypes.map((e) => (
+                <MenuItem key={e.id} value={e.id}>
+                  {e.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="text"
+              variant="outlined"
+              fullWidth
+              name="cardNumber"
+              label="Número de carnet"
+              id="cardNumber"
+              value={cardNumber}
+              onChange={onChange}
+            />
+          </Grid>
+        </Grid>
+      </form>
+    </Box>
+  );
+}
+BillingForm.propTypes = {
+  onChange: PropTypes.func.isRequired,
+  setContent: PropTypes.func.isRequired,
   content: PropTypes.object.isRequired,
 };
