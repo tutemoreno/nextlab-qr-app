@@ -116,7 +116,10 @@ export const PatientInfo = () => {
     useFormState(initialState);
   const [accordionState, setAccordionState] = useState(initialAccordionState);
   const [isValidForm, setIsValidForm] = useState(true);
-  const orderForm = document.querySelector('#orderForm');
+  const documentForm = document.querySelector('#documentForm');
+  const patientForm = document.querySelector('#patientForm');
+  const contactForm = document.querySelector('#contactForm');
+  const billingForm = document.querySelector('#billingForm');
 
   const [notificationState, setNotificationState] = useState(
     initialNotificationState,
@@ -317,7 +320,17 @@ export const PatientInfo = () => {
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
 
-    if (orderForm.checkValidity()) {
+    const isDocumentFormValid = documentForm.checkValidity();
+    const isPatientFormValid = patientForm.checkValidity();
+    const isContactFormValid = contactForm.checkValidity();
+    const isBillingFormValid = billingForm.checkValidity();
+
+    if (
+      isDocumentFormValid &&
+      isPatientFormValid &&
+      isContactFormValid &&
+      isBillingFormValid
+    ) {
       try {
         const { orderNumber, response } = await sendOrder(content, user.codigo);
 
@@ -331,11 +344,11 @@ export const PatientInfo = () => {
       }
     } else {
       setAccordionState({
-        analisis: true,
-        document: true,
-        patient: true,
-        contact: true,
-        billing: true,
+        document: !isDocumentFormValid,
+        patient: !isPatientFormValid,
+        contact: !isContactFormValid,
+        analisis: false,
+        billing: !isBillingFormValid,
       });
       setIsValidForm(false);
     }
@@ -343,7 +356,10 @@ export const PatientInfo = () => {
 
   useEffect(() => {
     if (!isValidForm) {
-      orderForm.reportValidity();
+      documentForm.reportValidity();
+      patientForm.reportValidity();
+      contactForm.reportValidity();
+      billingForm.reportValidity();
       setIsValidForm(true);
     }
   }, [isValidForm]);
@@ -446,8 +462,6 @@ export const PatientInfo = () => {
           >
             <HeaderHoc title="Información del paciente" />
 
-            <form id="orderForm" noValidate onSubmit={handleSubmitOrder} />
-
             <Box mt={1}>
               <AccordionHoc
                 title="Documento"
@@ -527,6 +541,7 @@ export const PatientInfo = () => {
                     form="orderForm"
                     variant="contained"
                     color="primary"
+                    onClick={handleSubmitOrder}
                   >
                     Enviar
                   </Button>
@@ -837,6 +852,7 @@ function DocumentForm({
   return (
     <Box clone width="100%">
       <form
+        id="documentForm"
         onSubmit={(e) => {
           e.preventDefault();
           handleSubmit();
@@ -919,75 +935,74 @@ function ContactForm({ content, onChange }) {
   const { email, cellPhone, phone, address, observation } = content;
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          type="email"
-          variant="outlined"
-          fullWidth
-          name="email"
-          label="Email"
-          id="email"
-          value={email}
-          onChange={onChange}
-          inputProps={{ form: 'orderForm' }}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          type="tel"
-          variant="outlined"
-          fullWidth
-          name="cellPhone"
-          label="Celular"
-          id="cellPhone"
-          value={cellPhone}
-          onChange={onChange}
-          inputProps={{ form: 'orderForm' }}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          type="tel"
-          variant="outlined"
-          fullWidth
-          name="phone"
-          label="Teléfono fijo"
-          id="phone"
-          value={phone}
-          onChange={onChange}
-          inputProps={{ form: 'orderForm' }}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          type="text"
-          variant="outlined"
-          fullWidth
-          name="address"
-          label="Dirección"
-          id="address"
-          value={address}
-          onChange={onChange}
-          inputProps={{ form: 'orderForm' }}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          type="text"
-          variant="outlined"
-          multiline
-          fullWidth
-          rows={4}
-          name="observation"
-          label="Observaciones"
-          id="observation"
-          value={observation}
-          onChange={onChange}
-          inputProps={{ form: 'orderForm' }}
-        />
-      </Grid>
-    </Grid>
+    <Box clone width="100%">
+      <form id="contactForm">
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="email"
+              variant="outlined"
+              fullWidth
+              name="email"
+              label="Email"
+              id="email"
+              value={email}
+              onChange={onChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="tel"
+              variant="outlined"
+              fullWidth
+              name="cellPhone"
+              label="Celular"
+              id="cellPhone"
+              value={cellPhone}
+              onChange={onChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="tel"
+              variant="outlined"
+              fullWidth
+              name="phone"
+              label="Teléfono fijo"
+              id="phone"
+              value={phone}
+              onChange={onChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="text"
+              variant="outlined"
+              fullWidth
+              name="address"
+              label="Dirección"
+              id="address"
+              value={address}
+              onChange={onChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              type="text"
+              variant="outlined"
+              multiline
+              fullWidth
+              rows={4}
+              name="observation"
+              label="Observaciones"
+              id="observation"
+              value={observation}
+              onChange={onChange}
+            />
+          </Grid>
+        </Grid>
+      </form>
+    </Box>
   );
 }
 ContactForm.propTypes = {
@@ -1008,125 +1023,122 @@ function PatientForm({ content, onChange }) {
   } = content;
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          type="text"
-          variant="outlined"
-          required
-          fullWidth
-          name="firstName"
-          autoComplete="given-name"
-          label="Primer nombre"
-          id="firstName"
-          inputProps={{ form: 'orderForm' }}
-          value={firstName}
-          onChange={onChange}
-          InputProps={{ readOnly }}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          type="text"
-          variant="outlined"
-          fullWidth
-          name="secondName"
-          label="Segundo nombre"
-          id="secondName"
-          inputProps={{ form: 'orderForm' }}
-          value={secondName}
-          onChange={onChange}
-          InputProps={{ readOnly }}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          type="text"
-          variant="outlined"
-          required
-          fullWidth
-          name="firstSurname"
-          autoComplete="family-name"
-          label="Primer apellido"
-          id="firstSurname"
-          inputProps={{ form: 'orderForm' }}
-          value={firstSurname}
-          onChange={onChange}
-          InputProps={{ readOnly }}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          type="text"
-          variant="outlined"
-          fullWidth
-          name="secondSurname"
-          label="Segundo apellido"
-          id="secondSurname"
-          inputProps={{ form: 'orderForm' }}
-          value={secondSurname}
-          onChange={onChange}
-          InputProps={{ readOnly }}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <KeyboardDatePicker
-          variant="inline"
-          autoOk
-          inputVariant="outlined"
-          fullWidth
-          required
-          disableFuture
-          format="dd/MM/yyyy"
-          id="birthDate"
-          label="Fecha de nacimiento"
-          KeyboardButtonProps={{ color: 'primary', disabled: readOnly }}
-          value={birthDate}
-          inputProps={{ form: 'orderForm' }}
-          InputProps={{ readOnly }}
-          onChange={(date) =>
-            onChange({
-              target: {
-                value: date,
-                name: 'birthDate',
-                type: 'date',
-              },
-            })
-          }
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          id="gender"
-          label="Género"
-          name="gender"
-          variant="outlined"
-          fullWidth
-          required
-          value={gender}
-          onChange={onChange}
-          select
-          inputProps={{ form: 'orderForm' }}
-          InputProps={{ readOnly }}
-        >
-          <MenuItem value={'M'}>Masculino</MenuItem>
-          <MenuItem value={'F'}>Femenino</MenuItem>
-        </TextField>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          type="text"
-          variant="outlined"
-          fullWidth
-          name="passport"
-          label="Pasaporte"
-          id="passport"
-          inputProps={{ form: 'orderForm' }}
-          value={passport}
-          onChange={onChange}
-        />
-      </Grid>
-    </Grid>
+    <Box clone width="100%">
+      <form id="patientForm">
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="text"
+              variant="outlined"
+              required
+              fullWidth
+              name="firstName"
+              autoComplete="given-name"
+              label="Primer nombre"
+              id="firstName"
+              value={firstName}
+              onChange={onChange}
+              InputProps={{ readOnly }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="text"
+              variant="outlined"
+              fullWidth
+              name="secondName"
+              label="Segundo nombre"
+              id="secondName"
+              value={secondName}
+              onChange={onChange}
+              InputProps={{ readOnly }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="text"
+              variant="outlined"
+              required
+              fullWidth
+              name="firstSurname"
+              autoComplete="family-name"
+              label="Primer apellido"
+              id="firstSurname"
+              value={firstSurname}
+              onChange={onChange}
+              InputProps={{ readOnly }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="text"
+              variant="outlined"
+              fullWidth
+              name="secondSurname"
+              label="Segundo apellido"
+              id="secondSurname"
+              value={secondSurname}
+              onChange={onChange}
+              InputProps={{ readOnly }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <KeyboardDatePicker
+              variant="inline"
+              autoOk
+              inputVariant="outlined"
+              fullWidth
+              required
+              disableFuture
+              format="dd/MM/yyyy"
+              id="birthDate"
+              label="Fecha de nacimiento"
+              KeyboardButtonProps={{ color: 'primary', disabled: readOnly }}
+              value={birthDate}
+              InputProps={{ readOnly }}
+              onChange={(date) =>
+                onChange({
+                  target: {
+                    value: date,
+                    name: 'birthDate',
+                    type: 'date',
+                  },
+                })
+              }
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              id="gender"
+              label="Género"
+              name="gender"
+              variant="outlined"
+              fullWidth
+              required
+              value={gender}
+              onChange={onChange}
+              select
+              InputProps={{ readOnly }}
+            >
+              <MenuItem value={'M'}>Masculino</MenuItem>
+              <MenuItem value={'F'}>Femenino</MenuItem>
+            </TextField>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="text"
+              variant="outlined"
+              fullWidth
+              name="passport"
+              label="Pasaporte"
+              id="passport"
+              value={passport}
+              onChange={onChange}
+            />
+          </Grid>
+        </Grid>
+      </form>
+    </Box>
   );
 }
 PatientForm.propTypes = {
@@ -1155,63 +1167,65 @@ function BillingForm({ content, onChange, setContent }) {
   };
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          variant="outlined"
-          fullWidth
-          name="insurance"
-          label="Seguro"
-          id="insurance"
-          select
-          required
-          inputProps={{ form: 'orderForm' }}
-          value={insurance}
-        >
-          {insuranceTypes.map((e) => (
-            <MenuItem
-              key={e.id}
-              value={e.id}
-              onClick={() => onInsuranceChange(e)}
+    <Box clone width="100%">
+      <form id="billingForm">
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              variant="outlined"
+              fullWidth
+              name="insurance"
+              label="Seguro"
+              id="insurance"
+              select
+              required
+              value={insurance}
             >
-              {e.name}
-            </MenuItem>
-          ))}
-        </TextField>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          variant="outlined"
-          fullWidth
-          name="plan"
-          label="Plan"
-          id="plan"
-          select
-          inputProps={{ form: 'orderForm' }}
-          required
-          value={plan}
-          onChange={onChange}
-        >
-          {planTypes.map((e) => (
-            <MenuItem key={e.id} value={e.id}>
-              {e.name}
-            </MenuItem>
-          ))}
-        </TextField>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          type="text"
-          variant="outlined"
-          fullWidth
-          name="cardNumber"
-          label="Número de carnet"
-          id="cardNumber"
-          value={cardNumber}
-          onChange={onChange}
-        />
-      </Grid>
-    </Grid>
+              {insuranceTypes.map((e) => (
+                <MenuItem
+                  key={e.id}
+                  value={e.id}
+                  onClick={() => onInsuranceChange(e)}
+                >
+                  {e.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              variant="outlined"
+              fullWidth
+              name="plan"
+              label="Plan"
+              id="plan"
+              select
+              required
+              value={plan}
+              onChange={onChange}
+            >
+              {planTypes.map((e) => (
+                <MenuItem key={e.id} value={e.id}>
+                  {e.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              type="text"
+              variant="outlined"
+              fullWidth
+              name="cardNumber"
+              label="Número de carnet"
+              id="cardNumber"
+              value={cardNumber}
+              onChange={onChange}
+            />
+          </Grid>
+        </Grid>
+      </form>
+    </Box>
   );
 }
 BillingForm.propTypes = {

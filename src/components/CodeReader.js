@@ -4,7 +4,6 @@
 // https://webrtc.github.io/samples/
 import {
   Box,
-  Button,
   CircularProgress,
   Container,
   IconButton,
@@ -22,7 +21,7 @@ import {
   QrcodeScan,
 } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef } from 'react';
 import { useBarcodeDetector, useCamera, useFormState } from '../hooks';
 
 const useStyles = makeStyles(() => ({
@@ -39,10 +38,10 @@ function CodeReaderComponent(
   { isOpen, title, formats, handleScan, handleClose },
   ref,
 ) {
-  const [isManual, setIsManual] = useState(false);
+  // const [isManual, setIsManual] = useState(false);
   const hasBarcodeDetector = window.BarcodeDetector;
 
-  if (!isManual && hasBarcodeDetector) {
+  if (hasBarcodeDetector) {
     const { device, devices, onDeviceChange, videoRef, stream } =
       useCamera(isOpen);
 
@@ -84,7 +83,7 @@ function CodeReaderComponent(
               </MenuItem>
             ))}
           </TextField>
-          <Box clone mt={2}>
+          {/* <Box clone mt={2}>
             <Button
               fullWidth
               variant="contained"
@@ -93,7 +92,7 @@ function CodeReaderComponent(
             >
               Ingreso manual
             </Button>
-          </Box>
+          </Box> */}
         </Box>
       </Paper>
     );
