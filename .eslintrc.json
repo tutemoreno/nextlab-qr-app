@@ -4,7 +4,13 @@
     "es2021": true,
     "jest/globals": true
   },
-  "extends": ["eslint:recommended", "plugin:react/recommended", "prettier"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:jest/recommended",
+    "prettier"
+  ],
   "parserOptions": {
     "ecmaFeatures": {
       "jsx": true
@@ -12,7 +18,7 @@
     "ecmaVersion": 12,
     "sourceType": "module"
   },
-  "plugins": ["react", "react-hooks", "jest"],
+  "plugins": ["react"],
   "rules": {
     "no-extra-semi": "off",
     "no-mixed-spaces-and-tabs": "off",

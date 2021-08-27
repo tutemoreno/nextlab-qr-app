@@ -820,6 +820,7 @@ async function getInsuranceTypes() {
     plans: e.Planes[0].Plan.map((p) => ({
       id: p.Codigo[0],
       name: p.Descripcion[0],
+      cardRequired: p.RequiereCarnet[0],
     })),
   }));
 }
@@ -1150,6 +1151,7 @@ function BillingForm({ content, onChange, setContent }) {
   const { insurance, plan, cardNumber } = content;
   const [insuranceTypes, setInsuranceTypes] = useState([]);
   const [planTypes, setPlanTypes] = useState([]);
+  const [cardRequired, setCardRequired] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -1158,11 +1160,16 @@ function BillingForm({ content, onChange, setContent }) {
   }, []);
 
   const onInsuranceChange = (e) => {
+    const defaultPlan = e.plans.length == 1 ? e.plans[0] : {};
+
     setContent((prevState) => ({
       ...prevState,
       insurance: e.id,
-      plan: e.plans.length == 1 ? e.plans[0].id : '',
+      plan: defaultPlan.id || '',
     }));
+
+    setCardRequired(defaultPlan.cardRequired);
+
     setPlanTypes(e.plans);
   };
 
@@ -1206,7 +1213,7 @@ function BillingForm({ content, onChange, setContent }) {
             >
               {planTypes.map((e) => (
                 <MenuItem key={e.id} value={e.id}>
-                  {e.name}
+                  {e.name} - {e.cardRequired}
                 </MenuItem>
               ))}
             </TextField>
@@ -1216,6 +1223,7 @@ function BillingForm({ content, onChange, setContent }) {
               type="text"
               variant="outlined"
               fullWidth
+              required={cardRequired}
               name="cardNumber"
               label="Número de carnet"
               id="cardNumber"
