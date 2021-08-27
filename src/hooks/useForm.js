@@ -12,7 +12,7 @@ export const useFormState = (initialState) => {
 
     setContent((prevState) => ({
       ...prevState,
-      [name]: type != 'checkbox' ? value : checked,
+      [name]: type != 'checkbox' ? value.toUpperCase() : checked,
     }));
   };
 

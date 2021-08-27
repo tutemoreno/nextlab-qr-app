@@ -947,6 +947,7 @@ function ContactForm({ content, onChange }) {
               name="email"
               label="Email"
               id="email"
+              required
               value={email}
               onChange={onChange}
             />
@@ -961,6 +962,7 @@ function ContactForm({ content, onChange }) {
               id="cellPhone"
               value={cellPhone}
               onChange={onChange}
+              required={!cellPhone && !phone}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -973,6 +975,7 @@ function ContactForm({ content, onChange }) {
               id="phone"
               value={phone}
               onChange={onChange}
+              required={!cellPhone && !phone}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -1039,7 +1042,9 @@ function PatientForm({ content, onChange }) {
               id="firstName"
               value={firstName}
               onChange={onChange}
-              InputProps={{ readOnly }}
+              InputProps={{
+                readOnly,
+              }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
