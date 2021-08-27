@@ -1058,14 +1058,11 @@ function PatientForm({ content, onChange }) {
               required
               fullWidth
               name="firstName"
-              autoComplete="given-name"
               label="Primer nombre"
               id="firstName"
               value={firstName}
               onChange={onChange}
-              InputProps={{
-                readOnly,
-              }}
+              InputProps={{ readOnly }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -1088,7 +1085,6 @@ function PatientForm({ content, onChange }) {
               required
               fullWidth
               name="firstSurname"
-              autoComplete="family-name"
               label="Primer apellido"
               id="firstSurname"
               value={firstSurname}

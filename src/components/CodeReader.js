@@ -42,11 +42,6 @@ function CodeReaderComponent(
   const hasBarcodeDetector = window.BarcodeDetector;
 
   if (hasBarcodeDetector) {
-    const { device, devices, onDeviceChange, videoRef, stream } =
-      useCamera(isOpen);
-
-    useBarcodeDetector({ handleScan, formats, stream, videoRef });
-
     return (
       <Paper elevation={24}>
         <Box display="flex" p={2}>
@@ -58,42 +53,7 @@ function CodeReaderComponent(
             <CloseCircle variant="contained" />
           </IconButton>
         </Box>
-        <Box width="100%">
-          <video
-            style={{ width: 'inherit', height: 'inherit' }}
-            autoPlay
-            muted
-            ref={videoRef}
-          />
-        </Box>
-        <Box p={2}>
-          <TextField
-            id="device"
-            label="Camara seccionada"
-            name="device"
-            variant="outlined"
-            fullWidth
-            value={device}
-            onChange={onDeviceChange}
-            select
-          >
-            {devices.map((e) => (
-              <MenuItem key={e.deviceId} value={e.deviceId}>
-                {e.label}
-              </MenuItem>
-            ))}
-          </TextField>
-          {/* <Box clone mt={2}>
-            <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              onClick={() => setIsManual(true)}
-            >
-              Ingreso manual
-            </Button>
-          </Box> */}
-        </Box>
+        <Camera isOpen={isOpen} formats={formats} handleScan={handleScan} />
       </Paper>
     );
   } else {
@@ -162,6 +122,60 @@ CodeReaderComponent.propTypes = {
 };
 
 export const CodeReader = forwardRef(CodeReaderComponent);
+
+function Camera({ isOpen, handleScan, formats }) {
+  const { device, devices, onDeviceChange, videoRef, stream } =
+    useCamera(isOpen);
+
+  useBarcodeDetector({ handleScan, formats, stream, videoRef });
+
+  return (
+    <>
+      <Box width="100%">
+        <video
+          style={{ width: 'inherit', height: 'inherit' }}
+          autoPlay
+          muted
+          ref={videoRef}
+        />
+      </Box>
+      <Box p={2}>
+        <TextField
+          id="device"
+          label="Camara seccionada"
+          name="device"
+          variant="outlined"
+          fullWidth
+          value={device}
+          onChange={onDeviceChange}
+          select
+        >
+          {devices.map((e) => (
+            <MenuItem key={e.deviceId} value={e.deviceId}>
+              {e.label}
+            </MenuItem>
+          ))}
+        </TextField>
+        {/* <Box clone mt={2}>
+            <Button
+              fullWidth
+              variant="contained"
+              color="primary"
+              onClick={() => setIsManual(true)}
+            >
+              Ingreso manual
+            </Button>
+          </Box> */}
+      </Box>
+    </>
+  );
+}
+
+Camera.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  handleScan: PropTypes.func.isRequired,
+  formats: PropTypes.array.isRequired,
+};
 
 function CodeIcon({ format, ...rest }) {
   let icon;
