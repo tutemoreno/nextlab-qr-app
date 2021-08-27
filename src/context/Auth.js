@@ -19,7 +19,6 @@ const {
 
 export function ProvideAuth({ children }) {
   const auth = useProvideAuth();
-  //asda
 
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }

@@ -58,6 +58,9 @@ const initialState = {
   insurance: '',
   plan: '',
   cardNumber: '',
+  lastInsurance: '',
+  lastPlan: '',
+  lastCardNumber: '',
 };
 
 const initialScannerState = {
@@ -233,7 +236,16 @@ export const PatientInfo = () => {
 
     try {
       const {
-        parsedInfo: { patientCode, email, cellPhone, phone, address },
+        parsedInfo: {
+          patientCode,
+          email,
+          cellPhone,
+          phone,
+          address,
+          lastInsurance,
+          lastPlan,
+          lastCardNumber,
+        },
         error,
       } = await getPatientInfo({
         documentId: newContent.documentId,
@@ -248,6 +260,9 @@ export const PatientInfo = () => {
           cellPhone,
           phone,
           address,
+          lastInsurance,
+          lastPlan,
+          lastCardNumber,
         };
       }
     } catch (error) {
@@ -586,6 +601,9 @@ async function getPatientInfo(content) {
     Telefono: [phone],
     Direccion: [address],
     Error: [error],
+    UltimoSeguro: [lastInsurance],
+    UltimoPlan: [lastPlan],
+    UltimoCarnet: [lastCardNumber],
   } = Paciente;
 
   return {
@@ -602,6 +620,9 @@ async function getPatientInfo(content) {
       phone: phone ? retrieveNumber(phone) : '',
       address,
       error,
+      lastInsurance,
+      lastPlan,
+      lastCardNumber,
     },
     error,
   };
@@ -1153,16 +1174,37 @@ PatientForm.propTypes = {
 };
 
 function BillingForm({ content, onChange, setContent }) {
-  const { insurance, plan, cardNumber } = content;
+  const {
+    insurance,
+    plan,
+    cardNumber,
+    lastInsurance,
+    lastPlan,
+    lastCardNumber,
+  } = content;
+
   const [insuranceTypes, setInsuranceTypes] = useState([]);
   const [planTypes, setPlanTypes] = useState([]);
   const [cardRequired, setCardRequired] = useState(false);
 
   useEffect(() => {
     (async () => {
-      setInsuranceTypes(await getInsuranceTypes());
+      const insurances = await getInsuranceTypes();
+      const insuranceFound = insurances.find((i) => i.id === lastInsurance); //lastInsurance
+
+      setInsuranceTypes(insurances);
+
+      if (insuranceFound) {
+        setPlanTypes(insuranceFound.plans);
+        setContent((prevState) => ({
+          ...prevState,
+          insurance: lastInsurance,
+          plan: lastPlan,
+          cardNumber: lastCardNumber,
+        }));
+      }
     })();
-  }, []);
+  }, [lastInsurance]);
 
   const onInsuranceChange = (insurance) => {
     const plan =
