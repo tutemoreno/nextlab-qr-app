@@ -1159,18 +1159,29 @@ function BillingForm({ content, onChange, setContent }) {
     })();
   }, []);
 
-  const onInsuranceChange = (e) => {
-    const defaultPlan = e.plans.length == 1 ? e.plans[0] : {};
+  const onInsuranceChange = (insurance) => {
+    const plan =
+      insurance.plans.length == 1
+        ? insurance.plans[0]
+        : { id: '', cardRequired: false };
 
     setContent((prevState) => ({
       ...prevState,
-      insurance: e.id,
-      plan: defaultPlan.id || '',
+      insurance: insurance.id,
     }));
 
-    setCardRequired(defaultPlan.cardRequired);
+    setPlanTypes(insurance.plans);
 
-    setPlanTypes(e.plans);
+    setPlan(plan);
+  };
+
+  const setPlan = (plan) => {
+    setContent((prevState) => ({
+      ...prevState,
+      plan: plan.id,
+    }));
+
+    setCardRequired(plan.cardRequired);
   };
 
   return (
@@ -1209,11 +1220,10 @@ function BillingForm({ content, onChange, setContent }) {
               select
               required
               value={plan}
-              onChange={onChange}
             >
               {planTypes.map((e) => (
-                <MenuItem key={e.id} value={e.id}>
-                  {e.name} - {e.cardRequired}
+                <MenuItem key={e.id} value={e.id} onClick={() => setPlan(e)}>
+                  {e.name}
                 </MenuItem>
               ))}
             </TextField>
