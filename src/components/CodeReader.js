@@ -9,7 +9,7 @@ import {
   CloseCircle,
   CreditCardScan,
   MagnifyScan,
-  QrcodeScan,
+  QrcodeScan
 } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import React, { forwardRef, useState } from 'react';
@@ -22,7 +22,7 @@ import {
   MenuItem,
   Paper,
   TextField,
-  Typography,
+  Typography
 } from './';
 
 const useStyles = makeStyles(() => ({
@@ -42,8 +42,8 @@ function CodeReaderComponent(
   { isOpen, title, formats, handleScan, handleClose },
   ref,
 ) {
-  const [isManual, setIsManual] = useState(false);
-  const showCamera = hasBarcodeDetector && !isManual;
+  const [showInput, setShowInput] = useState(false);
+  const showCamera = hasBarcodeDetector && !showInput;
 
   return (
     <Container disableGutters maxWidth={showCamera ? 'lg' : 'xs'}>
@@ -58,12 +58,18 @@ function CodeReaderComponent(
           </IconButton>
         </Box>
         {showCamera ? (
-          <Camera isOpen={isOpen} formats={formats} handleScan={handleScan} />
+          <Camera
+            isOpen={isOpen}
+            formats={formats}
+            handleScan={handleScan}
+            switchInput={() => setShowInput(true)}
+          />
         ) : (
           <FocusedInput
             inputRef={ref}
             formats={formats}
             handleScan={handleScan}
+            switchCamera={() => setShowInput(false)}
           />
         )}
       </Paper>
