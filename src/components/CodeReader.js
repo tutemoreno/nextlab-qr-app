@@ -6,10 +6,12 @@
 import { makeStyles } from '@material-ui/core/styles';
 import {
   BarcodeScan,
+  Camera as CameraIcon,
   CloseCircle,
   CreditCardScan,
+  Keyboard,
   MagnifyScan,
-  QrcodeScan
+  QrcodeScan,
 } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import React, { forwardRef, useState } from 'react';
@@ -19,10 +21,11 @@ import {
   CircularProgress,
   Container,
   IconButton,
+  InputAdornment,
   MenuItem,
   Paper,
   TextField,
-  Typography
+  Typography,
 } from './';
 
 const useStyles = makeStyles(() => ({
@@ -87,7 +90,7 @@ CodeReaderComponent.propTypes = {
 
 export const CodeReader = forwardRef(CodeReaderComponent);
 
-function Camera({ isOpen, handleScan, formats }) {
+function Camera({ isOpen, handleScan, formats, switchInput }) {
   const { device, devices, onDeviceChange, videoRef, stream } =
     useCamera(isOpen);
 
@@ -108,8 +111,6 @@ function Camera({ isOpen, handleScan, formats }) {
           id="device"
           label="Camara seccionada"
           name="device"
-          variant="outlined"
-          fullWidth
           value={device}
           onChange={onDeviceChange}
           select
@@ -120,16 +121,9 @@ function Camera({ isOpen, handleScan, formats }) {
             </MenuItem>
           ))}
         </TextField>
-        {/* <Box clone mt={2}>
-            <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              onClick={() => setIsManual(true)}
-            >
-              Ingreso manual
-            </Button>
-          </Box> */}
+        <IconButton onClick={switchInput}>
+          <Keyboard color="primary" fontSize="large" />
+        </IconButton>
       </Box>
     </>
   );
@@ -139,9 +133,10 @@ Camera.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   handleScan: PropTypes.func.isRequired,
   formats: PropTypes.array.isRequired,
+  switchInput: PropTypes.func,
 };
 
-function FocusedInput({ formats, handleScan, inputRef }) {
+function FocusedInput({ formats, handleScan, inputRef, switchCamera }) {
   const classes = useStyles();
   const { content, onChange, setValue } = useFormState({ scanner: '' }),
     { scanner } = content;
@@ -177,6 +172,15 @@ function FocusedInput({ formats, handleScan, inputRef }) {
             onChange={onChange}
             onBlur={() => inputRef.current.focus()}
             inputRef={inputRef}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton color="primary" onClick={switchCamera}>
+                    <CameraIcon fontSize="large" />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
         </form>
       </Box>
@@ -187,6 +191,7 @@ FocusedInput.propTypes = {
   inputRef: PropTypes.object.isRequired,
   handleScan: PropTypes.func.isRequired,
   formats: PropTypes.array.isRequired,
+  switchCamera: PropTypes.func,
 };
 
 function CodeIcon({ format, ...rest }) {
