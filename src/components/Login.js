@@ -35,7 +35,8 @@ export const Login = () => {
     try {
       const loggedIn = await auth.signIn(content);
 
-      if (!loggedIn) openAlert('Usuario/Contraseña incorrectos', 'error');
+      if (loggedIn) window.scroll({ top: 0, behavior: 'smooth' });
+      else openAlert('Usuario/Contraseña incorrectos', 'error');
     } catch (error) {
       console.log(error);
       openAlert('Error de comunicación', 'error');
