@@ -98,13 +98,24 @@ function Camera({ isOpen, handleScan, formats, switchInput }) {
 
   return (
     <>
-      <Box width="100%">
+      <Box position="relative" width="100%">
         <video
           style={{ width: 'inherit', height: 'inherit' }}
           autoPlay
           muted
           ref={videoRef}
         />
+        <Box
+          clone
+          position="absolute"
+          bottom="20px"
+          right="20px"
+          bgcolor="primary.main"
+        >
+          <IconButton onClick={switchInput}>
+            <Keyboard htmlColor="#fff" fontSize="large" />
+          </IconButton>
+        </Box>
       </Box>
       <Box p={2}>
         <TextField
@@ -121,9 +132,6 @@ function Camera({ isOpen, handleScan, formats, switchInput }) {
             </MenuItem>
           ))}
         </TextField>
-        <IconButton onClick={switchInput}>
-          <Keyboard color="primary" fontSize="large" />
-        </IconButton>
       </Box>
     </>
   );
@@ -157,14 +165,14 @@ function FocusedInput({ formats, handleScan, inputRef, switchCamera }) {
       <Box my={10} position="relative">
         <CodeIcon format={formats[0]} className={classes.codeIcon} />
 
-        <CircularProgress size="200px" className={classes.progress} />
+        <Box clone position="absolute" bottom="-50px" right="-50px">
+          <CircularProgress size="200px" _className={classes.progress} />
+        </Box>
       </Box>
       <Box clone p={2} width="100%">
         <form onSubmit={handleSubmit}>
           <TextField
-            variant="outlined"
             required
-            fullWidth
             id="scanner"
             label="Scanner"
             name="scanner"
@@ -173,7 +181,7 @@ function FocusedInput({ formats, handleScan, inputRef, switchCamera }) {
             onBlur={() => inputRef.current.focus()}
             inputRef={inputRef}
             InputProps={{
-              endAdornment: (
+              endAdornment: hasBarcodeDetector && (
                 <InputAdornment position="end">
                   <IconButton color="primary" onClick={switchCamera}>
                     <CameraIcon fontSize="large" />
