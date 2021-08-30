@@ -32,11 +32,6 @@ const useStyles = makeStyles(() => ({
   codeIcon: {
     fontSize: '100px',
   },
-  progress: {
-    position: 'absolute',
-    top: '-50px',
-    left: '-50px',
-  },
 }));
 
 const hasBarcodeDetector = !!window.BarcodeDetector;
@@ -166,7 +161,7 @@ function FocusedInput({ formats, handleScan, inputRef, switchCamera }) {
         <CodeIcon format={formats[0]} className={classes.codeIcon} />
 
         <Box clone position="absolute" bottom="-50px" right="-50px">
-          <CircularProgress size="200px" _className={classes.progress} />
+          <CircularProgress size="200px" />
         </Box>
       </Box>
       <Box clone p={2} width="100%">

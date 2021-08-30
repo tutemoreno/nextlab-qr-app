@@ -406,7 +406,7 @@ export const PatientInfo = () => {
       };
     });
   };
-  console.log('state');
+
   return (
     <Container>
       <Slide
