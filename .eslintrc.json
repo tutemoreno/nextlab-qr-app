@@ -5,6 +5,8 @@
     "jest/globals": true
   },
   "extends": [
+    // "react-app",
+    // "react-app/jest",
     "eslint:recommended",
     "plugin:react/recommended",
     // "plugin:react-hooks/recommended",
@@ -23,7 +25,8 @@
     "no-extra-semi": "off",
     "no-mixed-spaces-and-tabs": "off",
     "no-unexpected-multiline": "off",
-    "no-unused-vars": "warn"
+    "no-unused-vars": "warn",
+    "eqeqeq": "off"
   },
   "globals": {
     "process": "readonly"

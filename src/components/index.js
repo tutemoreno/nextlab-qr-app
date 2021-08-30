@@ -1,4 +1,6 @@
+export * from '@material-ui/core';
 export * from './AccordionHoc';
+export { default as Button } from './Button';
 export * from './CodeReader';
 export * from './HeaderHoc';
 export * from './Home';
@@ -6,3 +8,4 @@ export * from './ListHoc';
 export * from './Login';
 export * from './Navbar';
 export * from './PatientInfo';
+export { default as TextField } from './TextField';

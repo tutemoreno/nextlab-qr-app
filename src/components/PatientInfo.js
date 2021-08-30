@@ -1,17 +1,3 @@
-import {
-  Box,
-  Button,
-  Container,
-  Grid,
-  Grow,
-  IconButton,
-  InputAdornment,
-  MenuItem,
-  Paper,
-  Slide,
-  TextField,
-  Typography,
-} from '@material-ui/core';
 import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
 import { Alert, CreditCardScan, Magnify } from 'mdi-material-ui';
@@ -22,7 +8,24 @@ import { useHistory } from 'react-router-dom';
 import xml2js from 'xml2js';
 import { useAlert, useAuth } from '../context';
 import { useFormState } from '../hooks';
-import { AccordionHoc, CodeReader, HeaderHoc, ListHoc } from './';
+import {
+  AccordionHoc,
+  Box,
+  Button,
+  CodeReader,
+  Container,
+  Grid,
+  Grow,
+  HeaderHoc,
+  IconButton,
+  InputAdornment,
+  ListHoc,
+  MenuItem,
+  Paper,
+  Slide,
+  TextField,
+  Typography,
+} from './';
 
 const initialState = {
   // qr
@@ -119,10 +122,6 @@ export const PatientInfo = () => {
     useFormState(initialState);
   const [accordionState, setAccordionState] = useState(initialAccordionState);
   const [isValidForm, setIsValidForm] = useState(true);
-  const documentForm = document.querySelector('#documentForm');
-  const patientForm = document.querySelector('#patientForm');
-  const contactForm = document.querySelector('#contactForm');
-  const billingForm = document.querySelector('#billingForm');
 
   const [notificationState, setNotificationState] = useState(
     initialNotificationState,
@@ -335,10 +334,18 @@ export const PatientInfo = () => {
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
 
-    const isDocumentFormValid = documentForm.checkValidity();
-    const isPatientFormValid = patientForm.checkValidity();
-    const isContactFormValid = contactForm.checkValidity();
-    const isBillingFormValid = billingForm.checkValidity();
+    const isDocumentFormValid = document
+      .querySelector('#documentForm')
+      .checkValidity();
+    const isPatientFormValid = document
+      .querySelector('#patientForm')
+      .checkValidity();
+    const isContactFormValid = document
+      .querySelector('#contactForm')
+      .checkValidity();
+    const isBillingFormValid = document
+      .querySelector('#billingForm')
+      .checkValidity();
 
     if (
       isDocumentFormValid &&
@@ -371,10 +378,11 @@ export const PatientInfo = () => {
 
   useEffect(() => {
     if (!isValidForm) {
-      documentForm.reportValidity();
-      patientForm.reportValidity();
-      contactForm.reportValidity();
-      billingForm.reportValidity();
+      document.querySelector('#documentForm').reportValidity();
+      document.querySelector('#patientForm').reportValidity();
+      document.querySelector('#contactForm').reportValidity();
+      document.querySelector('#billingForm').reportValidity();
+
       setIsValidForm(true);
     }
   }, [isValidForm]);
@@ -398,7 +406,7 @@ export const PatientInfo = () => {
       };
     });
   };
-
+  console.log('state');
   return (
     <Container>
       <Slide
@@ -446,13 +454,7 @@ export const PatientInfo = () => {
               </Box>
             </Paper>
             <Box clone mt={3}>
-              <Button
-                type="button"
-                fullWidth
-                variant="contained"
-                color="secondary"
-                onClick={newOrden}
-              >
+              <Button type="button" color="secondary" onClick={newOrden}>
                 Nueva orden
               </Button>
             </Box>
@@ -539,22 +541,14 @@ export const PatientInfo = () => {
             <Box width="100%" mt={3}>
               <Grid container spacing={2}>
                 <Grid item xs={6}>
-                  <Button
-                    type="button"
-                    fullWidth
-                    variant="contained"
-                    color="secondary"
-                    onClick={newOrden}
-                  >
+                  <Button type="button" color="secondary" onClick={newOrden}>
                     Cancelar
                   </Button>
                 </Grid>
                 <Grid item xs={6}>
                   <Button
                     type="submit"
-                    fullWidth
                     form="orderForm"
-                    variant="contained"
                     color="primary"
                     onClick={handleSubmitOrder}
                   >
@@ -886,8 +880,6 @@ function DocumentForm({
               id="documentType"
               label="Tipo de documento"
               name="documentType"
-              variant="outlined"
-              fullWidth
               value={documentType}
               onChange={(e) => {
                 setValue('documentId', '');
@@ -906,9 +898,7 @@ function DocumentForm({
           <Grid item xs>
             <TextField
               type="text"
-              variant="outlined"
               required
-              fullWidth
               name="documentId"
               label="Documento"
               id="documentId"
@@ -963,8 +953,6 @@ function ContactForm({ content, onChange }) {
           <Grid item xs={12} sm={6}>
             <TextField
               type="email"
-              variant="outlined"
-              fullWidth
               name="email"
               label="Email"
               id="email"
@@ -976,8 +964,6 @@ function ContactForm({ content, onChange }) {
           <Grid item xs={12} sm={6}>
             <TextField
               type="tel"
-              variant="outlined"
-              fullWidth
               name="cellPhone"
               label="Celular"
               id="cellPhone"
@@ -989,8 +975,6 @@ function ContactForm({ content, onChange }) {
           <Grid item xs={12} sm={6}>
             <TextField
               type="tel"
-              variant="outlined"
-              fullWidth
               name="phone"
               label="Teléfono fijo"
               id="phone"
@@ -1002,8 +986,6 @@ function ContactForm({ content, onChange }) {
           <Grid item xs={12} sm={6}>
             <TextField
               type="text"
-              variant="outlined"
-              fullWidth
               name="address"
               label="Dirección"
               id="address"
@@ -1014,9 +996,7 @@ function ContactForm({ content, onChange }) {
           <Grid item xs={12}>
             <TextField
               type="text"
-              variant="outlined"
               multiline
-              fullWidth
               rows={4}
               name="observation"
               label="Observaciones"
@@ -1054,9 +1034,7 @@ function PatientForm({ content, onChange }) {
           <Grid item xs={12} sm={6}>
             <TextField
               type="text"
-              variant="outlined"
               required
-              fullWidth
               name="firstName"
               label="Primer nombre"
               id="firstName"
@@ -1068,8 +1046,6 @@ function PatientForm({ content, onChange }) {
           <Grid item xs={12} sm={6}>
             <TextField
               type="text"
-              variant="outlined"
-              fullWidth
               name="secondName"
               label="Segundo nombre"
               id="secondName"
@@ -1081,9 +1057,7 @@ function PatientForm({ content, onChange }) {
           <Grid item xs={12} sm={6}>
             <TextField
               type="text"
-              variant="outlined"
               required
-              fullWidth
               name="firstSurname"
               label="Primer apellido"
               id="firstSurname"
@@ -1095,8 +1069,6 @@ function PatientForm({ content, onChange }) {
           <Grid item xs={12} sm={6}>
             <TextField
               type="text"
-              variant="outlined"
-              fullWidth
               name="secondSurname"
               label="Segundo apellido"
               id="secondSurname"
@@ -1135,8 +1107,6 @@ function PatientForm({ content, onChange }) {
               id="gender"
               label="Género"
               name="gender"
-              variant="outlined"
-              fullWidth
               required
               value={gender}
               onChange={onChange}
@@ -1150,8 +1120,6 @@ function PatientForm({ content, onChange }) {
           <Grid item xs={12} sm={6}>
             <TextField
               type="text"
-              variant="outlined"
-              fullWidth
               name="passport"
               label="Pasaporte"
               id="passport"
@@ -1233,8 +1201,6 @@ function BillingForm({ content, onChange, setContent }) {
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
             <TextField
-              variant="outlined"
-              fullWidth
               name="insurance"
               label="Seguro"
               id="insurance"
@@ -1255,8 +1221,6 @@ function BillingForm({ content, onChange, setContent }) {
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
-              variant="outlined"
-              fullWidth
               name="plan"
               label="Plan"
               id="plan"
@@ -1274,8 +1238,6 @@ function BillingForm({ content, onChange, setContent }) {
           <Grid item xs={12} sm={6}>
             <TextField
               type="text"
-              variant="outlined"
-              fullWidth
               required={cardRequired}
               name="cardNumber"
               label="Número de carnet"

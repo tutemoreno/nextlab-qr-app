@@ -2,16 +2,7 @@
 // https://itnext.io/accessing-the-webcam-with-javascript-and-react-33cbe92f49cb
 // https://googlechrome.github.io/samples/image-capture/index.html
 // https://webrtc.github.io/samples/
-import {
-  Box,
-  CircularProgress,
-  Container,
-  IconButton,
-  MenuItem,
-  Paper,
-  TextField,
-  Typography,
-} from '@material-ui/core';
+
 import { makeStyles } from '@material-ui/core/styles';
 import {
   BarcodeScan,
@@ -21,8 +12,18 @@ import {
   QrcodeScan,
 } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState } from 'react';
 import { useBarcodeDetector, useCamera, useFormState } from '../hooks';
+import {
+  Box,
+  CircularProgress,
+  Container,
+  IconButton,
+  MenuItem,
+  Paper,
+  TextField,
+  Typography,
+} from './';
 
 const useStyles = makeStyles(() => ({
   codeIcon: {
@@ -34,15 +35,18 @@ const useStyles = makeStyles(() => ({
     left: '-50px',
   },
 }));
+
+const hasBarcodeDetector = !!window.BarcodeDetector;
+
 function CodeReaderComponent(
   { isOpen, title, formats, handleScan, handleClose },
   ref,
 ) {
-  // const [isManual, setIsManual] = useState(false);
-  const hasBarcodeDetector = window.BarcodeDetector;
+  const [isManual, setIsManual] = useState(false);
+  const showCamera = hasBarcodeDetector && !isManual;
 
-  if (hasBarcodeDetector) {
-    return (
+  return (
+    <Container disableGutters maxWidth={showCamera ? 'lg' : 'xs'}>
       <Paper elevation={24}>
         <Box display="flex" p={2}>
           <Box clone flexGrow={1}>
@@ -53,64 +57,18 @@ function CodeReaderComponent(
             <CloseCircle variant="contained" />
           </IconButton>
         </Box>
-        <Camera isOpen={isOpen} formats={formats} handleScan={handleScan} />
+        {showCamera ? (
+          <Camera isOpen={isOpen} formats={formats} handleScan={handleScan} />
+        ) : (
+          <FocusedInput
+            inputRef={ref}
+            formats={formats}
+            handleScan={handleScan}
+          />
+        )}
       </Paper>
-    );
-  } else {
-    const classes = useStyles();
-    const { content, onChange, setValue } = useFormState({ scanner: '' }),
-      { scanner } = content;
-
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      handleScan(scanner);
-      setValue('scanner', '');
-    };
-
-    return (
-      <Container disableGutters maxWidth="xs">
-        <Paper elevation={24}>
-          <Box display="flex" p={2}>
-            <Box clone flexGrow={1}>
-              <Typography variant="h6">{title}</Typography>
-            </Box>
-
-            <IconButton color="secondary" onClick={handleClose}>
-              <CloseCircle variant="contained" />
-            </IconButton>
-          </Box>
-          <Box
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Box my={10} position="relative">
-              <CodeIcon format={formats[0]} className={classes.codeIcon} />
-
-              <CircularProgress size="200px" className={classes.progress} />
-            </Box>
-            <Box clone p={2} width="100%">
-              <form onSubmit={handleSubmit}>
-                <TextField
-                  variant="outlined"
-                  required
-                  fullWidth
-                  id="scanner"
-                  label="Scanner"
-                  name="scanner"
-                  value={scanner}
-                  onChange={onChange}
-                  onBlur={() => ref.current.focus()}
-                  inputRef={ref}
-                />
-              </form>
-            </Box>
-          </Box>
-        </Paper>
-      </Container>
-    );
-  }
+    </Container>
+  );
 }
 
 CodeReaderComponent.propTypes = {
@@ -173,6 +131,54 @@ function Camera({ isOpen, handleScan, formats }) {
 
 Camera.propTypes = {
   isOpen: PropTypes.bool.isRequired,
+  handleScan: PropTypes.func.isRequired,
+  formats: PropTypes.array.isRequired,
+};
+
+function FocusedInput({ formats, handleScan, inputRef }) {
+  const classes = useStyles();
+  const { content, onChange, setValue } = useFormState({ scanner: '' }),
+    { scanner } = content;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleScan(scanner);
+    setValue('scanner', '');
+  };
+
+  return (
+    <Box
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+    >
+      <Box my={10} position="relative">
+        <CodeIcon format={formats[0]} className={classes.codeIcon} />
+
+        <CircularProgress size="200px" className={classes.progress} />
+      </Box>
+      <Box clone p={2} width="100%">
+        <form onSubmit={handleSubmit}>
+          <TextField
+            variant="outlined"
+            required
+            fullWidth
+            id="scanner"
+            label="Scanner"
+            name="scanner"
+            value={scanner}
+            onChange={onChange}
+            onBlur={() => inputRef.current.focus()}
+            inputRef={inputRef}
+          />
+        </form>
+      </Box>
+    </Box>
+  );
+}
+FocusedInput.propTypes = {
+  inputRef: PropTypes.object.isRequired,
   handleScan: PropTypes.func.isRequired,
   formats: PropTypes.array.isRequired,
 };
