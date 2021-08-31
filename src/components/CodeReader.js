@@ -101,10 +101,10 @@ function Camera({ isOpen, handleScan, formats, switchInput }) {
           ref={videoRef}
         />
         <Box
-          clone
           position="absolute"
           bottom="20px"
           right="20px"
+          borderRadius="50%"
           bgcolor="primary.main"
         >
           <IconButton onClick={switchInput}>
@@ -157,7 +157,7 @@ function FocusedInput({ formats, handleScan, inputRef, switchCamera }) {
       justifyContent="center"
       alignItems="center"
     >
-      <Box my={10} position="relative">
+      <Box my={10} position="relative" display="flex">
         <CodeIcon format={formats[0]} className={classes.codeIcon} />
 
         <Box clone position="absolute" bottom="-50px" right="-50px">
