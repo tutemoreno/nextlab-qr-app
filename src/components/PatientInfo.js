@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Alert, CreditCardScan, Magnify } from 'mdi-material-ui';
+import { Alert, CreditCardScan, Delete, Magnify } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import qs from 'qs';
 import React, { useEffect, useRef, useState } from 'react';
@@ -162,8 +162,8 @@ export const PatientInfo = () => {
 
         toggleView('form');
       }
-    } catch (error) {
-      console.log(error);
+    } catch ({ message, type }) {
+      openAlert(message, type || 'error');
     }
   };
   const [scannerState, setScannerState] = useState({
@@ -240,27 +240,24 @@ export const PatientInfo = () => {
           lastPlan,
           lastCardNumber,
         },
-        error,
       } = await getPatientInfo({
         documentId: newContent.documentId,
         documentType: state.documentType,
       });
 
-      if (error.Codigo == '0') {
-        newContent = {
-          ...newContent,
-          patientCode,
-          email,
-          cellPhone,
-          phone,
-          address,
-          lastInsurance,
-          lastPlan,
-          lastCardNumber,
-        };
-      }
-    } catch (error) {
-      console.log(error);
+      newContent = {
+        ...newContent,
+        patientCode,
+        email,
+        cellPhone,
+        phone,
+        address,
+        lastInsurance,
+        lastPlan,
+        lastCardNumber,
+      };
+    } catch ({ message, type }) {
+      openAlert(message, type || 'error');
     }
 
     setState((prevState) => ({
@@ -292,10 +289,22 @@ export const PatientInfo = () => {
   };
 
   const handleDocumentSubmit = async () => {
-    try {
-      const { parsedInfo, error } = await getPatientInfo(state);
+    const { isReadOnly } = state;
+    if (isReadOnly) {
+      setState(
+        ({ branch, sampleNumber, sampleType, analisis, protocolName }) => ({
+          ...initialState,
+          branch,
+          sampleNumber,
+          sampleType,
+          analisis,
+          protocolName,
+        }),
+      );
+    } else {
+      try {
+        const { parsedInfo } = await getPatientInfo(state);
 
-      if (error.Codigo == '0') {
         focusPatientAccordion();
 
         setState((prevState) => ({
@@ -303,9 +312,9 @@ export const PatientInfo = () => {
           ...parsedInfo,
           isReadOnly: true,
         }));
-      } else openAlert(error.Descripcion, 'warning');
-    } catch (error) {
-      console.log(error);
+      } catch ({ message, type }) {
+        openAlert(message, type || 'error');
+      }
     }
   };
 
@@ -357,8 +366,8 @@ export const PatientInfo = () => {
           description: orderNumber,
         });
         toggleView('notification');
-      } catch (error) {
-        openAlert(error, 'error');
+      } catch ({ message, type }) {
+        openAlert(message, type || 'error');
       }
     } else {
       setAccordionState({
@@ -573,6 +582,9 @@ async function getPatientInfo({ documentId, documentType }) {
     }),
   });
 
+  if (Paciente.Error[0].Codigo[0] != '0')
+    throw { message: Paciente.Error[0].Descripcion[0] };
+
   const {
     Codigo: [patientCode],
     Nombre: [firstName],
@@ -585,7 +597,6 @@ async function getPatientInfo({ documentId, documentType }) {
     Celular: [cellPhone],
     Telefono: [phone],
     Direccion: [address],
-    Error: [error],
     UltimoSeguro: [lastInsurance],
     UltimoPlan: [lastPlan],
     UltimoCarnet: [lastCardNumber],
@@ -599,17 +610,17 @@ async function getPatientInfo({ documentId, documentType }) {
       firstSurname,
       secondSurname,
       gender,
-      birthDate,
+      birthDate: birthDate
+        ? birthDate.split('T')[0].split('-').reverse().join('/')
+        : '',
       email,
       cellPhone: cellPhone ? retrieveNumber(cellPhone) : '',
       phone: phone ? retrieveNumber(phone) : '',
       address,
-      error,
       lastInsurance,
       lastPlan,
       lastCardNumber,
     },
-    error,
   };
 }
 
@@ -655,7 +666,7 @@ async function sendOrder(state, ogirinCode) {
       nombre: firstName,
       nombre2: secondName,
       sexo: gender,
-      fecha_nacimiento: birthDate.toISOString(),
+      fecha_nacimiento: birthDate,
       pasaporte: passport,
       email,
       celular: cellPhone,
@@ -664,11 +675,8 @@ async function sendOrder(state, ogirinCode) {
     }),
   });
 
-  const {
-    Error: [error],
-  } = Paciente;
-
-  if (error.Codigo[0] != '0') throw new Error(error.Descripcion[0]);
+  if (Paciente.Error[0].Codigo[0] != '0')
+    throw { message: Paciente.Error[0].Descripcion[0] };
 
   const data = xmlBuilder.buildObject({
     'soap12:Envelope': {
@@ -701,7 +709,7 @@ async function sendOrder(state, ogirinCode) {
               Nombre: firstName,
               Nombre2: secondName,
               Sexo: gender,
-              FechaNacimiento: birthDate.toISOString(),
+              FechaNacimiento: birthDate,
               Observacion: observation,
               Telefono: phone,
               Email: email,
@@ -840,13 +848,7 @@ async function axiosRequest(cfg) {
 
 const initialDocumentTypesState = [{ id: 'CI', name: 'Cédula' }];
 
-function DocumentForm({
-  handleSubmit,
-  state,
-  openScanner,
-  setValue,
-  setState,
-}) {
+function DocumentForm({ state, setState, handleSubmit, openScanner }) {
   const { documentType, documentId, isReadOnly: readOnly } = state;
   const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
 
@@ -894,7 +896,7 @@ function DocumentForm({
               name="documentId"
               label="Documento"
               value={documentId}
-              setValue={setValue}
+              setState={setState}
               InputProps={{
                 readOnly,
                 endAdornment: (
@@ -912,7 +914,11 @@ function DocumentForm({
             />
           </Grid>
           <IconButton disabled={!documentId} color="primary" type="submit">
-            <Magnify fontSize="large" />
+            {readOnly ? (
+              <Delete fontSize="large" />
+            ) : (
+              <Magnify fontSize="large" />
+            )}
           </IconButton>
         </Grid>
       </form>
@@ -923,11 +929,10 @@ DocumentForm.propTypes = {
   openScanner: PropTypes.func.isRequired,
   handleSubmit: PropTypes.func.isRequired,
   state: PropTypes.object.isRequired,
-  setValue: PropTypes.func.isRequired,
   setState: PropTypes.func.isRequired,
 };
 
-function ContactForm({ state, setValue }) {
+function ContactForm({ state, setState }) {
   const { email, cellPhone, phone, address, observation } = state;
 
   return (
@@ -941,7 +946,7 @@ function ContactForm({ state, setValue }) {
               label="Email"
               required
               value={email}
-              setValue={setValue}
+              setState={setState}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -950,7 +955,7 @@ function ContactForm({ state, setValue }) {
               name="cellPhone"
               label="Celular"
               value={cellPhone}
-              setValue={setValue}
+              setState={setState}
               required={!cellPhone && !phone}
             />
           </Grid>
@@ -960,7 +965,7 @@ function ContactForm({ state, setValue }) {
               name="phone"
               label="Teléfono fijo"
               value={phone}
-              setValue={setValue}
+              setState={setState}
               required={!cellPhone && !phone}
             />
           </Grid>
@@ -970,7 +975,7 @@ function ContactForm({ state, setValue }) {
               name="address"
               label="Dirección"
               value={address}
-              setValue={setValue}
+              setState={setState}
             />
           </Grid>
           <Grid item xs={12}>
@@ -981,7 +986,7 @@ function ContactForm({ state, setValue }) {
               name="observation"
               label="Observaciones"
               value={observation}
-              setValue={setValue}
+              setState={setState}
             />
           </Grid>
         </Grid>
@@ -990,7 +995,7 @@ function ContactForm({ state, setValue }) {
   );
 }
 ContactForm.propTypes = {
-  setValue: PropTypes.func.isRequired,
+  setState: PropTypes.func.isRequired,
   state: PropTypes.object.isRequired,
 };
 
@@ -1060,17 +1065,9 @@ function PatientForm({ state, setState }) {
               name="birthDate"
               label="Fecha de nacimiento"
               KeyboardButtonProps={{ color: 'primary', disabled: readOnly }}
-              value={birthDate}
-              InputProps={{
-                readOnly,
-                onChange: (e) => {
-                  console.log(e);
-                },
-              }}
+              inputValue={birthDate}
+              InputProps={{ readOnly }}
               setState={setState}
-              onChange={(e, a) => {
-                console.log(a);
-              }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -1106,7 +1103,7 @@ PatientForm.propTypes = {
   state: PropTypes.object.isRequired,
 };
 
-function BillingForm({ content, setValue, setState }) {
+function BillingForm({ state, setState }) {
   const {
     insurance,
     plan,
@@ -1114,7 +1111,7 @@ function BillingForm({ content, setValue, setState }) {
     lastInsurance,
     lastPlan,
     lastCardNumber,
-  } = content;
+  } = state;
 
   const [insuranceTypes, setInsuranceTypes] = useState([]);
   const [planTypes, setPlanTypes] = useState([]);
@@ -1203,7 +1200,7 @@ function BillingForm({ content, setValue, setState }) {
               name="cardNumber"
               label="Número de carnet"
               value={cardNumber}
-              setValue={setValue}
+              setState={setState}
             />
           </Grid>
         </Grid>
@@ -1212,7 +1209,6 @@ function BillingForm({ content, setValue, setState }) {
   );
 }
 BillingForm.propTypes = {
-  setValue: PropTypes.func.isRequired,
   setState: PropTypes.func.isRequired,
-  content: PropTypes.object.isRequired,
+  state: PropTypes.object.isRequired,
 };

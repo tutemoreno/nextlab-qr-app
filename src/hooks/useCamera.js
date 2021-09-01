@@ -1,13 +1,12 @@
-import { useEffect, useRef } from 'react';
-import { useFormState } from './';
+import { useEffect, useRef, useState } from 'react';
 
 export const useCamera = (isOpen) => {
-  const { content, setValue, setContent } = useFormState({
+  const [state, setState] = useState({
     device: '',
     devices: [],
     stream: null,
   });
-  const { device, devices, stream } = content;
+  const { device, devices, stream } = state;
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -19,7 +18,7 @@ export const useCamera = (isOpen) => {
           (device) => device.kind === 'videoinput',
         );
 
-        setContent((prevState) => ({
+        setState((prevState) => ({
           ...prevState,
           device: videoDevices[videoDevices.length - 1].deviceId,
           devices: videoDevices,
@@ -44,7 +43,7 @@ export const useCamera = (isOpen) => {
 
         videoRef.current.srcObject = srcStream;
 
-        setValue('stream', srcStream);
+        setState('stream', srcStream);
       } catch (error) {
         console.log('[startVideo]', error);
       }
@@ -65,7 +64,7 @@ export const useCamera = (isOpen) => {
   return {
     device,
     devices,
-    setValue,
+    setState,
     stream,
     videoRef,
   };

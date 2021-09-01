@@ -15,7 +15,7 @@ import {
 } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import React, { forwardRef, useState } from 'react';
-import { useBarcodeDetector, useCamera, useFormState } from '../hooks';
+import { useBarcodeDetector, useCamera } from '../hooks';
 import {
   Box,
   CircularProgress,
@@ -86,7 +86,7 @@ CodeReaderComponent.propTypes = {
 export const CodeReader = forwardRef(CodeReaderComponent);
 
 function Camera({ isOpen, handleScan, formats, switchInput }) {
-  const { device, devices, setValue, videoRef, stream } = useCamera(isOpen);
+  const { device, devices, setState, videoRef, stream } = useCamera(isOpen);
 
   useBarcodeDetector({ handleScan, formats, stream, videoRef });
 
@@ -116,7 +116,7 @@ function Camera({ isOpen, handleScan, formats, switchInput }) {
           label="Camara seccionada"
           name="device"
           value={device}
-          setValue={setValue}
+          setState={setState}
           select
         >
           {devices.map((e) => (
@@ -139,13 +139,12 @@ Camera.propTypes = {
 
 function FocusedInput({ formats, handleScan, inputRef, switchCamera }) {
   const classes = useStyles();
-  const { content, setValue } = useFormState({ scanner: '' }),
-    { scanner } = content;
+  const [scanner, setScanner] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     handleScan(scanner);
-    setValue('scanner', '');
+    setScanner('');
   };
 
   return (
@@ -169,7 +168,7 @@ function FocusedInput({ formats, handleScan, inputRef, switchCamera }) {
             label="Scanner"
             name="scanner"
             value={scanner}
-            setValue={setValue}
+            onChange={(e) => setScanner(e.target.value.toUpperCase())}
             onBlur={() => inputRef.current.focus()}
             inputRef={inputRef}
             InputProps={{

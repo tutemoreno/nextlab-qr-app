@@ -1,7 +1,6 @@
 import { Eye, EyeOff } from 'mdi-material-ui';
 import React, { useState } from 'react';
 import { useAlert, useAuth } from '../context';
-import { useFormState } from '../hooks';
 import {
   Box,
   Button,
@@ -23,8 +22,8 @@ const initialState = {
 };
 
 export const Login = () => {
-  const { content, setValue } = useFormState(initialState),
-    { username, password, remember } = content;
+  const [state, setState] = useState(initialState),
+    { username, password, remember } = state;
   const [showPassword, setShowPassword] = useState(false);
   const auth = useAuth();
   const { openAlert } = useAlert();
@@ -33,7 +32,7 @@ export const Login = () => {
     e.preventDefault();
 
     try {
-      const loggedIn = await auth.signIn(content);
+      const loggedIn = await auth.signIn(state);
 
       if (loggedIn) window.scroll({ top: 0, behavior: 'smooth' });
       else openAlert('Usuario/Contraseña incorrectos', 'error');
@@ -56,7 +55,7 @@ export const Login = () => {
                   label="Nombre de usuario"
                   name="username"
                   value={username}
-                  setValue={setValue}
+                  setState={setState}
                   autoComplete="username"
                   autoFocus
                 />
@@ -69,7 +68,7 @@ export const Login = () => {
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   value={password}
-                  setValue={setValue}
+                  setState={setState}
                   autoComplete="current-password"
                   InputProps={{
                     endAdornment: (
@@ -91,7 +90,7 @@ export const Login = () => {
                     <Checkbox
                       name="remember"
                       checked={remember}
-                      setValue={setValue}
+                      setState={setState}
                       color="primary"
                     />
                   }
