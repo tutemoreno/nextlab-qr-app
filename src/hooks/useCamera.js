@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useFormState } from './';
 
 export const useCamera = (isOpen) => {
-  const { content, onChange, setValue, setContent } = useFormState({
+  const { content, setValue, setContent } = useFormState({
     device: '',
     devices: [],
     stream: null,
@@ -65,8 +65,8 @@ export const useCamera = (isOpen) => {
   return {
     device,
     devices,
+    setValue,
     stream,
-    onDeviceChange: onChange,
     videoRef,
   };
 };

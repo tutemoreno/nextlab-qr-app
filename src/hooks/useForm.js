@@ -1,25 +1,39 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
-export const useFormState = (initialState) => {
+export function useFormState(initialState) {
   const [content, setContent] = useState(initialState);
 
-  const setValue = (key, value) => {
+  const setValue = useCallback((key, value) => {
     setContent((prevState) => ({ ...prevState, [key]: value }));
-  };
-
-  const onChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    setContent((prevState) => ({
-      ...prevState,
-      [name]: type != 'checkbox' ? value.toUpperCase() : checked,
-    }));
-  };
+  }, []);
 
   return {
     content,
     setContent,
     setValue,
-    onChange,
   };
-};
+}
+
+export function formReducer(state, action) {
+  switch (action.type) {
+    case 'change': {
+      const { type, value, checked, name } = action.target;
+
+      switch (type) {
+        case 'text':
+          return { ...state, [name]: value.toUpperCase() };
+        case 'checkbox':
+          return { ...state, [name]: checked };
+        case 'date':
+          return { ...state, [name]: value };
+      }
+      break;
+    }
+    case 'setContent': {
+      return { ...state, ...action.value };
+    }
+    default:
+      console.log(action);
+      return state;
+  }
+}

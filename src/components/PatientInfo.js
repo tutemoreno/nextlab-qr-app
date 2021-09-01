@@ -1,4 +1,3 @@
-import { KeyboardDatePicker } from '@material-ui/pickers';
 import axios from 'axios';
 import { Alert, CreditCardScan, Magnify } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
@@ -7,7 +6,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import xml2js from 'xml2js';
 import { useAlert, useAuth } from '../context';
-import { useFormState } from '../hooks';
 import {
   AccordionHoc,
   Box,
@@ -19,6 +17,7 @@ import {
   HeaderHoc,
   IconButton,
   InputAdornment,
+  KeyboardDatePicker,
   ListHoc,
   MenuItem,
   Paper,
@@ -50,7 +49,7 @@ const initialState = {
   populationGroup: '',
   exportationDate: '',
   address: '',
-  birthDate: null,
+  birthDate: '',
   phone: '',
   fax: '',
   cellPhone: '',
@@ -118,8 +117,7 @@ export const PatientInfo = () => {
   const history = useHistory();
   const { user } = useAuth();
   const { openAlert } = useAlert();
-  const { content, setContent, setValue, onChange } =
-    useFormState(initialState);
+  const [state, setState] = useState(initialState);
   const [accordionState, setAccordionState] = useState(initialAccordionState);
   const [isValidForm, setIsValidForm] = useState(true);
 
@@ -151,7 +149,7 @@ export const PatientInfo = () => {
         });
         toggleView('notification');
       } else {
-        setContent((prevState) => ({
+        setState((prevState) => ({
           ...prevState,
           branch: Sucursal,
           sampleNumber: NroMuestra,
@@ -196,36 +194,33 @@ export const PatientInfo = () => {
     let newContent;
 
     if (split[0].length) {
-      const splittedDate = split[6].split('/'),
-        splittedName = removeDWS(split[2].trim()).split(' '),
+      // const splittedDate = split[6].split('/'),
+      const splittedName = removeDWS(split[2].trim()).split(' '),
         splittedSurname = removeDWS(split[1].trim()).split(' ');
 
       newContent = {
         documentId: split[4],
         gender: split[3],
-        birthDate: new Date(
-          splittedDate[2],
-          splittedDate[1] - 1,
-          splittedDate[0],
-        ),
+        // birthDate: new Date(
+        //   splittedDate[2],
+        //   splittedDate[1] - 1,
+        //   splittedDate[0],
+        // ),
+        birthDate: split[6],
         firstName: splittedName.shift(),
         secondName: splittedName.join(' '),
         firstSurname: splittedSurname.shift(),
         secondSurname: splittedSurname.join(' '),
       };
     } else {
-      const splittedDate = split[7].split('/'),
-        splittedName = removeDWS(split[5].trim()).split(' '),
+      // const splittedDate = split[7].split('/'),
+      const splittedName = removeDWS(split[5].trim()).split(' '),
         splittedSurname = removeDWS(split[4].trim()).split(' ');
 
       newContent = {
         documentId: split[1].trim(),
         gender: split[8],
-        birthDate: new Date(
-          splittedDate[2],
-          splittedDate[1] - 1,
-          splittedDate[0],
-        ),
+        birthDate: split[7],
         firstName: splittedName.shift(),
         secondName: splittedName.join(' '),
         firstSurname: splittedSurname.shift(),
@@ -248,7 +243,7 @@ export const PatientInfo = () => {
         error,
       } = await getPatientInfo({
         documentId: newContent.documentId,
-        documentType: content.documentType,
+        documentType: state.documentType,
       });
 
       if (error.Codigo == '0') {
@@ -268,7 +263,7 @@ export const PatientInfo = () => {
       console.log(error);
     }
 
-    setContent((prevState) => ({
+    setState((prevState) => ({
       ...prevState,
       ...newContent,
       isReadOnly: true,
@@ -298,12 +293,12 @@ export const PatientInfo = () => {
 
   const handleDocumentSubmit = async () => {
     try {
-      const { parsedInfo, error } = await getPatientInfo(content);
+      const { parsedInfo, error } = await getPatientInfo(state);
 
       if (error.Codigo == '0') {
         focusPatientAccordion();
 
-        setContent((prevState) => ({
+        setState((prevState) => ({
           ...prevState,
           ...parsedInfo,
           isReadOnly: true,
@@ -325,8 +320,9 @@ export const PatientInfo = () => {
     setScannerState({
       ...initialScannerState,
       handleScan: onBloodScan,
+      handleClose: () => history.push('/'),
     });
-    setContent(initialState);
+    setState(initialState);
     setAccordionState(initialAccordionState);
     toggleView('scanner');
   };
@@ -354,7 +350,7 @@ export const PatientInfo = () => {
       isBillingFormValid
     ) {
       try {
-        const { orderNumber, response } = await sendOrder(content, user.codigo);
+        const { orderNumber, response } = await sendOrder(state, user.codigo);
 
         setNotificationState({
           title: response.Descripcion[0],
@@ -486,11 +482,10 @@ export const PatientInfo = () => {
                 onChange={() => expandAccordion('document')}
               >
                 <DocumentForm
-                  content={content}
-                  onChange={onChange}
+                  state={state}
                   openScanner={openDocumentScanner}
                   handleSubmit={handleDocumentSubmit}
-                  setValue={setValue}
+                  setState={setState}
                 />
               </AccordionHoc>
 
@@ -500,7 +495,7 @@ export const PatientInfo = () => {
                 onChange={() => expandAccordion('patient')}
                 square
               >
-                <PatientForm content={content} onChange={onChange} />
+                <PatientForm state={state} setState={setState} />
               </AccordionHoc>
 
               <AccordionHoc
@@ -508,7 +503,7 @@ export const PatientInfo = () => {
                 expanded={accordionState.contact}
                 onChange={() => expandAccordion('contact')}
               >
-                <ContactForm content={content} onChange={onChange} />
+                <ContactForm state={state} setState={setState} />
               </AccordionHoc>
 
               <AccordionHoc
@@ -517,11 +512,13 @@ export const PatientInfo = () => {
                 onChange={() => expandAccordion('analisis')}
               >
                 <Box width="100%" display="flex" flexDirection="column">
-                  <Typography>{content.protocolName}</Typography>
-                  <Typography>{content.sampleNumber}</Typography>
+                  <Typography>{state.protocolName}</Typography>
+                  <Typography>{state.sampleNumber}</Typography>
                   <ListHoc
-                    items={content.analisis}
-                    setItems={(arr) => setValue('analisis', arr)}
+                    items={state.analisis}
+                    setItems={(analisis) =>
+                      setState((prevState) => ({ ...prevState, analisis }))
+                    }
                   />
                 </Box>
               </AccordionHoc>
@@ -531,11 +528,7 @@ export const PatientInfo = () => {
                 expanded={accordionState.billing}
                 onChange={() => expandAccordion('billing')}
               >
-                <BillingForm
-                  content={content}
-                  onChange={onChange}
-                  setContent={setContent}
-                />
+                <BillingForm state={state} setState={setState} />
               </AccordionHoc>
             </Box>
             <Box width="100%" mt={3}>
@@ -564,9 +557,7 @@ export const PatientInfo = () => {
   );
 };
 
-async function getPatientInfo(content) {
-  const { documentId, documentType } = content;
-
+async function getPatientInfo({ documentId, documentType }) {
   const { Paciente } = await axiosRequest({
     method: 'post',
     url: `${REACT_APP_PATIENT_SERVICE}/paciente_datos`,
@@ -608,7 +599,7 @@ async function getPatientInfo(content) {
       firstSurname,
       secondSurname,
       gender,
-      birthDate: new Date(birthDate),
+      birthDate,
       email,
       cellPhone: cellPhone ? retrieveNumber(cellPhone) : '',
       phone: phone ? retrieveNumber(phone) : '',
@@ -622,7 +613,7 @@ async function getPatientInfo(content) {
   };
 }
 
-async function sendOrder(content, ogirinCode) {
+async function sendOrder(state, ogirinCode) {
   const {
     // barcode
     branch,
@@ -649,7 +640,7 @@ async function sendOrder(content, ogirinCode) {
     cardNumber,
     insurance,
     plan,
-  } = content;
+  } = state;
 
   const { Paciente } = await axiosRequest({
     method: 'post',
@@ -851,12 +842,12 @@ const initialDocumentTypesState = [{ id: 'CI', name: 'Cédula' }];
 
 function DocumentForm({
   handleSubmit,
-  onChange,
-  content,
+  state,
   openScanner,
   setValue,
+  setState,
 }) {
-  const { documentType, documentId, isReadOnly: readOnly } = content;
+  const { documentType, documentId, isReadOnly: readOnly } = state;
   const [documentTypes, setDocumentTypes] = useState(initialDocumentTypesState);
 
   useEffect(() => {
@@ -877,16 +868,17 @@ function DocumentForm({
         <Grid container spacing={2}>
           <Grid item xs={12} sm={5}>
             <TextField
-              id="documentType"
               label="Tipo de documento"
               name="documentType"
               value={documentType}
               onChange={(e) => {
-                setValue('documentId', '');
-                onChange(e);
+                setState((prevState) => ({
+                  ...prevState,
+                  documentId: '',
+                  documentType: e.target.value,
+                }));
               }}
               select
-              xs="6"
             >
               {documentTypes.map((e) => (
                 <MenuItem key={e.id} value={e.id}>
@@ -901,9 +893,8 @@ function DocumentForm({
               required
               name="documentId"
               label="Documento"
-              id="documentId"
               value={documentId}
-              onChange={onChange}
+              setValue={setValue}
               InputProps={{
                 readOnly,
                 endAdornment: (
@@ -920,31 +911,24 @@ function DocumentForm({
               }}
             />
           </Grid>
-          <Grid item container xs={2} direction="row" alignItems="center">
-            <IconButton
-              disabled={!documentId}
-              color="primary"
-              type="submit"
-              edge="start"
-            >
-              <Magnify fontSize="large" />
-            </IconButton>
-          </Grid>
+          <IconButton disabled={!documentId} color="primary" type="submit">
+            <Magnify fontSize="large" />
+          </IconButton>
         </Grid>
       </form>
     </Box>
   );
 }
 DocumentForm.propTypes = {
-  onChange: PropTypes.func.isRequired,
   openScanner: PropTypes.func.isRequired,
   handleSubmit: PropTypes.func.isRequired,
-  content: PropTypes.object.isRequired,
+  state: PropTypes.object.isRequired,
   setValue: PropTypes.func.isRequired,
+  setState: PropTypes.func.isRequired,
 };
 
-function ContactForm({ content, onChange }) {
-  const { email, cellPhone, phone, address, observation } = content;
+function ContactForm({ state, setValue }) {
+  const { email, cellPhone, phone, address, observation } = state;
 
   return (
     <Box clone width="100%">
@@ -955,10 +939,9 @@ function ContactForm({ content, onChange }) {
               type="email"
               name="email"
               label="Email"
-              id="email"
               required
               value={email}
-              onChange={onChange}
+              setValue={setValue}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -966,9 +949,8 @@ function ContactForm({ content, onChange }) {
               type="tel"
               name="cellPhone"
               label="Celular"
-              id="cellPhone"
               value={cellPhone}
-              onChange={onChange}
+              setValue={setValue}
               required={!cellPhone && !phone}
             />
           </Grid>
@@ -977,9 +959,8 @@ function ContactForm({ content, onChange }) {
               type="tel"
               name="phone"
               label="Teléfono fijo"
-              id="phone"
               value={phone}
-              onChange={onChange}
+              setValue={setValue}
               required={!cellPhone && !phone}
             />
           </Grid>
@@ -988,9 +969,8 @@ function ContactForm({ content, onChange }) {
               type="text"
               name="address"
               label="Dirección"
-              id="address"
               value={address}
-              onChange={onChange}
+              setValue={setValue}
             />
           </Grid>
           <Grid item xs={12}>
@@ -1000,9 +980,8 @@ function ContactForm({ content, onChange }) {
               rows={4}
               name="observation"
               label="Observaciones"
-              id="observation"
               value={observation}
-              onChange={onChange}
+              setValue={setValue}
             />
           </Grid>
         </Grid>
@@ -1011,11 +990,11 @@ function ContactForm({ content, onChange }) {
   );
 }
 ContactForm.propTypes = {
-  onChange: PropTypes.func.isRequired,
-  content: PropTypes.object.isRequired,
+  setValue: PropTypes.func.isRequired,
+  state: PropTypes.object.isRequired,
 };
 
-function PatientForm({ content, onChange }) {
+function PatientForm({ state, setState }) {
   const {
     firstName,
     secondName,
@@ -1025,7 +1004,7 @@ function PatientForm({ content, onChange }) {
     gender,
     passport,
     isReadOnly: readOnly,
-  } = content;
+  } = state;
 
   return (
     <Box clone width="100%">
@@ -1037,9 +1016,8 @@ function PatientForm({ content, onChange }) {
               required
               name="firstName"
               label="Primer nombre"
-              id="firstName"
               value={firstName}
-              onChange={onChange}
+              setState={setState}
               InputProps={{ readOnly }}
             />
           </Grid>
@@ -1048,9 +1026,8 @@ function PatientForm({ content, onChange }) {
               type="text"
               name="secondName"
               label="Segundo nombre"
-              id="secondName"
               value={secondName}
-              onChange={onChange}
+              setState={setState}
               InputProps={{ readOnly }}
             />
           </Grid>
@@ -1060,9 +1037,8 @@ function PatientForm({ content, onChange }) {
               required
               name="firstSurname"
               label="Primer apellido"
-              id="firstSurname"
               value={firstSurname}
-              onChange={onChange}
+              setState={setState}
               InputProps={{ readOnly }}
             />
           </Grid>
@@ -1071,45 +1047,39 @@ function PatientForm({ content, onChange }) {
               type="text"
               name="secondSurname"
               label="Segundo apellido"
-              id="secondSurname"
               value={secondSurname}
-              onChange={onChange}
+              setState={setState}
               InputProps={{ readOnly }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <KeyboardDatePicker
-              variant="inline"
               autoOk
-              inputVariant="outlined"
-              fullWidth
               required
               disableFuture
-              format="dd/MM/yyyy"
-              id="birthDate"
+              name="birthDate"
               label="Fecha de nacimiento"
               KeyboardButtonProps={{ color: 'primary', disabled: readOnly }}
               value={birthDate}
-              InputProps={{ readOnly }}
-              onChange={(date) =>
-                onChange({
-                  target: {
-                    value: date,
-                    name: 'birthDate',
-                    type: 'date',
-                  },
-                })
-              }
+              InputProps={{
+                readOnly,
+                onChange: (e) => {
+                  console.log(e);
+                },
+              }}
+              setState={setState}
+              onChange={(e, a) => {
+                console.log(a);
+              }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
-              id="gender"
               label="Género"
               name="gender"
               required
               value={gender}
-              onChange={onChange}
+              setState={setState}
               select
               InputProps={{ readOnly }}
             >
@@ -1122,9 +1092,8 @@ function PatientForm({ content, onChange }) {
               type="text"
               name="passport"
               label="Pasaporte"
-              id="passport"
               value={passport}
-              onChange={onChange}
+              setState={setState}
             />
           </Grid>
         </Grid>
@@ -1133,11 +1102,11 @@ function PatientForm({ content, onChange }) {
   );
 }
 PatientForm.propTypes = {
-  onChange: PropTypes.func.isRequired,
-  content: PropTypes.object.isRequired,
+  setState: PropTypes.func.isRequired,
+  state: PropTypes.object.isRequired,
 };
 
-function BillingForm({ content, onChange, setContent }) {
+function BillingForm({ content, setValue, setState }) {
   const {
     insurance,
     plan,
@@ -1160,7 +1129,7 @@ function BillingForm({ content, onChange, setContent }) {
 
       if (insuranceFound) {
         setPlanTypes(insuranceFound.plans);
-        setContent((prevState) => ({
+        setState((prevState) => ({
           ...prevState,
           insurance: lastInsurance,
           plan: lastPlan,
@@ -1176,7 +1145,7 @@ function BillingForm({ content, onChange, setContent }) {
         ? insurance.plans[0]
         : { id: '', cardRequired: false };
 
-    setContent((prevState) => ({
+    setState((prevState) => ({
       ...prevState,
       insurance: insurance.id,
     }));
@@ -1187,12 +1156,12 @@ function BillingForm({ content, onChange, setContent }) {
   };
 
   const setPlan = (plan) => {
-    setContent((prevState) => ({
+    setState((prevState) => ({
       ...prevState,
       plan: plan.id,
     }));
 
-    setCardRequired(plan.cardRequired);
+    setCardRequired(plan.cardRequired == 'true');
   };
 
   return (
@@ -1203,7 +1172,6 @@ function BillingForm({ content, onChange, setContent }) {
             <TextField
               name="insurance"
               label="Seguro"
-              id="insurance"
               select
               required
               value={insurance}
@@ -1220,14 +1188,7 @@ function BillingForm({ content, onChange, setContent }) {
             </TextField>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField
-              name="plan"
-              label="Plan"
-              id="plan"
-              select
-              required
-              value={plan}
-            >
+            <TextField name="plan" label="Plan" select required value={plan}>
               {planTypes.map((e) => (
                 <MenuItem key={e.id} value={e.id} onClick={() => setPlan(e)}>
                   {e.name}
@@ -1241,9 +1202,8 @@ function BillingForm({ content, onChange, setContent }) {
               required={cardRequired}
               name="cardNumber"
               label="Número de carnet"
-              id="cardNumber"
               value={cardNumber}
-              onChange={onChange}
+              setValue={setValue}
             />
           </Grid>
         </Grid>
@@ -1252,7 +1212,7 @@ function BillingForm({ content, onChange, setContent }) {
   );
 }
 BillingForm.propTypes = {
-  onChange: PropTypes.func.isRequired,
-  setContent: PropTypes.func.isRequired,
+  setValue: PropTypes.func.isRequired,
+  setState: PropTypes.func.isRequired,
   content: PropTypes.object.isRequired,
 };

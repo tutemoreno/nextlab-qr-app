@@ -1,9 +1,11 @@
 export * from '@material-ui/core';
 export * from './AccordionHoc';
 export { default as Button } from './Button';
+export { default as Checkbox } from './Checkbox';
 export * from './CodeReader';
 export * from './HeaderHoc';
 export * from './Home';
+export { default as KeyboardDatePicker } from './KeyboardDatePicker';
 export * from './ListHoc';
 export * from './Login';
 export * from './Navbar';

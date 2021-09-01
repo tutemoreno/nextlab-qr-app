@@ -1,3 +1,7 @@
+import { Eye, EyeOff } from 'mdi-material-ui';
+import React, { useState } from 'react';
+import { useAlert, useAuth } from '../context';
+import { useFormState } from '../hooks';
 import {
   Box,
   Button,
@@ -9,11 +13,7 @@ import {
   InputAdornment,
   Paper,
   TextField,
-} from '@material-ui/core';
-import { Eye, EyeOff } from 'mdi-material-ui';
-import React, { useState } from 'react';
-import { useAlert, useAuth } from '../context';
-import { useFormState } from '../hooks';
+} from './';
 
 const initialState = {
   username: '',
@@ -23,7 +23,7 @@ const initialState = {
 };
 
 export const Login = () => {
-  const { content, onChange } = useFormState(initialState),
+  const { content, setValue } = useFormState(initialState),
     { username, password, remember } = content;
   const [showPassword, setShowPassword] = useState(false);
   const auth = useAuth();
@@ -51,29 +51,25 @@ export const Login = () => {
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
-                  variant="outlined"
                   required
-                  fullWidth
                   id="username"
                   label="Nombre de usuario"
                   name="username"
                   value={username}
-                  onChange={onChange}
+                  setValue={setValue}
                   autoComplete="username"
                   autoFocus
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  variant="outlined"
                   required
-                  fullWidth
                   name="password"
                   label="Contraseña"
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   value={password}
-                  onChange={onChange}
+                  setValue={setValue}
                   autoComplete="current-password"
                   InputProps={{
                     endAdornment: (
@@ -95,7 +91,7 @@ export const Login = () => {
                     <Checkbox
                       name="remember"
                       checked={remember}
-                      onChange={onChange}
+                      setValue={setValue}
                       color="primary"
                     />
                   }
@@ -104,12 +100,7 @@ export const Login = () => {
                 />
               </Grid>
               <Grid item xs={12}>
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                >
+                <Button type="submit" color="primary">
                   Iniciar sesion
                 </Button>
               </Grid>

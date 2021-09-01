@@ -86,8 +86,7 @@ CodeReaderComponent.propTypes = {
 export const CodeReader = forwardRef(CodeReaderComponent);
 
 function Camera({ isOpen, handleScan, formats, switchInput }) {
-  const { device, devices, onDeviceChange, videoRef, stream } =
-    useCamera(isOpen);
+  const { device, devices, setValue, videoRef, stream } = useCamera(isOpen);
 
   useBarcodeDetector({ handleScan, formats, stream, videoRef });
 
@@ -114,11 +113,10 @@ function Camera({ isOpen, handleScan, formats, switchInput }) {
       </Box>
       <Box p={2}>
         <TextField
-          id="device"
           label="Camara seccionada"
           name="device"
           value={device}
-          onChange={onDeviceChange}
+          setValue={setValue}
           select
         >
           {devices.map((e) => (
@@ -141,7 +139,7 @@ Camera.propTypes = {
 
 function FocusedInput({ formats, handleScan, inputRef, switchCamera }) {
   const classes = useStyles();
-  const { content, onChange, setValue } = useFormState({ scanner: '' }),
+  const { content, setValue } = useFormState({ scanner: '' }),
     { scanner } = content;
 
   const handleSubmit = (e) => {
@@ -168,11 +166,10 @@ function FocusedInput({ formats, handleScan, inputRef, switchCamera }) {
         <form onSubmit={handleSubmit}>
           <TextField
             required
-            id="scanner"
             label="Scanner"
             name="scanner"
             value={scanner}
-            onChange={onChange}
+            setValue={setValue}
             onBlur={() => inputRef.current.focus()}
             inputRef={inputRef}
             InputProps={{
