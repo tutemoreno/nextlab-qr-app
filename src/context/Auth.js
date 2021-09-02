@@ -17,12 +17,12 @@ const {
   } = process.env,
   AuthContext = createContext();
 
-export function ProvideAuth({ children }) {
+export function AuthProvider({ children }) {
   const auth = useProvideAuth();
 
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }
-ProvideAuth.propTypes = {
+AuthProvider.propTypes = {
   children: PropTypes.element.isRequired,
 };
 
