@@ -43,7 +43,7 @@ export const useCamera = (isOpen) => {
 
         videoRef.current.srcObject = srcStream;
 
-        setState('stream', srcStream);
+        setState((prevState) => ({ ...prevState, stream: srcStream }));
       } catch (error) {
         console.log('[startVideo]', error);
       }
