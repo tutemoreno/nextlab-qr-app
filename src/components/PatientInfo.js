@@ -120,7 +120,7 @@ export const PatientInfo = () => {
   const [state, setState] = useState(initialState);
   const [accordionState, setAccordionState] = useState(initialAccordionState);
   const [isValidForm, setIsValidForm] = useState(true);
-
+  let isLoading = false;
   const [notificationState, setNotificationState] = useState(
     initialNotificationState,
   );
@@ -337,6 +337,7 @@ export const PatientInfo = () => {
 
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
+    if (isLoading) return;
 
     const isDocumentFormValid = document
       .querySelector('#documentForm')
@@ -358,6 +359,8 @@ export const PatientInfo = () => {
       isBillingFormValid
     ) {
       try {
+        isLoading = true;
+
         const { orderNumber, response } = await sendOrder(state, user.codigo);
 
         setNotificationState({
@@ -367,6 +370,8 @@ export const PatientInfo = () => {
         toggleView('notification');
       } catch ({ message, type }) {
         openAlert(message, type || 'error');
+      } finally {
+        isLoading = false;
       }
     } else {
       setAccordionState({
