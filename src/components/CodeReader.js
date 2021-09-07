@@ -88,8 +88,6 @@ export const CodeReader = forwardRef(CodeReaderComponent);
 function Camera({ isOpen, handleScan, formats, switchInput }) {
   const { device, devices, setState, videoRef, stream } = useCamera(isOpen);
 
-  console.log(device, devices);
-
   useBarcodeDetector({ handleScan, formats, stream, videoRef });
 
   return (

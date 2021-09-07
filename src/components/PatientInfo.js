@@ -49,7 +49,7 @@ const initialState = {
   populationGroup: '',
   exportationDate: '',
   address: '',
-  birthDate: '',
+  birthDate: null,
   phone: '',
   fax: '',
   cellPhone: '',
@@ -194,33 +194,32 @@ export const PatientInfo = () => {
     let newContent;
 
     if (split[0].length) {
-      // const splittedDate = split[6].split('/'),
-      const splittedName = removeDWS(split[2].trim()).split(' '),
+      const splittedDate = split[6].split('/'),
+        splittedName = removeDWS(split[2].trim()).split(' '),
         splittedSurname = removeDWS(split[1].trim()).split(' ');
 
       newContent = {
         documentId: split[4],
         gender: split[3],
-        // birthDate: new Date(
-        //   splittedDate[2],
-        //   splittedDate[1] - 1,
-        //   splittedDate[0],
-        // ),
-        birthDate: split[6],
+        birthDate: new Date(
+          Date.UTC(splittedDate[2], splittedDate[1] - 1, splittedDate[0]),
+        ),
         firstName: splittedName.shift(),
         secondName: splittedName.join(' '),
         firstSurname: splittedSurname.shift(),
         secondSurname: splittedSurname.join(' '),
       };
     } else {
-      // const splittedDate = split[7].split('/'),
-      const splittedName = removeDWS(split[5].trim()).split(' '),
+      const splittedDate = split[7].split('/'),
+        splittedName = removeDWS(split[5].trim()).split(' '),
         splittedSurname = removeDWS(split[4].trim()).split(' ');
 
       newContent = {
         documentId: split[1].trim(),
         gender: split[8],
-        birthDate: split[7],
+        birthDate: new Date(
+          Date.UTC(splittedDate[2], splittedDate[1] - 1, splittedDate[0]),
+        ),
         firstName: splittedName.shift(),
         secondName: splittedName.join(' '),
         firstSurname: splittedSurname.shift(),
@@ -602,6 +601,8 @@ async function getPatientInfo({ documentId, documentType }) {
     UltimoCarnet: [lastCardNumber],
   } = Paciente;
 
+  const splittedDate = birthDate.split('T')[0].split('-');
+
   return {
     parsedInfo: {
       patientCode,
@@ -610,9 +611,9 @@ async function getPatientInfo({ documentId, documentType }) {
       firstSurname,
       secondSurname,
       gender,
-      birthDate: birthDate
-        ? birthDate.split('T')[0].split('-').reverse().join('/')
-        : '',
+      birthDate: new Date(
+        Date.UTC(splittedDate[0], splittedDate[1] - 1, splittedDate[2]),
+      ),
       email,
       cellPhone: cellPhone ? retrieveNumber(cellPhone) : '',
       phone: phone ? retrieveNumber(phone) : '',
@@ -666,7 +667,7 @@ async function sendOrder(state, ogirinCode) {
       nombre: firstName,
       nombre2: secondName,
       sexo: gender,
-      fecha_nacimiento: birthDate.split('/').reverse().join('-'),
+      fecha_nacimiento: birthDate.toISOString(),
       pasaporte: passport,
       email,
       celular: cellPhone,
@@ -709,7 +710,7 @@ async function sendOrder(state, ogirinCode) {
               Nombre: firstName,
               Nombre2: secondName,
               Sexo: gender,
-              FechaNacimiento: birthDate.split('/').reverse().join('-'),
+              FechaNacimiento: birthDate.toISOString(),
               Observacion: observation,
               Telefono: phone,
               Email: email,
@@ -941,7 +942,7 @@ function ContactForm({ state, setState }) {
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
             <TextField
-              type="email"
+              type="text"
               name="email"
               label="Email"
               required
@@ -1065,7 +1066,7 @@ function PatientForm({ state, setState }) {
               name="birthDate"
               label="Fecha de nacimiento"
               KeyboardButtonProps={{ color: 'primary', disabled: readOnly }}
-              inputValue={birthDate}
+              value={birthDate}
               InputProps={{ readOnly }}
               setState={setState}
             />
