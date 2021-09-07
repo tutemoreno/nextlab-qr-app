@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { format as formatDate } from 'date-fns';
 import { Alert, CreditCardScan, Delete, Magnify } from 'mdi-material-ui';
 import PropTypes from 'prop-types';
 import qs from 'qs';
@@ -25,6 +26,9 @@ import {
   TextField,
   Typography,
 } from './';
+
+const dateTimeFormatString = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+const dateFormatString = "yyyy-MM-dd'T'00:00:00.000'Z'";
 
 const initialState = {
   // qr
@@ -194,32 +198,26 @@ export const PatientInfo = () => {
     let newContent;
 
     if (split[0].length) {
-      const splittedDate = split[6].split('/'),
-        splittedName = removeDWS(split[2].trim()).split(' '),
+      const splittedName = removeDWS(split[2].trim()).split(' '),
         splittedSurname = removeDWS(split[1].trim()).split(' ');
 
       newContent = {
         documentId: split[4],
         gender: split[3],
-        birthDate: new Date(
-          Date.UTC(splittedDate[2], splittedDate[1] - 1, splittedDate[0]),
-        ),
+        birthDate: new Date(split[6].split('/').reverse()),
         firstName: splittedName.shift(),
         secondName: splittedName.join(' '),
         firstSurname: splittedSurname.shift(),
         secondSurname: splittedSurname.join(' '),
       };
     } else {
-      const splittedDate = split[7].split('/'),
-        splittedName = removeDWS(split[5].trim()).split(' '),
+      const splittedName = removeDWS(split[5].trim()).split(' '),
         splittedSurname = removeDWS(split[4].trim()).split(' ');
 
       newContent = {
         documentId: split[1].trim(),
         gender: split[8],
-        birthDate: new Date(
-          Date.UTC(splittedDate[2], splittedDate[1] - 1, splittedDate[0]),
-        ),
+        birthDate: new Date(split[7].split('/').reverse()),
         firstName: splittedName.shift(),
         secondName: splittedName.join(' '),
         firstSurname: splittedSurname.shift(),
@@ -606,8 +604,6 @@ async function getPatientInfo({ documentId, documentType }) {
     UltimoCarnet: [lastCardNumber],
   } = Paciente;
 
-  const splittedDate = birthDate.split('T')[0].split('-');
-
   return {
     parsedInfo: {
       patientCode,
@@ -616,9 +612,7 @@ async function getPatientInfo({ documentId, documentType }) {
       firstSurname,
       secondSurname,
       gender,
-      birthDate: new Date(
-        Date.UTC(splittedDate[0], splittedDate[1] - 1, splittedDate[2]),
-      ),
+      birthDate: new Date(birthDate),
       email,
       cellPhone: cellPhone ? retrieveNumber(cellPhone) : '',
       phone: phone ? retrieveNumber(phone) : '',
@@ -672,7 +666,7 @@ async function sendOrder(state, ogirinCode) {
       nombre: firstName,
       nombre2: secondName,
       sexo: gender,
-      fecha_nacimiento: birthDate.toISOString(),
+      fecha_nacimiento: formatDate(birthDate, dateFormatString),
       pasaporte: passport,
       email,
       celular: cellPhone,
@@ -700,8 +694,8 @@ async function sendOrder(state, ogirinCode) {
           pedido: {
             Sucursal: branch,
             Numero: '',
-            FechaPedido: new Date().toLocaleString(),
-            FechaEntrega: new Date().toLocaleString(),
+            FechaPedido: formatDate(new Date(), dateTimeFormatString),
+            FechaEntrega: formatDate(new Date(), dateTimeFormatString),
             Origen: { Codigo: ogirinCode, Descripcion: '' },
             Urgente: 'N',
             Observacion: observation,
@@ -715,7 +709,7 @@ async function sendOrder(state, ogirinCode) {
               Nombre: firstName,
               Nombre2: secondName,
               Sexo: gender,
-              FechaNacimiento: birthDate.toISOString(),
+              FechaNacimiento: formatDate(birthDate, dateFormatString),
               Observacion: observation,
               Telefono: phone,
               Email: email,
@@ -744,7 +738,7 @@ async function sendOrder(state, ogirinCode) {
               CodigoPlan: plan,
               DescripcionPlan: '',
             },
-            FechaReceta: new Date().toISOString(),
+            FechaReceta: formatDate(new Date(), dateTimeFormatString),
             NumeroCarnet: cardNumber,
             Diagnosticos: {
               ReqDiagnostico: [],

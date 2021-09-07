@@ -3,10 +3,10 @@ import PropTypes from 'prop-types';
 import React, { useCallback } from 'react';
 
 export default function KeyboardDatePicker({ name, setState, ...rest }) {
-  const onChange = useCallback((d) => {
+  const onChange = useCallback((date) => {
     setState((prevState) => ({
       ...prevState,
-      [name]: new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())),
+      [name]: date,
     }));
   }, []);
 
