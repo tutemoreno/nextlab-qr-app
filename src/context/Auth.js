@@ -53,14 +53,17 @@ function useProvideAuth() {
     if (response.status == 200) {
       const parsedInfo = await xml2jsParser.parseStringPromise(response.data);
 
-      isValid = parsedInfo.Usuario.EsValido == 'true';
-      const codigo = parsedInfo.Usuario.Codigo;
+      let {
+        Usuario: { EsValido, Codigo: codigo },
+      } = parsedInfo;
+
+      isValid = EsValido == 'true';
 
       if (isValid) {
         const usr = { username, isValid, codigo };
 
         setUser(usr);
-        setStore(REACT_APP_STORE_PATH, usr, remember, codigo);
+        setStore(REACT_APP_STORE_PATH, usr, remember);
       }
     }
 

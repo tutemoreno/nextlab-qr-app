@@ -13,9 +13,9 @@ export const useBarcodeDetector = ({
       handled = false;
 
     const startScan = async () => {
-      try {
-        if (handled) return;
+      if (handled) return;
 
+      try {
         const data = await barcodeDetector.detect(videoRef.current);
 
         if (data.length) {

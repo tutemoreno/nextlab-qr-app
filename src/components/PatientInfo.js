@@ -462,7 +462,7 @@ export const PatientInfo = () => {
                 </Typography>
               </Box>
             </Paper>
-            <Box clone mt={3}>
+            <Box width="100%" mt={3}>
               <Button type="button" color="secondary" onClick={newOrden}>
                 Nueva orden
               </Button>
@@ -700,8 +700,8 @@ async function sendOrder(state, ogirinCode) {
           pedido: {
             Sucursal: branch,
             Numero: '',
-            FechaPedido: new Date().toISOString(),
-            FechaEntrega: new Date().toISOString(),
+            FechaPedido: new Date().toLocaleString(),
+            FechaEntrega: new Date().toLocaleString(),
             Origen: { Codigo: ogirinCode, Descripcion: '' },
             Urgente: 'N',
             Observacion: observation,
