@@ -124,7 +124,7 @@ export const PatientInfo = () => {
   const [state, setState] = useState(initialState);
   const [accordionState, setAccordionState] = useState(initialAccordionState);
   const [isValidForm, setIsValidForm] = useState(true);
-  let isLoading = false;
+  const [isLoading, setIsLoading] = useState(false);
   const [notificationState, setNotificationState] = useState(
     initialNotificationState,
   );
@@ -357,10 +357,11 @@ export const PatientInfo = () => {
       isBillingFormValid
     ) {
       try {
-        isLoading = true;
+        setIsLoading(true);
 
         const { orderNumber, response } = await sendOrder(state, user.codigo);
 
+        setState(initialState);
         setNotificationState({
           title: response.Descripcion[0],
           description: orderNumber,
@@ -369,7 +370,7 @@ export const PatientInfo = () => {
       } catch ({ message, type }) {
         openAlert(message, type || 'error');
       } finally {
-        isLoading = false;
+        setIsLoading(false);
       }
     } else {
       setAccordionState({
@@ -550,12 +551,7 @@ export const PatientInfo = () => {
                   </Button>
                 </Grid>
                 <Grid item xs={6}>
-                  <Button
-                    type="submit"
-                    form="orderForm"
-                    color="primary"
-                    onClick={handleSubmitOrder}
-                  >
+                  <Button color="primary" onClick={handleSubmitOrder}>
                     Enviar
                   </Button>
                 </Grid>
