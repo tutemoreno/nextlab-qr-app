@@ -4,7 +4,7 @@ import { ThemeProvider } from '@material-ui/core/styles';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import React from 'react';
 import { Navbar } from './components';
-import { AuthProvider, ProvideSnackbar } from './context';
+import { AuthProvider, SnackbarProvider } from './context';
 import { AppRouter } from './routers';
 import { theme } from './styles';
 
@@ -14,12 +14,12 @@ export default function App() {
       <AuthProvider>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <ProvideSnackbar>
+          <SnackbarProvider>
             <>
               <Navbar />
               <AppRouter />
             </>
-          </ProvideSnackbar>
+          </SnackbarProvider>
         </ThemeProvider>
       </AuthProvider>
     </MuiPickersUtilsProvider>

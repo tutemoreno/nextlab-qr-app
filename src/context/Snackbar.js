@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState } from 'react';
 
 const SnackbarContext = createContext();
 
-export function ProvideSnackbar({ children }) {
+export function SnackbarProvider({ children }) {
   const [alertState, setAlertState] = useState({
     message: '',
     severity: 'info',
@@ -40,7 +40,7 @@ export function ProvideSnackbar({ children }) {
     </SnackbarContext.Provider>
   );
 }
-ProvideSnackbar.propTypes = {
+SnackbarProvider.propTypes = {
   children: PropTypes.element.isRequired,
 };
 
